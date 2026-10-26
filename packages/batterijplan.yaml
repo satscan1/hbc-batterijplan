@@ -1,6 +1,6 @@
 # ============================================================================
 # Batterijplan — slimme laag bovenop Home Battery Control (HBC) Dynamic
-# Versie 0.1.1
+# Versie 0.1.5
 #
 # HBC markeert per kwartier goedkoop (low) en duur (high), maar kijkt niet of
 # de batterij genoeg heeft voor alle dure kwartieren tot de volgende laadkans
@@ -21,7 +21,7 @@ input_boolean:
     name: Batterijplan live (stuurt HBC)
     icon: mdi:battery-sync
   batterijplan_toon_instellingen:
-    name: Batterijplan sensoren en uitleg tonen
+    name: Batterijplan instellingen tonen
     icon: mdi:eye-settings
 
 input_button:
@@ -31,6 +31,9 @@ input_button:
   batterijplan_terugzetten:
     name: Batterijplan instellingen terugzetten
     icon: mdi:backup-restore
+  batterijplan_standaard:
+    name: Batterijplan standaardwaarden
+    icon: mdi:restore
 
 input_text:
   batterijplan_sensor_net:
@@ -49,6 +52,13 @@ input_text:
     name: Batterijplan sensor laadpaal (optioneel)
     max: 255
     icon: mdi:ev-station
+
+input_datetime:
+  batterijplan_contract_start:
+    name: Batterijplan ingangsdatum energiecontract
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-start
 
 input_number:
   batterijplan_capaciteit:
@@ -177,6 +187,36 @@ template:
               {%- set ns.out = ns.out + [ ([cnt[i] + 1, 56] | min) if (i == h and v >= 0) else cnt[i] ] -%}
             {%- endfor -%}
             {{ ns.out }}
+          # Betrouwbaarheid van de voorspelling: elk kwartier de voorspelling
+          # uit het profiel (vóór deze meting) naast het echte verbruik leggen.
+          # Glijdend over 14 dagen (1344 kwartieren).
+          # Betrouwbaarheid = 100 % - gemiddelde afwijking / gemiddeld verbruik.
+          bt_n: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set u = a.get('uur') -%}
+            {%- set h = (now() - timedelta(minutes=2)).hour -%}
+            {%- set v = states('sensor.batterijplan_huisverbruik_15m') | float(-1) -%}
+            {%- set p = u[h] if (u is not none and u is not string and u | count == 24) else none -%}
+            {%- set n = a.get('bt_n', 0) | int(0) -%}
+            {{ ([n + 1, 1344] | min) if (p is number and v >= 0) else n }}
+          bt_afw: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set u = a.get('uur') -%}
+            {%- set h = (now() - timedelta(minutes=2)).hour -%}
+            {%- set v = states('sensor.batterijplan_huisverbruik_15m') | float(-1) -%}
+            {%- set p = u[h] if (u is not none and u is not string and u | count == 24) else none -%}
+            {%- set n = a.get('bt_n', 0) | int(0) -%}
+            {%- set f = a.get('bt_afw', 0) | float(0) -%}
+            {{ (f + ((v - p) | abs - f) / ([n + 1, 1344] | min)) | round(1) if (p is number and v >= 0) else f }}
+          bt_gem: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set u = a.get('uur') -%}
+            {%- set h = (now() - timedelta(minutes=2)).hour -%}
+            {%- set v = states('sensor.batterijplan_huisverbruik_15m') | float(-1) -%}
+            {%- set p = u[h] if (u is not none and u is not string and u | count == 24) else none -%}
+            {%- set n = a.get('bt_n', 0) | int(0) -%}
+            {%- set g = a.get('bt_gem', 0) | float(0) -%}
+            {{ (g + (v - g) / ([n + 1, 1344] | min)) | round(1) if (p is number and v >= 0) else g }}
 
   - trigger:
       - trigger: time_pattern
@@ -386,6 +426,91 @@ template:
           meerwaarde_kwartier_eur: "{{ plan.meerwaarde_kwartier_eur }}"
           kwartier_kwh: "{{ plan.kwartier_kwh }}"
           modus: "{{ 'live' if is_state('input_boolean.batterijplan_live', 'on') else 'schaduw' }}"
+          versie: "0.1.5"
+
+  # Badge "Voorspelling": dagen geleerd en betrouwbaarheid in procenten.
+  - sensor:
+      - name: Batterijplan voorspelling
+        unique_id: batterijplan_voorspelling
+        icon: mdi:crystal-ball
+        state: >
+          {%- set p = 'sensor.batterijplan_verbruiksprofiel' -%}
+          {%- set d = state_attr(p, 'dagen') | float(0) -%}
+          {%- set n = state_attr(p, 'bt_n') | int(0) -%}
+          {%- set g = state_attr(p, 'bt_gem') | float(0) -%}
+          {%- set pct = ([0, [100, 100 * (1 - state_attr(p, 'bt_afw') | float(0) / g)] | min] | max) | round(0) | int if (n >= 4 and g > 0) else none -%}
+          {%- set pt = (pct ~ ' %') if pct is not none else '– %' -%}
+          {{ (d | int ~ '/14 d · ' ~ pt) if d < 14 else pt }}
+        attributes:
+          dagen: "{{ state_attr('sensor.batterijplan_verbruiksprofiel', 'dagen') | float(0) }}"
+          betrouwbaarheid: >
+            {%- set p = 'sensor.batterijplan_verbruiksprofiel' -%}
+            {%- set n = state_attr(p, 'bt_n') | int(0) -%}
+            {%- set g = state_attr(p, 'bt_gem') | float(0) -%}
+            {{ ([0, [100, 100 * (1 - state_attr(p, 'bt_afw') | float(0) / g)] | min] | max) | round(0) | int if (n >= 4 and g > 0) else none }}
+
+      # Kleurstap voor de badge: grijs tijdens het leren (licht → donker),
+      # daarna groen naar betrouwbaarheid (donker groen boven 90 %).
+      - name: Batterijplan voorspelling kleur
+        unique_id: batterijplan_voorspelling_kleur
+        icon: mdi:palette
+        state: >
+          {%- set d = state_attr('sensor.batterijplan_verbruiksprofiel', 'dagen') | float(0) -%}
+          {%- set pct = state_attr('sensor.batterijplan_voorspelling', 'betrouwbaarheid') -%}
+          {%- if d < 14 -%}
+            {{ 'grijs1' if d < 5 else ('grijs2' if d < 10 else 'grijs3') }}
+          {%- elif pct is not number -%}
+            grijs3
+          {%- else -%}
+            {{ 'groen4' if pct > 90 else ('groen3' if pct >= 80 else ('groen2' if pct >= 70 else 'groen1')) }}
+          {%- endif -%}
+
+  # Meerwaarde in de huidige energieperiode, vanaf de ingangsdatum van je
+  # contract (dag en maand tellen; elk contractjaar begint opnieuw).
+  - trigger:
+      - trigger: state
+        entity_id: sensor.batterijplan_meerwaarde
+      - trigger: state
+        entity_id: input_datetime.batterijplan_contract_start
+      - trigger: time
+        at: "00:00:05"
+      - trigger: homeassistant
+        event: start
+    sensor:
+      - name: Batterijplan meerwaarde periode
+        unique_id: batterijplan_meerwaarde_periode
+        unit_of_measurement: EUR
+        device_class: monetary
+        icon: mdi:calendar-check
+        state: >
+          {%- set a = this.attributes if this is defined else {} -%}
+          {%- set tot = states('sensor.batterijplan_meerwaarde') | float(0) -%}
+          {%- set c = states('input_datetime.batterijplan_contract_start') -%}
+          {%- set m = c[5:7] | int(1) if has_value('input_datetime.batterijplan_contract_start') else 1 -%}
+          {%- set dg = c[8:10] | int(1) if has_value('input_datetime.batterijplan_contract_start') else 1 -%}
+          {%- set t = now().date() -%}
+          {%- set y = t.year if (t.month, t.day) >= (m, dg) else t.year - 1 -%}
+          {%- set start = y ~ '-' ~ '%02d' | format(m) ~ '-' ~ '%02d' | format(dg) -%}
+          {%- set basis = a.get('start_totaal', 0) | float(0) if a.get('periode_start', start) == start else tot -%}
+          {{ (tot - basis) | round(2) }}
+        attributes:
+          periode_start: >
+            {%- set c = states('input_datetime.batterijplan_contract_start') -%}
+            {%- set m = c[5:7] | int(1) if has_value('input_datetime.batterijplan_contract_start') else 1 -%}
+            {%- set dg = c[8:10] | int(1) if has_value('input_datetime.batterijplan_contract_start') else 1 -%}
+            {%- set t = now().date() -%}
+            {%- set y = t.year if (t.month, t.day) >= (m, dg) else t.year - 1 -%}
+            {{ y ~ '-' ~ '%02d' | format(m) ~ '-' ~ '%02d' | format(dg) }}
+          start_totaal: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set tot = states('sensor.batterijplan_meerwaarde') | float(0) -%}
+            {%- set c = states('input_datetime.batterijplan_contract_start') -%}
+            {%- set m = c[5:7] | int(1) if has_value('input_datetime.batterijplan_contract_start') else 1 -%}
+            {%- set dg = c[8:10] | int(1) if has_value('input_datetime.batterijplan_contract_start') else 1 -%}
+            {%- set t = now().date() -%}
+            {%- set y = t.year if (t.month, t.day) >= (m, dg) else t.year - 1 -%}
+            {%- set start = y ~ '-' ~ '%02d' | format(m) ~ '-' ~ '%02d' | format(dg) -%}
+            {{ a.get('start_totaal', 0) | float(0) if a.get('periode_start', start) == start else tot }}
 
   # Teller: opbrengst bovenop HBC (geschat), per kwartier één keer geteld.
   # Schaduw = wat het zou opleveren; live = wat het werkelijk stuurde.
@@ -542,6 +667,42 @@ automation:
         data:
           name: Batterijplan
           message: "Instellingen teruggezet uit de back-up van {{ states(b) }}"
+
+  - id: batterijplan_standaardwaarden
+    alias: Batterijplan — standaardwaarden (eerst back-up)
+    description: >-
+      Maakt eerst een back-up en zet dan de veiligheidsmarge en het rendement
+      terug naar de standaardwaarden. Capaciteit, opslag en sensoren blijven
+      staan; die zijn van jouw installatie.
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: input_button.batterijplan_standaard
+    conditions:
+      - condition: template
+        value_template: >
+          {{ trigger.from_state is not none and trigger.from_state.state != 'unavailable'
+             and trigger.to_state.state not in ['unknown', 'unavailable'] }}
+    actions:
+      - action: input_button.press
+        target:
+          entity_id: input_button.batterijplan_backup
+      - delay:
+          seconds: 2
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.batterijplan_marge
+        data:
+          value: 0.3
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.batterijplan_rendement
+        data:
+          value: 75
+      - action: logbook.log
+        data:
+          name: Batterijplan
+          message: "Standaardwaarden gezet (marge 0,3 kWh, rendement 75 %); back-up gemaakt vooraf"
 
   - id: batterijplan_live_uit_herstel
     alias: Batterijplan — live uit, HBC terug op ontladen

@@ -1,0 +1,462 @@
+# ============================================================================
+# Batterijplan — slimme laag bovenop Home Battery Control (HBC) Dynamic
+# Versie 0.1.0
+#
+# HBC markeert per kwartier goedkoop (low) en duur (high), maar kijkt niet of
+# de batterij genoeg heeft voor alle dure kwartieren tot de volgende laadkans
+# (HBC-docs, "Current limitations"). Batterijplan verdeelt de beschikbare
+# lading over de duurste dure kwartieren tot het volgende goedkope kwartier,
+# met het geleerde huisverbruik en de voorzichtige zonverwachting (Solcast).
+#   - dure kwartieren met lading : ontladen (HBC Self-consumption)
+#   - dure kwartieren zonder     : vasthouden (HBC Standby / peak shave)
+#   - tekort + extra nachtladen  : alleen uitgerekend en getoond
+#
+# Het pakket verandert alleen input_select.house_battery_strategy_dynamic_
+# expensive, alleen als "Batterijplan live" aan staat en HBC op Dynamic staat.
+# Zie README.md voor installatie, instellingen en onderhoud.
+# ============================================================================
+
+input_boolean:
+  batterijplan_live:
+    name: Batterijplan live (stuurt HBC)
+    icon: mdi:battery-sync
+
+input_text:
+  batterijplan_sensor_net:
+    name: Batterijplan sensor netvermogen
+    max: 255
+    icon: mdi:transmission-tower
+  batterijplan_sensor_zon:
+    name: Batterijplan sensor zonnevermogen
+    max: 255
+    icon: mdi:solar-power
+  batterijplan_sensor_batterij:
+    name: Batterijplan sensor batterijvermogen
+    max: 255
+    icon: mdi:home-battery
+  batterijplan_sensor_ev:
+    name: Batterijplan sensor laadpaal (optioneel)
+    max: 255
+    icon: mdi:ev-station
+
+input_number:
+  batterijplan_capaciteit:
+    name: Batterijplan bruikbare capaciteit
+    min: 1
+    max: 40
+    step: 0.1
+    unit_of_measurement: kWh
+    mode: box
+    icon: mdi:battery-high
+  batterijplan_marge:
+    name: Batterijplan veiligheidsmarge
+    min: 0
+    max: 3
+    step: 0.1
+    unit_of_measurement: kWh
+    mode: box
+    icon: mdi:shield-half-full
+  batterijplan_rendement:
+    name: Batterijplan rendement heen en terug
+    min: 50
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    mode: box
+    icon: mdi:sync
+  batterijplan_opslag:
+    name: Batterijplan opslag per kWh excl. btw
+    min: 0
+    max: 0.5
+    step: 0.00001
+    unit_of_measurement: "EUR/kWh"
+    mode: box
+    icon: mdi:cash-plus
+
+template:
+  - sensor:
+      - name: Batterijplan huisverbruik
+        unique_id: batterijplan_huisverbruik
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:home-lightning-bolt
+        # net (+ = afname) + zon + thuisbatterij (+ = ontladen) - laadpaal
+        # De sensornamen vul je in bij de Batterijplan-instellingen.
+        state: >
+          {%- set s = namespace(net='input_text.batterijplan_sensor_net', zon='input_text.batterijplan_sensor_zon',
+                                bat='input_text.batterijplan_sensor_batterij', ev='input_text.batterijplan_sensor_ev') -%}
+          {{ [ states(states(s.net)) | float(0)
+               + states(states(s.zon)) | float(0)
+               + states(states(s.bat)) | float(0)
+               - states(states(s.ev)) | float(0), 0 ] | max | round(0) }}
+        availability: >
+          {{ has_value(states('input_text.batterijplan_sensor_net'))
+             and has_value(states('input_text.batterijplan_sensor_zon'))
+             and has_value(states('input_text.batterijplan_sensor_batterij')) }}
+
+  - trigger:
+      - trigger: time_pattern
+        minutes: "/15"
+    sensor:
+      - name: Batterijplan verbruiksprofiel
+        unique_id: batterijplan_verbruiksprofiel
+        icon: mdi:chart-bell-curve
+        # Leren over 14 dagen: per uur van de dag
+        # 4 metingen per dag, dus max 56 metingen. Tot 56: gewoon gemiddelde,
+        # daarna glijdend (elke nieuwe meting telt 1/56 mee).
+        # Status: <7 dagen = aan het leren, 7-13 = grof, 14+ = prima.
+        state: >
+          {%- set n = this.attributes.get('n', []) if this is defined else [] -%}
+          {%- set d = ((n | min) / 4) | int if (n is not string and n | count == 24) else 0 -%}
+          {{ 'prima' if d >= 14 else ('grof' if d >= 7 else 'aan het leren') }}
+        attributes:
+          dagen: >
+            {%- set n = this.attributes.get('n', []) if this is defined else [] -%}
+            {{ ((n | min) / 4) | round(1) if (n is not string and n | count == 24) else 0 }}
+          uur: >
+            {%- set u = this.attributes.get('uur') if this is defined else none -%}
+            {%- set old = u if (u is not none and u is not string and u | count == 24) else [none] * 24 -%}
+            {%- set c = this.attributes.get('n') if this is defined else none -%}
+            {%- set cnt = c if (c is not none and c is not string and c | count == 24) else [0] * 24 -%}
+            {%- set h = (now() - timedelta(minutes=2)).hour -%}
+            {%- set v = states('sensor.batterijplan_huisverbruik_15m') | float(-1) -%}
+            {%- set ns = namespace(out=[]) -%}
+            {%- for i in range(24) -%}
+              {%- if i == h and v >= 0 -%}
+                {%- set k = [cnt[i] + 1, 56] | min -%}
+                {%- set ns.out = ns.out + [ (v if old[i] is not number else old[i] + (v - old[i]) / k) | round(0) ] -%}
+              {%- else -%}
+                {%- set ns.out = ns.out + [ old[i] ] -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns.out }}
+          n: >
+            {%- set c = this.attributes.get('n') if this is defined else none -%}
+            {%- set cnt = c if (c is not none and c is not string and c | count == 24) else [0] * 24 -%}
+            {%- set h = (now() - timedelta(minutes=2)).hour -%}
+            {%- set v = states('sensor.batterijplan_huisverbruik_15m') | float(-1) -%}
+            {%- set ns = namespace(out=[]) -%}
+            {%- for i in range(24) -%}
+              {%- set ns.out = ns.out + [ ([cnt[i] + 1, 56] | min) if (i == h and v >= 0) else cnt[i] ] -%}
+            {%- endfor -%}
+            {{ ns.out }}
+
+  - trigger:
+      - trigger: time_pattern
+        minutes: "14"
+        seconds: "15"
+      - trigger: time_pattern
+        minutes: "29"
+        seconds: "15"
+      - trigger: time_pattern
+        minutes: "44"
+        seconds: "15"
+      - trigger: time_pattern
+        minutes: "59"
+        seconds: "15"
+      - trigger: homeassistant
+        event: start
+      - trigger: event
+        event_type: event_template_reloaded
+      - trigger: state
+        entity_id: input_boolean.batterijplan_live
+      # na een herstart: opnieuw rekenen zodra HBC-prijzen en laadpercentages er zijn
+      - trigger: template
+        value_template: >
+          {%- set n = states('input_number.house_battery_count') | int(0) -%}
+          {%- set ok = namespace(c=0) -%}
+          {%- for i in range(1, n + 1) -%}
+            {%- if has_value('sensor.marstek_m' ~ i ~ '_battery_state_of_charge') -%}{%- set ok.c = ok.c + 1 -%}{%- endif -%}
+          {%- endfor -%}
+          {{ n > 0 and ok.c == n and (state_attr('sensor.hbc_energy_prices_data', 'marks') or []) | count > 0 }}
+      # nieuwe prijzen of labels van HBC (bijv. de prijzen van morgen)
+      - trigger: state
+        entity_id: sensor.hbc_energy_prices_data
+        attribute: marks
+    action:
+      - variables:
+          plan: >
+            {#- Batterijplan — verdeelt de lading over de duurste kwartieren tot de volgende laadkans -#}
+            {%- set nowts = as_timestamp(now()) -%}
+            {%- set T = ((nowts + 90) // 900 * 900) | int -%}
+            {%- set cap = states('input_number.batterijplan_capaciteit') | float(0) -%}
+            {%- set marge = states('input_number.batterijplan_marge') | float(0.3) -%}
+            {%- set rte = states('input_number.batterijplan_rendement') | float(75) / 100 -%}
+            {%- set opslag = states('input_number.batterijplan_opslag') | float(0) -%}
+            {#- lading nu: per batterij (laadpercentage - ondergrens HBC) / (100 - ondergrens), gemiddeld, maal bruikbare capaciteit -#}
+            {%- set nbat = states('input_number.house_battery_count') | int(0) -%}
+            {%- set eb = namespace(sum=0, ok=0) -%}
+            {%- for i in range(1, nbat + 1) -%}
+              {%- set soc = states('sensor.marstek_m' ~ i ~ '_battery_state_of_charge') | float(-1) -%}
+              {%- set cut = states('input_number.marstek_m' ~ i ~ '_discharging_cutoff_capacity') | float(10) -%}
+              {%- if soc >= 0 -%}{%- set eb.sum = eb.sum + ([soc - cut, 0] | max) / ([100 - cut, 1] | max) -%}{%- set eb.ok = eb.ok + 1 -%}{%- endif -%}
+            {%- endfor -%}
+            {%- set Eruw = (eb.sum / eb.ok * cap) if (nbat > 0 and eb.ok == nbat and cap > 1) else -1 -%}
+            {%- set E = [Eruw - marge, 0] | max -%}
+            {%- set marks = state_attr('sensor.hbc_energy_prices_data', 'marks') or [] -%}
+            {%- set prof = state_attr('sensor.batterijplan_verbruiksprofiel', 'uur') or [] -%}
+            {%- set fallback = states('sensor.batterijplan_huisverbruik_15m') | float(states('sensor.batterijplan_huisverbruik') | float(400)) -%}
+            {#- zonvoorspelling (voorzichtig, estimate10) per half uur -#}
+            {%- set ns = namespace(pv={}) -%}
+            {%- for s in ['sensor.solcast_pv_forecast_forecast_today', 'sensor.solcast_pv_forecast_forecast_tomorrow'] -%}
+              {%- for f in (state_attr(s, 'detailedForecast') or []) -%}
+                {%- set ns.pv = dict(ns.pv, **{ (as_timestamp(f.period_start) | int) | string : f.pv_estimate10 | float(0) }) -%}
+              {%- endfor -%}
+            {%- endfor -%}
+            {#- kwartierlijst vanaf T -#}
+            {%- set nq = namespace(q=[]) -%}
+            {%- for m in marks -%}
+              {%- set t = (m.start / 1000) | int -%}
+              {%- if t >= T -%}
+                {%- set h = t | timestamp_custom('%H', true) | int -%}
+                {%- set w = prof[h] if (prof | count == 24 and prof[h] is number) else fallback -%}
+                {%- set pv = ns.pv.get(((t // 1800) * 1800) | string, 0) -%}
+                {%- set need = (w / 1000 - pv) * 0.25 -%}
+                {%- set nq.q = nq.q + [ dict(t=t, p=m.price | float(0), m=m.mark, need=need | round(3)) ] -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- set q = nq.q -%}
+            {#- segment: vanaf T tot het eerstvolgende 'low'-kwartier (daar laadt HBC bij) -#}
+            {%- set sg = namespace(seg=[], stop=false, started=false) -%}
+            {%- for x in q -%}
+              {%- if not sg.stop -%}
+                {%- if x.m == 'low' and sg.started -%}{%- set sg.stop = true -%}
+                {%- elif x.m != 'low' -%}{%- set sg.started = true -%}{%- set sg.seg = sg.seg + [x] -%}
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- set seg = sg.seg -%}
+            {%- set segeinde = (seg | last).t + 900 if seg else T -%}
+            {#- toewijzen: duurste dure kwartieren eerst, alleen als de batterij het chronologisch haalt -#}
+            {%- set highs = seg | selectattr('m', 'eq', 'high') | selectattr('need', 'gt', 0) | sort(attribute='p', reverse=true) | list -%}
+            {%- set na = namespace(alloc=[]) -%}
+            {%- for hq in highs -%}
+              {%- set tent = na.alloc + [hq.t] -%}
+              {%- set sim = namespace(soc=E, ok=true) -%}
+              {%- for x in seg -%}
+                {%- if x.t in tent -%}{%- set sim.soc = sim.soc - x.need -%}
+                {%- elif x.need < 0 -%}{%- set sim.soc = [cap, sim.soc - x.need] | min -%}
+                {%- endif -%}
+                {%- if sim.soc < -0.01 -%}{%- set sim.ok = false -%}{%- endif -%}
+              {%- endfor -%}
+              {%- if sim.ok -%}{%- set na.alloc = tent -%}{%- endif -%}
+            {%- endfor -%}
+            {#- restlading: een duur kwartier ná het laatst toegewezen kwartier mag de rest gebruiken (er komt daarna niets meer dat het nodig heeft) -#}
+            {%- for hq in highs -%}
+              {%- if hq.t not in na.alloc and (na.alloc | count == 0 or hq.t > na.alloc | max) -%}
+                {%- set rs = namespace(soc=E) -%}
+                {%- for x in seg if x.t < hq.t -%}
+                  {%- if x.t in na.alloc -%}{%- set rs.soc = rs.soc - x.need -%}
+                  {%- elif x.need < 0 -%}{%- set rs.soc = [cap, rs.soc - x.need] | min -%}
+                  {%- endif -%}
+                {%- endfor -%}
+                {%- if rs.soc > 0.05 -%}{%- set na.alloc = na.alloc + [hq.t] -%}{%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {#- tekort en wat 's nachts bijladen zou opleveren (alleen tonen) -#}
+            {%- set unalloc = highs | rejectattr('t', 'in', na.alloc) | list -%}
+            {%- set tekort = unalloc | sum(attribute='need') -%}
+            {%- set nc = namespace(kwh=0, eur=0, kw=[]) -%}
+            {%- if unalloc -%}
+              {%- set eerste = unalloc | map(attribute='t') | min -%}
+              {%- set duur = unalloc | sort(attribute='p') | list -%}
+              {%- set kandidaten = seg | selectattr('t', 'lt', eerste) | selectattr('m', 'none') | sort(attribute='p') | list -%}
+              {%- for k in kandidaten -%}
+                {%- for d in duur -%}
+                  {%- set winst = (d.p / 100 + opslag) * 1.21 - (k.p / 100 + opslag) * 1.21 / rte -%}
+                  {%- if winst > 0 and nc.kwh < tekort and k.t not in nc.kw -%}
+                    {%- set e = [1.25, tekort - nc.kwh] | min -%}
+                    {%- set nc.kwh = nc.kwh + e -%}
+                    {%- set nc.eur = nc.eur + winst * e * rte -%}
+                    {%- set nc.kw = nc.kw + [k.t] -%}
+                  {%- endif -%}
+                {%- endfor -%}
+              {%- endfor -%}
+            {%- endif -%}
+            {#- opbrengst t.o.v. HBC zonder plan (HBC ontlaadt elk duur kwartier op volgorde tot de batterij leeg is) -#}
+            {%- set hb = namespace(soc=E, val=0) -%}
+            {%- for x in seg -%}
+              {%- if x.m == 'high' and x.need > 0 -%}
+                {%- set d = [hb.soc, x.need] | min -%}
+                {%- set hb.soc = hb.soc - d -%}
+                {%- set hb.val = hb.val + d * x.p -%}
+              {%- elif x.need < 0 -%}{%- set hb.soc = [cap, hb.soc - x.need] | min -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- set allocq = highs | selectattr('t', 'in', na.alloc) | list -%}
+            {#- waarde van het plan, op dezelfde manier doorgerekend (een kwartier ontlaadt tot de batterij leeg is) -#}
+            {%- set pv2 = namespace(v=0, soc=E) -%}
+            {%- for x in seg -%}
+              {%- if x.t in na.alloc and x.need > 0 -%}
+                {%- set d = [pv2.soc, x.need] | min -%}
+                {%- set pv2.soc = pv2.soc - d -%}
+                {%- set pv2.v = pv2.v + d * x.p -%}
+              {%- elif x.need < 0 -%}{%- set pv2.soc = [cap, pv2.soc - x.need] | min -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- set meer_segment = (pv2.v - hb.val) * 1.21 / 100 -%}
+            {%- set cur = q | selectattr('t', 'eq', T) | first if q else none -%}
+            {%- set later = allocq | selectattr('t', 'gt', T) | list -%}
+            {%- set meer_kwartier = 0 -%}
+            {%- if cur is not none and cur.m == 'high' and T not in na.alloc and cur.need > 0 and later -%}
+              {%- set gem = (later | sum(attribute='p')) / (later | count) -%}
+              {%- set meer_kwartier = [cur.need * (gem - cur.p) * 1.21 / 100, 0] | max -%}
+            {%- endif -%}
+            {%- if cur is none -%}{%- set besluit = 'Geen prijsdata' -%}
+            {%- elif cap <= 1 -%}{%- set besluit = 'Niet ingesteld' -%}
+            {%- elif Eruw < 0 -%}{%- set besluit = 'Geen batterijdata' -%}
+            {%- elif cur.m == 'high' -%}{%- set besluit = 'Ontladen' if (T in na.alloc or cur.need <= 0) else 'Vasthouden' -%}
+            {%- elif cur.m == 'low' -%}{%- set besluit = 'Laden (HBC)' -%}
+            {%- else -%}{%- set besluit = 'Zon laden (HBC)' -%}
+            {%- endif -%}
+            {%- set hm = '%H:%M' -%}
+            {{ {
+              'besluit': besluit,
+              'kwartier': T | timestamp_custom(hm, true),
+              'energie_kwh': E | round(2),
+              'energie_bron': ('laadpercentage ' ~ eb.ok ~ ' van ' ~ nbat ~ ' batterijen') if Eruw >= 0 else 'onbekend',
+              'segment_tot': segeinde | timestamp_custom('%a %H:%M', true),
+              'dure_kwartieren': highs | count,
+              'ontladen': na.alloc | sort | map('timestamp_custom', hm, true) | list,
+              'vasthouden': unalloc | map(attribute='t') | sort | map('timestamp_custom', hm, true) | list,
+              'tekort_kwh': tekort | round(2),
+              'nachtladen_kwartieren': nc.kw | sort | map('timestamp_custom', hm, true) | list,
+              'nachtladen_kwh': nc.kwh | round(2),
+              'nachtladen_winst_eur': nc.eur | round(2),
+              'verbruik_bron': 'profiel' if (prof | select('number') | list | count) == 24 else ('deels profiel' if (prof | select('number') | list | count) > 0 else 'huidig gemiddelde'),
+              'meerwaarde_segment_eur': meer_segment | round(3),
+              'meerwaarde_kwartier_eur': meer_kwartier | round(4),
+              'kwartier_kwh': (cur.need if cur is not none else 0) | round(3)
+            } | to_json }}
+    sensor:
+      - name: Batterijplan
+        unique_id: batterijplan
+        icon: mdi:battery-clock
+        state: "{{ plan.besluit }}"
+        attributes:
+          kwartier: "{{ plan.kwartier }}"
+          energie_kwh: "{{ plan.energie_kwh }}"
+          segment_tot: "{{ plan.segment_tot }}"
+          dure_kwartieren: "{{ plan.dure_kwartieren }}"
+          ontladen: "{{ plan.ontladen }}"
+          vasthouden: "{{ plan.vasthouden }}"
+          tekort_kwh: "{{ plan.tekort_kwh }}"
+          nachtladen_kwartieren: "{{ plan.nachtladen_kwartieren }}"
+          nachtladen_kwh: "{{ plan.nachtladen_kwh }}"
+          nachtladen_winst_eur: "{{ plan.nachtladen_winst_eur }}"
+          verbruik_bron: "{{ plan.verbruik_bron }}"
+          meerwaarde_segment_eur: "{{ plan.meerwaarde_segment_eur }}"
+          meerwaarde_kwartier_eur: "{{ plan.meerwaarde_kwartier_eur }}"
+          kwartier_kwh: "{{ plan.kwartier_kwh }}"
+          modus: "{{ 'live' if is_state('input_boolean.batterijplan_live', 'on') else 'schaduw' }}"
+
+  # Teller: opbrengst bovenop HBC (geschat), per kwartier één keer geteld.
+  # Schaduw = wat het zou opleveren; live = wat het werkelijk stuurde.
+  - trigger:
+      - trigger: state
+        entity_id: sensor.batterijplan
+        attribute: kwartier
+    sensor:
+      - name: Batterijplan meerwaarde
+        unique_id: batterijplan_meerwaarde
+        icon: mdi:cash-plus
+        unit_of_measurement: EUR
+        device_class: monetary
+        state_class: total
+        state: >
+          {%- set prev = this.state | float(0) if this is defined else 0 -%}
+          {%- set k = state_attr('sensor.batterijplan', 'kwartier') -%}
+          {%- if this is defined and this.attributes.get('laatste') == k -%}{{ prev }}
+          {%- else -%}{{ (prev + state_attr('sensor.batterijplan', 'meerwaarde_kwartier_eur') | float(0)) | round(4) }}
+          {%- endif -%}
+        attributes:
+          laatste: "{{ state_attr('sensor.batterijplan', 'kwartier') }}"
+          sinds: "{{ this.attributes.get('sinds', now().strftime('%d-%m-%Y')) if this is defined else now().strftime('%d-%m-%Y') }}"
+          eur_schaduw: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
+            {%- set add = state_attr('sensor.batterijplan', 'meerwaarde_kwartier_eur') | float(0) if (nieuw and not is_state('input_boolean.batterijplan_live', 'on')) else 0 -%}
+            {{ (a.get('eur_schaduw', 0) | float(0) + add) | round(4) }}
+          eur_live: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
+            {%- set add = state_attr('sensor.batterijplan', 'meerwaarde_kwartier_eur') | float(0) if (nieuw and is_state('input_boolean.batterijplan_live', 'on')) else 0 -%}
+            {{ (a.get('eur_live', 0) | float(0) + add) | round(4) }}
+          kwartieren_vastgehouden: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
+            {{ a.get('kwartieren_vastgehouden', 0) | int(0) + (1 if (nieuw and is_state('sensor.batterijplan', 'Vasthouden')) else 0) }}
+          kwartieren_ontladen: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
+            {{ a.get('kwartieren_ontladen', 0) | int(0) + (1 if (nieuw and is_state('sensor.batterijplan', 'Ontladen')) else 0) }}
+          kwh_vastgehouden: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
+            {%- set add = state_attr('sensor.batterijplan', 'kwartier_kwh') | float(0) if (nieuw and is_state('sensor.batterijplan', 'Vasthouden')) else 0 -%}
+            {{ (a.get('kwh_vastgehouden', 0) | float(0) + add) | round(3) }}
+
+sensor:
+  - platform: statistics
+    name: Batterijplan huisverbruik 15m
+    unique_id: batterijplan_huisverbruik_15m
+    entity_id: sensor.batterijplan_huisverbruik
+    state_characteristic: average_step
+    max_age:
+      minutes: 15
+    sampling_size: 5000
+    keep_last_sample: true
+
+automation:
+  - id: batterijplan_stuur_hbc
+    alias: Batterijplan — stuur HBC dure kwartieren
+    description: >-
+      Zet de HBC-stand voor dure kwartieren op vasthouden (Standby / peak shave)
+      of ontladen (Self-consumption), alleen in live-modus en alleen als HBC op
+      Dynamic staat.
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id: sensor.batterijplan
+    conditions:
+      - condition: state
+        entity_id: input_boolean.batterijplan_live
+        state: "on"
+      - condition: state
+        entity_id: input_select.house_battery_strategy
+        state: Dynamic
+    actions:
+      - variables:
+          gewenst: >
+            {{ 'Standby / peak shave' if is_state('sensor.batterijplan', 'Vasthouden') else 'Self-consumption' }}
+      - if:
+          - condition: template
+            value_template: >
+              {{ states('input_select.house_battery_strategy_dynamic_expensive') != gewenst }}
+        then:
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.house_battery_strategy_dynamic_expensive
+            data:
+              option: "{{ gewenst }}"
+          - action: logbook.log
+            data:
+              name: Batterijplan
+              message: >-
+                Dure kwartieren {{ state_attr('sensor.batterijplan', 'kwartier') }}:
+                {{ states('sensor.batterijplan') | lower }} (HBC-stand {{ gewenst }})
+
+  - id: batterijplan_live_uit_herstel
+    alias: Batterijplan — live uit, HBC terug op ontladen
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: input_boolean.batterijplan_live
+        to: "off"
+    actions:
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.house_battery_strategy_dynamic_expensive
+        data:
+          option: Self-consumption

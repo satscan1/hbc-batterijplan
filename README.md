@@ -1,0 +1,216 @@
+# Batterijplan — slimme laag bovenop Home Battery Control (HBC)
+
+*Versie 0.1.0 · experimenteel · Nederlandstalig*
+
+Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** momenten van de dag. Het werkt samen met [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) en neemt HBC niet over. HBC blijft de batterij aansturen; Batterijplan geeft alleen per kwartier één aanwijzing.
+
+Het is een gewoon Home Assistant-pakket (YAML), met een eigen dashboard. Node-RED of HACS heb je er niet voor nodig.
+
+---
+
+## 1. Wat doet het, in gewone taal
+
+HBC (strategie **Dynamic**) geeft elk kwartier een label:
+- **goedkoop**: laden van het net;
+- **duur**: ontladen voor het huis;
+- **gewoon**: alleen laden met zon.
+
+Dat werkt goed, maar HBC kijkt niet of de batterij genoeg lading heeft voor *alle* dure kwartieren. De makers van HBC noemen dat zelf als beperking. Gevolg: de batterij kan leeg raken bij een duur moment van 27 ct, terwijl er een uur later een moment van 50 ct komt.
+
+Batterijplan rekent elk kwartier vooruit tot het volgende goedkope moment en kijkt daarbij naar:
+- hoeveel lading er nu in de batterij zit;
+- hoeveel je huis op dat uur van de dag gewoonlijk verbruikt (dat leert het zelf);
+- hoeveel zon er verwacht wordt (voorzichtige schatting);
+- welke dure kwartieren er nog komen en wat ze kosten.
+
+Daarna geeft het de lading eerst aan de **duurste** kwartieren. In de dure kwartieren die niet aan de beurt zijn, houdt de batterij zijn lading vast.
+
+Komt er tussen twee pieken zon of een goedkoop moment? Dan rekent Batterijplan dat mee als bijladen, en mag de eerste piek gewoon ontladen.
+
+Daarnaast rekent het uit of extra laden 's nachts zou lonen, inclusief het verlies bij laden en ontladen. Dat **laat het alleen zien**; in deze versie doet het dat nog niet zelf.
+
+---
+
+## 2. Wat heb je nodig
+
+| Nodig | Waarom |
+|---|---|
+| Home Assistant met packages | Batterijplan is één YAML-bestand in `/config/packages/`. |
+| HBC versie 4.14 of nieuwer, strategie **Dynamic** | Batterijplan leest de labels die HBC per kwartier maakt (`sensor.hbc_energy_prices_data`) en het laadpercentage en de ondergrens per batterij die HBC kent. |
+| Een dynamisch energiecontract met kwartier- of uurprijzen | Zonder prijsverschillen valt er niets te verdelen. |
+| Solcast-zonvoorspelling (integratie "Solcast PV Forecast") | Voor de verwachte zon per half uur. Geen zonnepanelen? Dan rekent het plan met 0 zon. |
+| Een sensor voor netvermogen, zonnevermogen en batterijvermogen | Om het huisverbruik te meten en te leren. |
+
+Optioneel: een sensor voor het laadvermogen van je laadpaal. Die wordt van het huisverbruik afgetrokken, zodat het opladen van de auto het verbruiksprofiel niet vervuilt.
+
+---
+
+## 3. Installeren
+
+**Stap 1 — HBC goed zetten**
+
+Zet HBC op **Full control** en strategie **Dynamic**. Kies op het tabblad Timed/Dynamic:
+
+| Periode | Stand |
+|---|---|
+| Goedkoop (low) | Charge |
+| Gewoon (regular / baseline) | **Charge PV** |
+| Duur (high) | Self-consumption |
+
+> **Belangrijk:** de gewone periode moet op **Charge PV** staan. Batterijplan gaat ervan uit dat de batterij buiten de dure kwartieren niet ontlaadt. Staat de gewone periode op Self-consumption, dan klopt de berekening niet.
+
+**Stap 2 — Bestanden plaatsen**
+
+| Uit deze repo | Naar Home Assistant |
+|---|---|
+| `packages/batterijplan.yaml` | `/config/packages/batterijplan.yaml` |
+| `www/batterijplan/` (de iconen) | `/config/www/batterijplan/` |
+
+Gebruik je nog geen packages? Voeg dan dit toe aan `configuration.yaml`:
+
+```yaml
+homeassistant:
+  packages: !include_dir_named packages
+```
+
+**Stap 3 — Herstarten**
+
+Ga naar *Ontwikkelhulpmiddelen → YAML*, kies **Configuratie controleren** en herstart Home Assistant. (Bij de eerste keer is herstarten nodig; de map `www` wordt alleen bij het opstarten gezien.)
+
+**Stap 4 — Dashboard toevoegen**
+
+1. *Instellingen → Dashboards → Dashboard toevoegen → Nieuw dashboard vanaf nul*, naam bijvoorbeeld "Batterijplan".
+2. Open het dashboard, kies rechtsboven ✏️ (bewerken), dan ⋮ → **Raw-configuratie-editor**.
+3. Plak de inhoud van `dashboards/batterijplan-dashboard.yaml` en sla op.
+
+**Stap 5 — Instellingen invullen**
+
+Na de herstart staan de instellingen op hun minimum. Vul ze in op het dashboard, kaart **Instellingen** (onder die kaart staat per instelling een korte uitleg):
+
+| Instelling | Wat vul je in | Voorbeeld |
+|---|---|---|
+| Bruikbare capaciteit batterijen | wat je batterijen samen écht kunnen leveren, boven de ondergrens in HBC | 2 × 5,12 kWh met 12 % ondergrens ≈ 9,0 kWh |
+| Veiligheidsmarge | lading die het plan nooit inrekent | 0,3 kWh |
+| Rendement laden + ontladen | hoeveel % van de geladen stroom er weer uitkomt | 75 % |
+| Energiebelasting + inkoop (excl. btw) | wat je per kWh bóvenop de kale beursprijs betaalt | staat op je contract |
+| Sensor netvermogen | jouw sensor, + = afname van het net | `sensor.p1_vermogen` |
+| Sensor zonnevermogen | totaal zonnevermogen | `sensor.zon_totaal` |
+| Sensor batterijvermogen | totaal batterijvermogen, + = ontladen | bij HBC meestal `sensor.house_total_battery_power` |
+| Sensor laadpaal (optioneel) | laadvermogen van je auto-lader | mag leeg blijven |
+
+> Zolang de bruikbare capaciteit niet is ingevuld, zegt het plan "Niet ingesteld" en doet het niets.
+
+Controle: de sensor **Batterijplan huisverbruik** moet ongeveer kloppen met wat je huis echt gebruikt. Hij is nooit negatief.
+
+**Stap 6 — Recorder (alleen als je een include-lijst gebruikt)**
+
+Gebruik je in de recorder een `include`-lijst, voeg dan deze vier toe, anders blijven de grafieken leeg:
+
+```yaml
+recorder:
+  include:
+    entities:
+      - sensor.batterijplan
+      - sensor.batterijplan_meerwaarde
+      - input_select.house_battery_strategy_dynamic_expensive
+      - input_boolean.batterijplan_live
+```
+
+---
+
+## 4. De eerste 14 dagen: kijken en leren
+
+Batterijplan begint in **schaduwmodus**: het rekent en laat zien wat het zou doen, maar het verandert niets aan HBC.
+
+In die tijd leert het je huisverbruik per uur van de dag. Je ziet de voortgang op het dashboard bij "Verbruik leren":
+
+| Status | Na | Betekenis |
+|---|---|---|
+| aan het leren | 0–6 dagen | Na de eerste dag doet het al mee, maar het is nog onrustig. |
+| grof | 7–13 dagen | Bruikbaar, maar één rare dag weegt nog zwaar. |
+| prima | 14+ dagen | Goed ingeregeld. Daarna leert het glijdend door: oude dagen doven langzaam uit, zodat het met de seizoenen meegaat. |
+
+**Wat je in deze tijd doet:** kijk af en toe naar de kaart "Plan":
+- Als het plan "Vasthouden" zegt: was er later op de dag inderdaad een duurder moment?
+- Als het plan "Ontladen" zegt: was de batterij aan het eind van de dure periode bijna leeg, en niet al veel eerder?
+
+Klopt dat? Dan kun je live gaan.
+
+---
+
+## 5. Live zetten
+
+Zet op het dashboard **Live (stuurt HBC)** aan. Vanaf dat moment:
+
+- Rekent het plan ± 45 seconden vóór elk kwartier (HBC leest zijn instellingen per kwartier).
+- Moet de batterij in het komende dure kwartier **vasthouden**, dan zet het plan de HBC-stand voor dure kwartieren op *Standby / peak shave*. De batterij staat dan stil.
+- Moet de batterij **ontladen**, dan zet het plan die stand terug op *Self-consumption*.
+- Elke wijziging komt in het logboek van Home Assistant, onder de naam "Batterijplan".
+
+Schakelaar weer **uit**? Dan zet Batterijplan de stand voor dure kwartieren direct terug op *Self-consumption*, en is HBC weer helemaal zoals voorheen.
+
+> Batterijplan doet niets als HBC **niet** op Dynamic staat. Zet iets of iemand HBC tijdelijk op een andere strategie (bijvoorbeeld een andere automatisering bij een negatieve prijs, of jij handmatig), dan wacht Batterijplan tot HBC weer op Dynamic staat. Kan het de lading van de batterijen niet bepalen, dan zegt het "Geen batterijdata" en houdt het ook niets vast.
+
+---
+
+## 6. Het dashboard
+
+| Kaart | Wat je ziet |
+|---|---|
+| **Batterijplan** | Modus (schaduw of live), hoe ver het leren is, of HBC op Dynamic staat, en het besluit voor het komende kwartier. |
+| **Plan tot …** | Tot wanneer het plan vooruitkijkt, de beschikbare lading, welke dure kwartieren ontladen (groen = nu bezig) en welke vasthouden (oranje = nu bezig), het tekort, de verwachte meerwaarde en het advies over 's nachts laden. |
+| **Wat levert het op** | De geschatte opbrengst bovenop HBC sinds de start, apart voor schaduw (zou opleveren) en live (echt gestuurd), en hoeveel lading er naar duurdere momenten is verschoven. |
+| **Meerwaarde per dag** | Staafgrafiek over 30 dagen. |
+| **Besluiten (laatste 48 uur)** | Wat het plan besloot en welke stand HBC had. |
+| **Instellingen** | Alle instellingen, met uitleg eronder. |
+
+**Hoe de opbrengst wordt geschat:** het plan rekent elke periode twee keer door. Eén keer zoals HBC het alleen zou doen (elk duur kwartier op volgorde ontladen tot de batterij leeg is), en één keer met het plan. Het verschil in prijs maal kWh, inclusief btw, is de meerwaarde. Het blijft een schatting, omdat de werkelijkheid afhangt van hoe goed verbruik en zon voorspeld zijn.
+
+---
+
+## 7. Onderhoud
+
+| Wanneer | Wat doen |
+|---|---|
+| **Eens per maand** | Kijk of "Vasthouden" en "Ontladen" nog logisch zijn. Blijft de batterij vaak ruim vol na de dure periode? Verlaag dan de veiligheidsmarge. Raakt hij vaak te vroeg leeg? Verhoog de marge, of controleer de capaciteit. |
+| **Nieuw energiecontract** | Pas *Energiebelasting + inkoop* aan. |
+| **Batterij erbij of eraf, of minder capaciteit door slijtage** | Pas de *bruikbare capaciteit* aan. |
+| **Grote verandering in verbruik** (warmtepomp, nieuw apparaat) | Niets doen: het profiel past zich binnen ± 14 dagen vanzelf aan. |
+| **HBC-update** | Controleer dat `sensor.hbc_energy_prices_data` nog bestaat en dat de gewone periode nog op Charge PV staat. |
+| **Andere sensoren** (nieuwe P1-meter, omvormer) | Pas de sensornamen aan bij de instellingen. |
+
+**Tijdelijk uitzetten:** *Live* uit. Het plan blijft dan rekenen en leren.
+
+**Helemaal verwijderen:**
+1. Zet *Live* uit, zodat HBC terug op Self-consumption gaat.
+2. Verwijder `packages/batterijplan.yaml`, de map `www/batterijplan/` en het dashboard.
+3. Herstart Home Assistant.
+
+---
+
+## 8. Wat het (nog) niet doet
+
+- **Zelf extra laden 's nachts:** dat wordt alleen uitgerekend en getoond.
+- **Overdag ontladen als de zon de batterij later toch weer vult:** in de gewone periode houdt HBC (Charge PV) de lading vast.
+- **Een goedkope middag die HBC niet als goedkoop markeert** (door de grens van uren per dag of het minimale prijsverschil in HBC) telt niet als bijladen.
+- **Verschil tussen werkdag en weekend** in het verbruik.
+- **Terugleveren aan het net** voor geld (Sell): Batterijplan is gericht op eigen verbruik.
+
+---
+
+## 9. Vragen
+
+**Werkt het zonder zonnepanelen?**
+Ja. Het plan rekent dan met 0 zon en verdeelt alleen de lading uit goedkope kwartieren.
+
+**Werkt het met andere batterijen dan Marstek?**
+Ja, als HBC ze aanstuurt. Batterijplan praat alleen met HBC, niet met de batterij zelf.
+
+**Kan het mijn batterij beschadigen?**
+Nee. Batterijplan kiest alleen tussen twee standen die HBC zelf aanbiedt (Self-consumption en Standby). Alle beveiligingen blijven bij HBC en de batterij.
+
+**Waarom staat de batterij soms stil terwijl het duur is?**
+Dan komt er later een nog duurder moment waar de lading meer oplevert. Op de kaart "Plan" zie je bij "Ontladen" welke kwartieren dat zijn.
+
+**Hoeveel levert het op?**
+Dat hangt af van je prijzen, je verbruik en de grootte van je batterij. Het verschil zit op dagen waarop de batterij niet genoeg heeft voor álle dure kwartieren. Op die dagen gaat de lading naar de duurste momenten in plaats van naar de eerste. De kaart "Wat levert het op" houdt het voor je bij.

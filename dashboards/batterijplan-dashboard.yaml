@@ -1,0 +1,146 @@
+# Batterijplan — dashboard (Home Assistant 'sections'-weergave)
+# Installeren: Instellingen > Dashboards > Dashboard toevoegen > Nieuw dashboard,
+# open het, ⋮ > Bewerken > ⋮ > Raw-configuratie-editor, en plak dit bestand.
+title: Batterijplan
+views:
+- title: Batterijplan
+  path: batterijplan
+  icon: mdi:battery-clock
+  type: sections
+  max_columns: 3
+  sections:
+  - type: grid
+    cards:
+    - type: markdown
+      content: |-
+        ## <img src="/local/batterijplan/thuisbatterij.png?v=1" height="22" alt=""> Batterijplan
+        **Haalt de batterij meer uit de duurste kwartieren dan HBC alleen?**
+
+        {%- set live = is_state('input_boolean.batterijplan_live','on') %}
+        {%- set p = 'sensor.batterijplan_verbruiksprofiel' %}
+        {%- set geleerd = (state_attr(p,'uur') or []) | select('number') | list | count %}
+        | | | |
+        |---|---|---|
+        | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if live else '<img src="/local/batterijplan/spook.png?v=1" height="22" alt="">' }} | Modus | {{ '**live** — stuurt HBC' if live else '**schaduw** — rekent mee, stuurt niet' }} |
+        | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if is_state(p,'prima') else '<img src="/local/batterijplan/zandloper.png?v=1" height="22" alt="">' }} | Verbruik leren | **{{ states(p) }}** · {{ (state_attr(p,'dagen') or 0) | string | replace('.', ',') }} van 14 dagen · {{ geleerd }} van 24 uren |
+        | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if is_state('input_select.house_battery_strategy','Dynamic') else '<img src="/local/batterijplan/zandloper.png?v=1" height="22" alt="">' }} | HBC-strategie | {{ states('input_select.house_battery_strategy') }}{{ '' if is_state('input_select.house_battery_strategy','Dynamic') else ' — plan wacht tot Dynamic' }} |
+        | <img src="/local/batterijplan/kalender-klok.png?v=1" height="22" alt=""> | Komend kwartier ({{ state_attr('sensor.batterijplan','kwartier') }}) | **{{ states('sensor.batterijplan') }}** |
+      grid_options:
+        columns: full
+    - type: markdown
+      content: |-
+        ## <img src="/local/batterijplan/kalender-klok.png?v=1" height="22" alt=""> Plan tot {{ (state_attr('sensor.batterijplan','segment_tot') or '') | replace('Mon','ma') | replace('Tue','di') | replace('Wed','wo') | replace('Thu','do') | replace('Fri','vr') | replace('Sat','za') | replace('Sun','zo') }}
+        {%- set b = 'sensor.batterijplan' %}
+        {%- set o = state_attr(b,'ontladen') or [] %}
+        {%- set v = state_attr(b,'vasthouden') or [] %}
+        {%- set nk = state_attr(b,'nachtladen_kwartieren') or [] %}
+        {%- macro kw(lijst, kleur) -%}
+        {%- set out = namespace(l=[]) -%}
+        {%- for k in lijst -%}
+        {%- set start = today_at(k) -%}
+        {%- set actief = start <= now() < start + timedelta(minutes=15) -%}
+        {%- set out.l = out.l + [('<font color="' ~ kleur ~ '"><b>' ~ k ~ ' nu</b></font>') if actief else k] -%}
+        {%- endfor -%}
+        {{ out.l | join(', ') if out.l else '—' }}
+        {%- endmacro %}
+        | | |
+        |---|---|
+        | Lading beschikbaar | {{ state_attr(b,'energie_kwh') | string | replace('.', ',') }} kWh |
+        | Dure kwartieren | {{ state_attr(b,'dure_kwartieren') }} |
+        | Ontladen | {{ kw(o, '#4caf50') }} |
+        | Vasthouden | {{ kw(v, '#e0a526') }} |
+        | Tekort voor alle dure kwartieren | {{ state_attr(b,'tekort_kwh') | string | replace('.', ',') }} kWh |
+        | Verwachte meerwaarde t.o.v. HBC | € {{ ('%.2f' | format(state_attr(b,'meerwaarde_segment_eur') | float(0))) | replace('.', ',') }} |
+        | Advies extra nachtladen | {{ (nk | join(', ') ~ ' · ' ~ (state_attr(b,'nachtladen_kwh') | string | replace('.', ',')) ~ ' kWh · ± € ' ~ ('%.2f' | format(state_attr(b,'nachtladen_winst_eur') | float(0))) | replace('.', ',')) if nk else 'niet nodig' }} |
+      grid_options:
+        columns: full
+  - type: grid
+    cards:
+    - type: markdown
+      content: |-
+        ## <img src="/local/batterijplan/euro.png?v=1" height="22" alt=""> Wat levert het op
+        {%- set m = 'sensor.batterijplan_meerwaarde' %}
+        | | |
+        |---|---|
+        | Totaal sinds {{ state_attr(m,'sinds') or 'start' }} | **€ {{ ('%.2f' | format(states(m) | float(0))) | replace('.', ',') }}** |
+        | waarvan schaduw (zou opleveren) | € {{ ('%.2f' | format(state_attr(m,'eur_schaduw') | float(0))) | replace('.', ',') }} |
+        | waarvan live (echt gestuurd) | € {{ ('%.2f' | format(state_attr(m,'eur_live') | float(0))) | replace('.', ',') }} |
+        | Kwartieren vastgehouden / ontladen | {{ state_attr(m,'kwartieren_vastgehouden') or 0 }} / {{ state_attr(m,'kwartieren_ontladen') or 0 }} |
+        | Lading verschoven naar duurdere momenten | {{ (state_attr(m,'kwh_vastgehouden') or 0) | string | replace('.', ',') }} kWh |
+
+        <small>Schatting: per vastgehouden kwartier telt de lading mee tegen de gemiddelde prijs van de dure kwartieren waar het plan haar later voor inzet (incl. btw). Dat is het verschil met HBC alleen.</small>
+      grid_options:
+        columns: full
+    - type: markdown
+      content: '## <img src="/local/batterijplan/staafdiagram-groot.png?v=1" height="22" alt=""> Meerwaarde per dag'
+      grid_options:
+        columns: full
+    - type: statistics-graph
+      entities:
+      - sensor.batterijplan_meerwaarde
+      stat_types:
+      - change
+      period: day
+      days_to_show: 30
+      chart_type: bar
+      hide_legend: true
+      grid_options:
+        columns: full
+  - type: grid
+    cards:
+    - type: markdown
+      content: '## <img src="/local/batterijplan/monitor-grafiek.png?v=1" height="22" alt=""> Besluiten (laatste 48 uur)'
+      grid_options:
+        columns: full
+    - type: history-graph
+      hours_to_show: 48
+      entities:
+      - entity: sensor.batterijplan
+        name: Plan
+      - entity: input_select.house_battery_strategy_dynamic_expensive
+        name: HBC-stand dure kwartieren
+      grid_options:
+        columns: full
+    - type: markdown
+      content: '## <img src="/local/batterijplan/schuifregelaars.png?v=1" height="22" alt=""> Instellingen'
+      grid_options:
+        columns: full
+    - type: entities
+      state_color: true
+      grid_options:
+        columns: full
+      entities:
+      - entity: input_boolean.batterijplan_live
+        name: Live (stuurt HBC)
+      - entity: input_number.batterijplan_capaciteit
+        name: Bruikbare capaciteit batterijen
+      - entity: input_number.batterijplan_marge
+        name: Veiligheidsmarge
+      - entity: input_number.batterijplan_rendement
+        name: Rendement laden + ontladen
+      - entity: input_number.batterijplan_opslag
+        name: Energiebelasting + inkoop (excl. btw)
+      - type: section
+        label: Sensoren
+      - entity: input_text.batterijplan_sensor_net
+        name: Netvermogen
+      - entity: input_text.batterijplan_sensor_zon
+        name: Zonnevermogen
+      - entity: input_text.batterijplan_sensor_batterij
+        name: Batterijvermogen
+      - entity: input_text.batterijplan_sensor_ev
+        name: Laadpaal (optioneel)
+    - type: markdown
+      content: |-
+        <img src="/local/batterijplan/info.png?v=1" height="22" alt=""> **Wat vul je in?**
+
+        | | |
+        |---|---|
+        | **Live** | Uit = schaduw: het plan rekent alleen mee. Aan = het plan stuurt HBC in de dure kwartieren. |
+        | **Bruikbare capaciteit** | Wat je batterijen samen écht kunnen leveren, boven de ondergrens die in HBC staat. Voorbeeld: 2 batterijen van 5,12 kWh met 12 % ondergrens ≈ 9,0 kWh. Zolang dit niet is ingevuld, doet het plan niets. |
+        | **Veiligheidsmarge** | Lading die het plan nooit inrekent, zodat het niet te krap plant. 0,3 kWh is een goed begin. |
+        | **Rendement** | Hoeveel % van de geladen stroom er weer uitkomt. Weet je het niet? Begin met 75 %. |
+        | **Energiebelasting + inkoop** | Wat je per kWh bóvenop de kale beursprijs betaalt, zonder btw: de energiebelasting plus de inkoopvergoeding van je leverancier. Staat op je contract of de site van je leverancier. Alleen gebruikt voor het advies over 's nachts laden. |
+        | **Sensoren** | De naam van je eigen sensor (bijv. `sensor.p1_vermogen`). Net: + = afname van het net. Zon: totaal zonnevermogen. Batterij: totaal batterijvermogen, + = ontladen (bij HBC meestal `sensor.house_total_battery_power`). Laadpaal: laadvermogen van je auto-lader, mag leeg blijven. |
+      grid_options:
+        columns: full

@@ -214,3 +214,12 @@ Dan komt er later een nog duurder moment waar de lading meer oplevert. Op de kaa
 
 **Hoeveel levert het op?**
 Dat hangt af van je prijzen, je verbruik en de grootte van je batterij. Het verschil zit op dagen waarop de batterij niet genoeg heeft voor álle dure kwartieren. Op die dagen gaat de lading naar de duurste momenten in plaats van naar de eerste. De kaart "Wat levert het op" houdt het voor je bij.
+
+---
+
+## Licentie
+
+- **Code** (pakket en dashboard): GPL-3.0-or-later, zie `LICENSE`.
+- **Iconen** (`www/batterijplan/`): eigen huisstijl van SatScan, zie `www/batterijplan/LICENSE-ICONEN.md`.
+
+Batterijplan is een losse aanvulling op [Home Battery Control](https://github.com/gitcodebob/marstek-venus-rs485-node-red) en wordt niet door de makers van HBC onderhouden.

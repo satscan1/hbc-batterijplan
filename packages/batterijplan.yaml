@@ -1,6 +1,6 @@
 # ============================================================================
 # Batterijplan — slimme laag bovenop Home Battery Control (HBC) Dynamic
-# Versie 0.1.0
+# Versie 0.1.1
 #
 # HBC markeert per kwartier goedkoop (low) en duur (high), maar kijkt niet of
 # de batterij genoeg heeft voor alle dure kwartieren tot de volgende laadkans
@@ -20,6 +20,17 @@ input_boolean:
   batterijplan_live:
     name: Batterijplan live (stuurt HBC)
     icon: mdi:battery-sync
+  batterijplan_toon_instellingen:
+    name: Batterijplan sensoren en uitleg tonen
+    icon: mdi:eye-settings
+
+input_button:
+  batterijplan_backup:
+    name: Batterijplan instellingen back-uppen
+    icon: mdi:content-save-cog
+  batterijplan_terugzetten:
+    name: Batterijplan instellingen terugzetten
+    icon: mdi:backup-restore
 
 input_text:
   batterijplan_sensor_net:
@@ -74,6 +85,31 @@ input_number:
     icon: mdi:cash-plus
 
 template:
+  # Back-up van de instellingen: wordt bewaard bij een herstart en bij een
+  # nieuwe versie van dit pakket. Terugzetten met de knop op het dashboard.
+  - trigger:
+      - trigger: state
+        entity_id: input_button.batterijplan_backup
+    condition:
+      - condition: template
+        value_template: >
+          {{ trigger.from_state is not none and trigger.from_state.state != 'unavailable'
+             and trigger.to_state.state not in ['unknown', 'unavailable'] }}
+    sensor:
+      - name: Batterijplan instellingen backup
+        unique_id: batterijplan_instellingen_backup
+        icon: mdi:content-save-cog
+        state: "{{ now().strftime('%d-%m-%Y %H:%M') }}"
+        attributes:
+          capaciteit: "{{ states('input_number.batterijplan_capaciteit') }}"
+          marge: "{{ states('input_number.batterijplan_marge') }}"
+          rendement: "{{ states('input_number.batterijplan_rendement') }}"
+          opslag: "{{ states('input_number.batterijplan_opslag') }}"
+          sensor_net: "{{ states('input_text.batterijplan_sensor_net') if has_value('input_text.batterijplan_sensor_net') else '' }}"
+          sensor_zon: "{{ states('input_text.batterijplan_sensor_zon') if has_value('input_text.batterijplan_sensor_zon') else '' }}"
+          sensor_batterij: "{{ states('input_text.batterijplan_sensor_batterij') if has_value('input_text.batterijplan_sensor_batterij') else '' }}"
+          sensor_ev: "{{ states('input_text.batterijplan_sensor_ev') if has_value('input_text.batterijplan_sensor_ev') else '' }}"
+
   - sensor:
       - name: Batterijplan huisverbruik
         unique_id: batterijplan_huisverbruik
@@ -446,6 +482,66 @@ automation:
               message: >-
                 Dure kwartieren {{ state_attr('sensor.batterijplan', 'kwartier') }}:
                 {{ states('sensor.batterijplan') | lower }} (HBC-stand {{ gewenst }})
+
+  - id: batterijplan_instellingen_terugzetten
+    alias: Batterijplan — instellingen terugzetten uit back-up
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: input_button.batterijplan_terugzetten
+    conditions:
+      - condition: template
+        value_template: >
+          {{ trigger.from_state is not none and trigger.from_state.state != 'unavailable'
+             and trigger.to_state.state not in ['unknown', 'unavailable']
+             and has_value('sensor.batterijplan_instellingen_backup') }}
+    actions:
+      - variables:
+          b: sensor.batterijplan_instellingen_backup
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.batterijplan_capaciteit
+        data:
+          value: "{{ state_attr(b, 'capaciteit') | float(1) }}"
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.batterijplan_marge
+        data:
+          value: "{{ state_attr(b, 'marge') | float(0) }}"
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.batterijplan_rendement
+        data:
+          value: "{{ state_attr(b, 'rendement') | float(75) }}"
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.batterijplan_opslag
+        data:
+          value: "{{ state_attr(b, 'opslag') | float(0) }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.batterijplan_sensor_net
+        data:
+          value: "{{ state_attr(b, 'sensor_net') or '' }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.batterijplan_sensor_zon
+        data:
+          value: "{{ state_attr(b, 'sensor_zon') or '' }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.batterijplan_sensor_batterij
+        data:
+          value: "{{ state_attr(b, 'sensor_batterij') or '' }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.batterijplan_sensor_ev
+        data:
+          value: "{{ state_attr(b, 'sensor_ev') or '' }}"
+      - action: logbook.log
+        data:
+          name: Batterijplan
+          message: "Instellingen teruggezet uit de back-up van {{ states(b) }}"
 
   - id: batterijplan_live_uit_herstel
     alias: Batterijplan — live uit, HBC terug op ontladen

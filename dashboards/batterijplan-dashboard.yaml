@@ -121,16 +121,62 @@ views:
       - entity: input_number.batterijplan_opslag
         name: Energiebelasting + inkoop (excl. btw)
       - type: section
-        label: Sensoren
+        label: Back-up
+      - entity: input_button.batterijplan_backup
+        name: Back-up maken
+      - entity: input_button.batterijplan_terugzetten
+        name: Back-up terugzetten
+      - entity: sensor.batterijplan_instellingen_backup
+        name: Laatste back-up
+      - type: section
+      - entity: input_boolean.batterijplan_toon_instellingen
+        name: Sensoren en uitleg tonen
+    - type: entities
+      title: Sensoren
+      grid_options:
+        columns: full
+      visibility:
+      - condition: or
+        conditions:
+        - condition: state
+          entity: input_boolean.batterijplan_toon_instellingen
+          state: 'on'
+        - condition: state
+          entity: input_text.batterijplan_sensor_net
+          state:
+          - ''
+          - unknown
+        - condition: numeric_state
+          entity: input_number.batterijplan_capaciteit
+          below: 1.05
+      entities:
       - entity: input_text.batterijplan_sensor_net
-        name: Netvermogen
+        name: Netvermogen (W)
       - entity: input_text.batterijplan_sensor_zon
-        name: Zonnevermogen
+        name: Zonnevermogen nu (W)
       - entity: input_text.batterijplan_sensor_batterij
-        name: Batterijvermogen
+        name: Batterijvermogen (W)
       - entity: input_text.batterijplan_sensor_ev
-        name: Laadpaal (optioneel)
+        name: Laadpaal (W, optioneel)
+      - entity: sensor.batterijplan_huisverbruik
+        name: 'Controle: huisverbruik nu'
     - type: markdown
+      grid_options:
+        columns: full
+      visibility:
+      - condition: or
+        conditions:
+        - condition: state
+          entity: input_boolean.batterijplan_toon_instellingen
+          state: 'on'
+        - condition: state
+          entity: input_text.batterijplan_sensor_net
+          state:
+          - ''
+          - unknown
+        - condition: numeric_state
+          entity: input_number.batterijplan_capaciteit
+          below: 1.05
       content: |-
         <img src="/local/batterijplan/info.png?v=1" height="22" alt=""> **Wat vul je in?**
 
@@ -140,7 +186,13 @@ views:
         | **Bruikbare capaciteit** | Wat je batterijen samen écht kunnen leveren, boven de ondergrens die in HBC staat. Voorbeeld: 2 batterijen van 5,12 kWh met 12 % ondergrens ≈ 9,0 kWh. Zolang dit niet is ingevuld, doet het plan niets. |
         | **Veiligheidsmarge** | Lading die het plan nooit inrekent, zodat het niet te krap plant. 0,3 kWh is een goed begin. |
         | **Rendement** | Hoeveel % van de geladen stroom er weer uitkomt. Weet je het niet? Begin met 75 %. |
-        | **Energiebelasting + inkoop** | Wat je per kWh bóvenop de kale beursprijs betaalt, zonder btw: de energiebelasting plus de inkoopvergoeding van je leverancier. Staat op je contract of de site van je leverancier. Alleen gebruikt voor het advies over 's nachts laden. |
-        | **Sensoren** | De naam van je eigen sensor (bijv. `sensor.p1_vermogen`). Net: + = afname van het net. Zon: totaal zonnevermogen. Batterij: totaal batterijvermogen, + = ontladen (bij HBC meestal `sensor.house_total_battery_power`). Laadpaal: laadvermogen van je auto-lader, mag leeg blijven. |
-      grid_options:
-        columns: full
+        | **Energiebelasting + inkoop** | Wat je per kWh bóvenop de kale beursprijs betaalt, zonder btw: de energiebelasting (2026: € 0,09161) plus de inkoopvergoeding van je leverancier (staat op je contract). Voorbeeld: 0,09161 + 0,0165 = 0,1081. Alleen gebruikt voor het advies over 's nachts laden. |
+        | **Sensoren** | Typ de naam van je eigen sensor, bijv. `sensor.p1_vermogen`. Steeds het vermogen van **dit moment in watt (W)**, geen dagtotaal in kWh. |
+        | – Net | Afname van het net is +, teruglevering is −. |
+        | – Zon | Wat al je zonnepanelen samen nu opwekken. Meerdere omvormers? Maak een helper *Combineer de status van meerdere sensoren* met type *Som*. |
+        | – Batterij | Totaal van al je batterijen, ontladen is +. Bij HBC meestal `sensor.house_total_battery_power`. |
+        | – Laadpaal | Laadvermogen van je auto-lader. Mag leeg blijven. |
+        | **Controle** | *Huisverbruik nu* moet ongeveer kloppen met wat je huis echt gebruikt. |
+        | **Back-up** | *Back-up maken* bewaart al deze instellingen. Na een herinstallatie of een vergissing zet *Back-up terugzetten* alles terug. De back-up blijft bewaard bij een herstart en een nieuwe versie. |
+
+        Alles ingesteld? Zet *Sensoren en uitleg tonen* uit, dan verdwijnen deze kaarten.

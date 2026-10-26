@@ -1,6 +1,6 @@
 # Batterijplan — slimme laag bovenop Home Battery Control (HBC)
 
-*Versie 0.1.1 · experimenteel · Nederlandstalig*
+*Versie 0.1.5 · experimenteel · Nederlandstalig*
 
 Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** momenten van de dag. Het werkt samen met [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) en neemt HBC niet over. HBC blijft de batterij aansturen; Batterijplan geeft alleen per kwartier één aanwijzing.
 
@@ -91,6 +91,7 @@ Na de herstart staan de instellingen op hun minimum. Vul ze in op het dashboard,
 
 | Instelling | Wat vul je in | Voorbeeld |
 |---|---|---|
+| Ingangsdatum energiecontract | de dag waarop je contractjaar begint (het jaartal maakt niet uit) | 9 december |
 | Bruikbare capaciteit batterijen | wat je batterijen samen écht kunnen leveren, boven de ondergrens in HBC | 2 × 5,12 kWh met 12 % ondergrens ≈ 9,0 kWh |
 | Veiligheidsmarge | lading die het plan nooit inrekent | 0,3 kWh |
 | Rendement laden + ontladen | hoeveel % van de geladen stroom er weer uitkomt | 75 % |
@@ -110,7 +111,9 @@ Controle: op de kaart Sensoren staat **Huisverbruik nu**. Dat moet ongeveer klop
 
 **Back-up maken.** Alles ingevuld? Druk op **Back-up maken**. Na een herinstallatie of een vergissing zet **Back-up terugzetten** alles terug. De back-up blijft bewaard bij een herstart en bij een nieuwe versie.
 
-**Inklappen.** Zet daarna **Sensoren en uitleg tonen** uit. De kaarten met de sensoren en de uitleg verdwijnen dan. Zolang er iets ontbreekt, blijven ze vanzelf staan.
+**Standaardwaarden.** Deze knop zet de veiligheidsmarge en het rendement terug op 0,3 kWh en 75 %. Er wordt eerst een back-up gemaakt, dus je kunt het ongedaan maken.
+
+**Inklappen.** Zet daarna de schakelaar **Instellingen** uit. De waarden, de sensoren en de uitleg verdwijnen dan. Zolang er iets ontbreekt, blijven ze vanzelf staan.
 
 **Stap 6 — Recorder (alleen als je een include-lijst gebruikt)**
 
@@ -167,12 +170,15 @@ Schakelaar weer **uit**? Dan zet Batterijplan de stand voor dure kwartieren dire
 
 | Kaart | Wat je ziet |
 |---|---|
-| **Batterijplan** | Modus (schaduw of live), hoe ver het leren is, of HBC op Dynamic staat, en het besluit voor het komende kwartier. |
+| **Badges bovenaan** | *Bespaard totaal* (sinds de start), *Deze energieperiode* (vanaf de ingangsdatum van je contract; elk contractjaar begint opnieuw) en *Trefzekerheid*: hoe goed het geleerde verbruik het echte verbruik voorspelt. |
+| **Batterijplan** | Versie, modus (schaduw of live), hoe ver het leren is, of HBC op Dynamic staat, en het besluit voor het komende kwartier. |
 | **Plan tot …** | Tot wanneer het plan vooruitkijkt, de beschikbare lading, welke dure kwartieren ontladen (groen = nu bezig) en welke vasthouden (oranje = nu bezig), het tekort, de verwachte meerwaarde en het advies over 's nachts laden. |
 | **Wat levert het op** | De geschatte opbrengst bovenop HBC sinds de start, apart voor schaduw (zou opleveren) en live (echt gestuurd), en hoeveel lading er naar duurdere momenten is verschoven. |
-| **Meerwaarde per dag** | Staafgrafiek over 30 dagen. |
-| **Besluiten (laatste 48 uur)** | Wat het plan besloot en welke stand HBC had. |
-| **Instellingen** | Alle instellingen, de back-upknoppen en de schakelaar *Sensoren en uitleg tonen*. Daaronder (als die aan staat) de sensoren met een controle van het huisverbruik, en de uitleg. |
+| **Grafiek met datumkiezer** | De opbrengst als staafjes. Met ‹ › blader je terug en vooruit; via ⋮ kies je dag, week, maand of jaar. |
+| **Plan komende uren** | Een balk met één streepje per kwartier tot het volgende goedkope moment, met begin- en eindtijd, en daaronder dezelfde periode in blokken. Vaste kleuren: groen = ontladen, oranje = vasthouden (hier stuurt Batterijplan bij), blauw = zon laden, leigrijs = rust (geen zon), grijs = laden van het net. |
+| **Instellingen** | Knoppen *Back-up maken*, *Back-up terugzetten* en *Standaardwaarden*, met de datum van de laatste back-up. De schakelaars *Live* en *Instellingen*. Staat *Instellingen* aan, dan zie je de waarden, de sensoren (met een controle van het huisverbruik) en de uitleg. |
+
+**Trefzekerheid:** elk kwartier legt Batterijplan de voorspelling uit het geleerde profiel naast het echte verbruik. Het cijfer is 100 % min de gemiddelde afwijking (als deel van het gemiddelde verbruik), glijdend over de laatste 14 dagen. Tijdens de eerste 14 dagen staat er ook hoeveel dagen al geleerd zijn, en is de badge grijs (licht → donker). Daarna wordt hij groen: hoe donkerder, hoe beter; donker groen boven 90 %.
 
 **Hoe de opbrengst wordt geschat:** het plan rekent elke periode twee keer door. Eén keer zoals HBC het alleen zou doen (elk duur kwartier op volgorde ontladen tot de batterij leeg is), en één keer met het plan. Het verschil in prijs maal kWh, inclusief btw, is de meerwaarde. Het blijft een schatting, omdat de werkelijkheid afhangt van hoe goed verbruik en zon voorspeld zijn.
 
@@ -183,11 +189,11 @@ Schakelaar weer **uit**? Dan zet Batterijplan de stand voor dure kwartieren dire
 | Wanneer | Wat doen |
 |---|---|
 | **Eens per maand** | Kijk of "Vasthouden" en "Ontladen" nog logisch zijn. Blijft de batterij vaak ruim vol na de dure periode? Verlaag dan de veiligheidsmarge. Raakt hij vaak te vroeg leeg? Verhoog de marge, of controleer de capaciteit. |
-| **Nieuw energiecontract** | Pas *Energiebelasting + inkoop* aan. |
+| **Nieuw energiecontract** | Pas *Energiebelasting + inkoop* en de *ingangsdatum* aan. |
 | **Batterij erbij of eraf, of minder capaciteit door slijtage** | Pas de *bruikbare capaciteit* aan. |
 | **Grote verandering in verbruik** (warmtepomp, nieuw apparaat) | Niets doen: het profiel past zich binnen ± 14 dagen vanzelf aan. |
 | **HBC-update** | Controleer dat `sensor.hbc_energy_prices_data` nog bestaat en dat de gewone periode nog op Charge PV staat. |
-| **Andere sensoren** (nieuwe P1-meter, omvormer) | Zet *Sensoren en uitleg tonen* aan en pas de sensornamen aan. Maak daarna een nieuwe back-up. |
+| **Andere sensoren** (nieuwe P1-meter, omvormer) | Zet de schakelaar *Instellingen* aan en pas de sensornamen aan. Maak daarna een nieuwe back-up. |
 | **Nieuwe versie van Batterijplan** | Maak eerst een back-up. Vervang `packages/batterijplan.yaml`, plak het nieuwe dashboard in de Raw-configuratie-editor en herstart. Je instellingen, het geleerde verbruik en de teller blijven bewaard; mist er toch iets, druk dan op *Back-up terugzetten*. |
 
 **Tijdelijk uitzetten:** *Live* uit. Het plan blijft dan rekenen en leren.

@@ -1,6 +1,6 @@
 # ============================================================================
 # Batterijplan — slimme laag bovenop Home Battery Control (HBC) Dynamic
-# Versie 0.1.5
+# Versie 1.0.0-dev1 (testversie)
 #
 # HBC markeert per kwartier goedkoop (low) en duur (high), maar kijkt niet of
 # de batterij genoeg heeft voor alle dure kwartieren tot de volgende laadkans
@@ -9,11 +9,18 @@
 # met het geleerde huisverbruik en de voorzichtige zonverwachting (Solcast).
 #   - dure kwartieren met lading : ontladen (HBC Self-consumption)
 #   - dure kwartieren zonder     : vasthouden (HBC Standby / peak shave)
+#   - overschot (lading die toch weer goedkoop wordt bijgeladen):
+#                                  ontladen in de duurste gewone kwartieren
+#                                  (HBC gewone stand Self-consumption)
 #   - tekort + extra nachtladen  : alleen uitgerekend en getoond
 #
-# Het pakket verandert alleen input_select.house_battery_strategy_dynamic_
-# expensive, alleen als "Batterijplan live" aan staat en HBC op Dynamic staat.
-# Zie README.md voor installatie, instellingen en onderhoud.
+# Het pakket verandert alleen de twee Dynamic-standen van HBC
+# (input_select.house_battery_strategy_dynamic_expensive en _default),
+# alleen als "Batterijplan live" aan staat en HBC op Dynamic staat. Staat HBC
+# op een andere strategie, dan staat Batterijplan stil (het leren gaat door).
+# Advies voor HBC ("Solar reserved for house") wordt alleen getoond; de
+# instelling in HBC wordt nooit aangepast.
+# Zie README.md en docs/ voor installatie, instellingen en onderhoud.
 # ============================================================================
 
 input_boolean:
@@ -237,6 +244,9 @@ template:
         event_type: event_template_reloaded
       - trigger: state
         entity_id: input_boolean.batterijplan_live
+      # andere HBC-strategie gekozen: plan stilzetten of direct weer oppakken
+      - trigger: state
+        entity_id: input_select.house_battery_strategy
       # na een herstart: opnieuw rekenen zodra HBC-prijzen en laadpercentages er zijn
       - trigger: template
         value_template: >
@@ -275,7 +285,10 @@ template:
             {%- set fallback = states('sensor.batterijplan_huisverbruik_15m') | float(states('sensor.batterijplan_huisverbruik') | float(400)) -%}
             {#- zonvoorspelling (voorzichtig, estimate10) per half uur -#}
             {%- set ns = namespace(pv={}) -%}
-            {%- for s in ['sensor.solcast_pv_forecast_forecast_today', 'sensor.solcast_pv_forecast_forecast_tomorrow'] -%}
+            {#- alle Solcast-sensoren met een voorspelling per half uur, ongeacht de taal van de namen (NL/EN) -#}
+            {%- set sol = integration_entities('solcast_solar') | select('match', 'sensor[.]') | list -%}
+            {%- set sol = sol if sol else ['sensor.solcast_pv_forecast_forecast_today', 'sensor.solcast_pv_forecast_forecast_tomorrow'] -%}
+            {%- for s in sol -%}
               {%- for f in (state_attr(s, 'detailedForecast') or []) -%}
                 {%- set ns.pv = dict(ns.pv, **{ (as_timestamp(f.period_start) | int) | string : f.pv_estimate10 | float(0) }) -%}
               {%- endfor -%}
@@ -283,7 +296,9 @@ template:
             {#- kwartierlijst vanaf T -#}
             {%- set nq = namespace(q=[]) -%}
             {%- for m in marks -%}
-              {%- set t = (m.start / 1000) | int -%}
+              {#- starttijd van HBC kan een getal (ms) zijn of tekst; altijd omzetten naar seconden -#}
+              {%- set st = m.start if m.start is number else ((m.start | float(0)) if (m.start | string | regex_match('^[0-9.]+$')) else (as_timestamp(m.start, 0) * 1000)) -%}
+              {%- set t = (st / 1000) | int -%}
               {%- if t >= T -%}
                 {%- set h = t | timestamp_custom('%H', true) | int -%}
                 {%- set w = prof[h] if (prof | count == 24 and prof[h] is number) else fallback -%}
@@ -332,6 +347,34 @@ template:
             {%- endfor -%}
             {#- tekort en wat 's nachts bijladen zou opleveren (alleen tonen) -#}
             {%- set unalloc = highs | rejectattr('t', 'in', na.alloc) | list -%}
+            {#- overschot: lading die over is en bij het volgende goedkope moment toch weer wordt
+                bijgeladen, mag naar de duurste gewone kwartieren (alleen als dat meer oplevert dan
+                het bijladen kost, inclusief rendementsverlies) -#}
+            {%- set lows = q | selectattr('t', 'ge', segeinde) | selectattr('m', 'eq', 'low') | list -%}
+            {%- set plow = lows[0].p if (lows and sg.stop) else none -%}
+            {%- set kost = ((plow / 100 + opslag) * 1.21 / rte) if plow is not none else none -%}
+            {%- set ov = namespace(kw=[], eur=0, kwh=0) -%}
+            {%- if kost is not none and not unalloc and Eruw >= 0 and cap > 1 -%}
+              {%- set kand = seg | selectattr('m', 'none') | selectattr('need', 'gt', 0) | sort(attribute='p', reverse=true) | list -%}
+              {%- for k in kand -%}
+                {%- set waarde = (k.p / 100 + opslag) * 1.21 -%}
+                {%- if waarde > kost + 0.01 -%}
+                  {%- set tent = ov.kw + [k.t] -%}
+                  {%- set sim = namespace(soc=E, ok=true) -%}
+                  {%- for x in seg -%}
+                    {%- if x.t in tent or x.t in na.alloc -%}{%- set sim.soc = sim.soc - x.need -%}
+                    {%- elif x.need < 0 -%}{%- set sim.soc = [cap, sim.soc - x.need] | min -%}
+                    {%- endif -%}
+                    {%- if sim.soc < -0.01 -%}{%- set sim.ok = false -%}{%- endif -%}
+                  {%- endfor -%}
+                  {%- if sim.ok -%}
+                    {%- set ov.kw = tent -%}
+                    {%- set ov.kwh = ov.kwh + k.need -%}
+                    {%- set ov.eur = ov.eur + k.need * (waarde - kost) -%}
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
             {%- set tekort = unalloc | sum(attribute='need') -%}
             {%- set nc = namespace(kwh=0, eur=0, kw=[]) -%}
             {%- if unalloc -%}
@@ -379,12 +422,31 @@ template:
               {%- set gem = (later | sum(attribute='p')) / (later | count) -%}
               {%- set meer_kwartier = [cur.need * (gem - cur.p) * 1.21 / 100, 0] | max -%}
             {%- endif -%}
-            {%- if cur is none -%}{%- set besluit = 'Geen prijsdata' -%}
+            {%- if cur is not none and T in ov.kw -%}
+              {%- set meer_kwartier = [cur.need * ((cur.p / 100 + opslag) * 1.21 - kost), 0] | max -%}
+            {%- endif -%}
+            {#- staat HBC niet op Dynamic, dan staat Batterijplan stil en telt het niets op (het leren gaat door) -#}
+            {%- set dyn = is_state('input_select.house_battery_strategy', 'Dynamic') -%}
+            {%- if not dyn -%}{%- set meer_kwartier = 0 -%}{%- endif -%}
+            {%- if not dyn -%}{%- set besluit = 'HBC niet op Dynamic' -%}
+            {%- elif cur is none -%}{%- set besluit = 'Geen prijsdata' -%}
             {%- elif cap <= 1 -%}{%- set besluit = 'Niet ingesteld' -%}
             {%- elif Eruw < 0 -%}{%- set besluit = 'Geen batterijdata' -%}
             {%- elif cur.m == 'high' -%}{%- set besluit = 'Ontladen' if (T in na.alloc or cur.need <= 0) else 'Vasthouden' -%}
             {%- elif cur.m == 'low' -%}{%- set besluit = 'Laden (HBC)' -%}
+            {%- elif T in ov.kw -%}{%- set besluit = 'Overschot ontladen' -%}
             {%- else -%}{%- set besluit = 'Zon laden (HBC)' -%}
+            {%- endif -%}
+            {#- verwacht verloop van de lading (kWh, inclusief marge) per kwartier tot het volgende goedkope moment -#}
+            {%- set vl = namespace(soc=Eruw, l=[]) -%}
+            {%- if Eruw >= 0 -%}
+              {%- set vl.l = [[T, Eruw | round(2)]] -%}
+              {%- for x in seg -%}
+                {%- if x.t in na.alloc or x.t in ov.kw -%}{%- set vl.soc = [vl.soc - x.need, 0] | max -%}
+                {%- elif x.need < 0 -%}{%- set vl.soc = [cap, vl.soc - x.need] | min -%}
+                {%- endif -%}
+                {%- set vl.l = vl.l + [[x.t + 900, vl.soc | round(2)]] -%}
+              {%- endfor -%}
             {%- endif -%}
             {%- set hm = '%H:%M' -%}
             {{ {
@@ -403,8 +465,14 @@ template:
               'verbruik_bron': 'profiel' if (prof | select('number') | list | count) == 24 else ('deels profiel' if (prof | select('number') | list | count) > 0 else 'huidig gemiddelde'),
               'meerwaarde_segment_eur': meer_segment | round(3),
               'meerwaarde_kwartier_eur': meer_kwartier | round(4),
-              'kwartier_kwh': (cur.need if cur is not none else 0) | round(3)
-            } | to_json }}
+              'kwartier_kwh': (cur.need if cur is not none else 0) | round(3),
+              'overschot': ov.kw | sort | map('timestamp_custom', hm, true) | list,
+              'overschot_kwh': ov.kwh | round(2),
+              'overschot_eur': ov.eur | round(2),
+              'bijladen_om': (lows[0].t | timestamp_custom('%a %H:%M', true)) if (plow is not none) else none,
+              'lading_kwh': (Eruw | round(2)) if Eruw >= 0 else none,
+              'verloop': vl.l
+            } }}
     sensor:
       - name: Batterijplan
         unique_id: batterijplan
@@ -425,8 +493,75 @@ template:
           meerwaarde_segment_eur: "{{ plan.meerwaarde_segment_eur }}"
           meerwaarde_kwartier_eur: "{{ plan.meerwaarde_kwartier_eur }}"
           kwartier_kwh: "{{ plan.kwartier_kwh }}"
+          overschot: "{{ plan.overschot }}"
+          overschot_kwh: "{{ plan.overschot_kwh }}"
+          overschot_eur: "{{ plan.overschot_eur }}"
+          bijladen_om: "{{ plan.bijladen_om }}"
+          lading_kwh: "{{ plan.lading_kwh }}"
+          verloop: "{{ plan.verloop }}"
           modus: "{{ 'live' if is_state('input_boolean.batterijplan_live', 'on') else 'schaduw' }}"
-          versie: "0.1.5"
+          hbc_strategie: "{{ states('input_select.house_battery_strategy') }}"
+          versie: "1.0.0-dev1"
+
+  # Lading in kWh (bruikbaar deel), apart bewaard zodat de grafiek ook
+  # terug in de tijd kan laten zien hoe vol de batterij was.
+  - sensor:
+      - name: Batterijplan lading
+        unique_id: batterijplan_lading
+        icon: mdi:battery-clock-outline
+        unit_of_measurement: kWh
+        device_class: energy_storage
+        state_class: measurement
+        state: "{{ state_attr('sensor.batterijplan', 'lading_kwh') }}"
+        availability: "{{ state_attr('sensor.batterijplan', 'lading_kwh') | is_number }}"
+
+  # Advies voor HBC ("Solar reserved for house"): hoeveel zon het huis vandaag en morgen
+  # naar verwachting zelf direct gebruikt = per half uur het kleinste van geleerd verbruik en
+  # Solcast-zon. Alleen advies: Batterijplan past de instelling in HBC niet aan.
+  - trigger:
+      - trigger: time_pattern
+        minutes: "/30"
+      - trigger: homeassistant
+        event: start
+      - trigger: event
+        event_type: event_template_reloaded
+    action:
+      - variables:
+          advies: >
+            {%- set prof = state_attr('sensor.batterijplan_verbruiksprofiel', 'uur') or [] -%}
+            {%- set fb = states('sensor.batterijplan_huisverbruik') | float(400) -%}
+            {%- set sol = integration_entities('solcast_solar') | select('match', 'sensor[.]') | list -%}
+            {%- set sol = sol if sol else ['sensor.solcast_pv_forecast_forecast_today', 'sensor.solcast_pv_forecast_forecast_tomorrow'] -%}
+            {%- set d0 = now().date() | string -%}
+            {%- set d1 = (now() + timedelta(days=1)).date() | string -%}
+            {%- set ns = namespace(v=0, m=0, zv=0, zm=0) -%}
+            {%- for s in sol -%}
+              {%- for f in (state_attr(s, 'detailedForecast') or []) -%}
+                {%- set t = as_local(as_datetime(f.period_start)) -%}
+                {%- set dag = t.date() | string -%}
+                {%- if dag == d0 or dag == d1 -%}
+                  {%- set w = prof[t.hour] if (prof | count == 24 and prof[t.hour] is number) else fb -%}
+                  {%- set zon = (f.pv_estimate | float(0)) * 0.5 -%}
+                  {%- set eigen = [w / 1000 * 0.5, zon] | min -%}
+                  {%- if dag == d0 -%}{%- set ns.v = ns.v + eigen -%}{%- set ns.zv = ns.zv + zon -%}
+                  {%- else -%}{%- set ns.m = ns.m + eigen -%}{%- set ns.zm = ns.zm + zon -%}{%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endfor -%}
+            {{ {'vandaag': ns.v | round(1), 'morgen': ns.m | round(1), 'zon_vandaag': ns.zv | round(1), 'zon_morgen': ns.zm | round(1)} }}
+    sensor:
+      - name: Batterijplan advies huisverbruik
+        unique_id: batterijplan_advies_huisverbruik
+        icon: mdi:home-lightning-bolt-outline
+        unit_of_measurement: kWh
+        state_class: measurement
+        state: "{{ advies.vandaag }}"
+        attributes:
+          morgen: "{{ advies.morgen }}"
+          zon_vandaag: "{{ advies.zon_vandaag }}"
+          zon_morgen: "{{ advies.zon_morgen }}"
+          ingesteld: "{{ states('input_number.house_battery_solar_reserved_for_house') | float(0) }}"
+          voorlopig: "{{ not is_state('sensor.batterijplan_verbruiksprofiel', 'prima') }}"
 
   # Badge "Voorspelling": dagen geleerd en betrouwbaarheid in procenten.
   - sensor:
@@ -512,8 +647,9 @@ template:
             {%- set start = y ~ '-' ~ '%02d' | format(m) ~ '-' ~ '%02d' | format(dg) -%}
             {{ a.get('start_totaal', 0) | float(0) if a.get('periode_start', start) == start else tot }}
 
-  # Teller: opbrengst bovenop HBC (geschat), per kwartier één keer geteld.
-  # Schaduw = wat het zou opleveren; live = wat het werkelijk stuurde.
+  # Teller: opbrengst bovenop HBC (geschat). Elk kwartier wordt het vorige kwartier afgerekend:
+  # bij overschot ontladen alleen de lading die echt uit de batterij ging (niet meer dan gepland),
+  # bij vasthouden/ontladen de waarde uit het plan. Schaduw = zou opleveren; live = echt gestuurd.
   - trigger:
       - trigger: state
         entity_id: sensor.batterijplan
@@ -526,28 +662,52 @@ template:
         device_class: monetary
         state_class: total
         state: >
-          {%- set prev = this.state | float(0) if this is defined else 0 -%}
-          {%- set k = state_attr('sensor.batterijplan', 'kwartier') -%}
-          {%- if this is defined and this.attributes.get('laatste') == k -%}{{ prev }}
-          {%- else -%}{{ (prev + state_attr('sensor.batterijplan', 'meerwaarde_kwartier_eur') | float(0)) | round(4) }}
-          {%- endif -%}
+            {#- afrekenen van het vorige kwartier: bij overschot ontladen telt alleen wat er echt uit de batterij ging -#}
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
+            {%- set lnu = state_attr('sensor.batterijplan', 'lading_kwh') -%}
+            {%- set pl = a.get('p_lading') -%}
+            {%- set echt = ([[pl - lnu, 0] | max, a.get('p_need', 0) | float(0)] | min) if (pl is number and lnu is number) else 0 -%}
+            {%- set add = ((a.get('p_kwh_eur', 0) | float(0)) * echt if a.get('p_x', false) else a.get('p_meer', 0) | float(0)) if nieuw else 0 -%}
+            {{ ((this.state | float(0) if this is defined else 0) + add) | round(4) }}
         attributes:
           laatste: "{{ state_attr('sensor.batterijplan', 'kwartier') }}"
           sinds: "{{ this.attributes.get('sinds', now().strftime('%d-%m-%Y')) if this is defined else now().strftime('%d-%m-%Y') }}"
           eur_schaduw: >
+            {#- afrekenen van het vorige kwartier: bij overschot ontladen telt alleen wat er echt uit de batterij ging -#}
             {%- set a = this.attributes if this is defined else {} -%}
             {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
-            {%- set add = state_attr('sensor.batterijplan', 'meerwaarde_kwartier_eur') | float(0) if (nieuw and not is_state('input_boolean.batterijplan_live', 'on')) else 0 -%}
-            {{ (a.get('eur_schaduw', 0) | float(0) + add) | round(4) }}
+            {%- set lnu = state_attr('sensor.batterijplan', 'lading_kwh') -%}
+            {%- set pl = a.get('p_lading') -%}
+            {%- set echt = ([[pl - lnu, 0] | max, a.get('p_need', 0) | float(0)] | min) if (pl is number and lnu is number) else 0 -%}
+            {%- set add = ((a.get('p_kwh_eur', 0) | float(0)) * echt if a.get('p_x', false) else a.get('p_meer', 0) | float(0)) if nieuw else 0 -%}
+            {{ (a.get('eur_schaduw', 0) | float(0) + (add if not a.get('p_live', false) else 0)) | round(4) }}
           eur_live: >
+            {#- afrekenen van het vorige kwartier: bij overschot ontladen telt alleen wat er echt uit de batterij ging -#}
             {%- set a = this.attributes if this is defined else {} -%}
             {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
-            {%- set add = state_attr('sensor.batterijplan', 'meerwaarde_kwartier_eur') | float(0) if (nieuw and is_state('input_boolean.batterijplan_live', 'on')) else 0 -%}
-            {{ (a.get('eur_live', 0) | float(0) + add) | round(4) }}
+            {%- set lnu = state_attr('sensor.batterijplan', 'lading_kwh') -%}
+            {%- set pl = a.get('p_lading') -%}
+            {%- set echt = ([[pl - lnu, 0] | max, a.get('p_need', 0) | float(0)] | min) if (pl is number and lnu is number) else 0 -%}
+            {%- set add = ((a.get('p_kwh_eur', 0) | float(0)) * echt if a.get('p_x', false) else a.get('p_meer', 0) | float(0)) if nieuw else 0 -%}
+            {{ (a.get('eur_live', 0) | float(0) + (add if a.get('p_live', false) else 0)) | round(4) }}
+          # gegevens van dit kwartier, om het volgende kwartier af te rekenen
+          p_lading: "{{ state_attr('sensor.batterijplan', 'lading_kwh') }}"
+          p_need: "{{ state_attr('sensor.batterijplan', 'kwartier_kwh') | float(0) }}"
+          p_meer: "{{ state_attr('sensor.batterijplan', 'meerwaarde_kwartier_eur') | float(0) }}"
+          p_x: "{{ is_state('sensor.batterijplan', 'Overschot ontladen') }}"
+          p_live: "{{ is_state('input_boolean.batterijplan_live', 'on') }}"
+          p_kwh_eur: >
+            {%- set n = state_attr('sensor.batterijplan', 'kwartier_kwh') | float(0) -%}
+            {{ ((state_attr('sensor.batterijplan', 'meerwaarde_kwartier_eur') | float(0)) / n) | round(4) if n > 0 else 0 }}
           kwartieren_vastgehouden: >
             {%- set a = this.attributes if this is defined else {} -%}
             {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
             {{ a.get('kwartieren_vastgehouden', 0) | int(0) + (1 if (nieuw and is_state('sensor.batterijplan', 'Vasthouden')) else 0) }}
+          kwartieren_overschot: >
+            {%- set a = this.attributes if this is defined else {} -%}
+            {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
+            {{ a.get('kwartieren_overschot', 0) | int(0) + (1 if (nieuw and is_state('sensor.batterijplan', 'Overschot ontladen')) else 0) }}
           kwartieren_ontladen: >
             {%- set a = this.attributes if this is defined else {} -%}
             {%- set nieuw = a.get('laatste') != state_attr('sensor.batterijplan', 'kwartier') -%}
@@ -607,6 +767,78 @@ automation:
               message: >-
                 Dure kwartieren {{ state_attr('sensor.batterijplan', 'kwartier') }}:
                 {{ states('sensor.batterijplan') | lower }} (HBC-stand {{ gewenst }})
+
+  - id: batterijplan_stuur_hbc_gewoon
+    alias: Batterijplan — stuur HBC gewone kwartieren (overschot)
+    description: >-
+      Zet de HBC-stand voor gewone kwartieren op Self-consumption als het plan
+      overschot wil benutten, en anders terug op Charge PV. Alleen in live-modus
+      en alleen als HBC op Dynamic staat.
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id: sensor.batterijplan
+    conditions:
+      - condition: state
+        entity_id: input_boolean.batterijplan_live
+        state: "on"
+      - condition: state
+        entity_id: input_select.house_battery_strategy
+        state: Dynamic
+    actions:
+      - variables:
+          gewenst: >
+            {{ 'Self-consumption' if is_state('sensor.batterijplan', 'Overschot ontladen') else 'Charge PV' }}
+      - if:
+          - condition: template
+            value_template: >
+              {{ states('input_select.house_battery_strategy_dynamic_default') != gewenst }}
+        then:
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.house_battery_strategy_dynamic_default
+            data:
+              option: "{{ gewenst }}"
+          - action: logbook.log
+            data:
+              name: Batterijplan
+              message: >-
+                Gewone kwartieren {{ state_attr('sensor.batterijplan', 'kwartier') }}:
+                {{ 'overschot ontladen' if gewenst == 'Self-consumption' else 'lading vasthouden' }} (HBC-stand {{ gewenst }})
+
+  - id: batterijplan_hbc_strategie_verlaten
+    alias: Batterijplan — HBC verlaat Dynamic, standen terug naar normaal
+    description: >-
+      Kies je in HBC een andere strategie dan Dynamic terwijl Batterijplan live
+      staat, dan zet dit de twee Dynamic-standen terug naar HBC-normaal. Kom je
+      terug op Dynamic, dan stuurt Batterijplan direct opnieuw bij (het plan
+      rekent opnieuw en de twee stuurregels volgen).
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id: input_select.house_battery_strategy
+        from: Dynamic
+    conditions:
+      - condition: state
+        entity_id: input_boolean.batterijplan_live
+        state: "on"
+    actions:
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.house_battery_strategy_dynamic_expensive
+        data:
+          option: Self-consumption
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.house_battery_strategy_dynamic_default
+        data:
+          option: Charge PV
+      - action: logbook.log
+        data:
+          name: Batterijplan
+          message: >-
+            HBC staat nu op {{ states('input_select.house_battery_strategy') }}: Batterijplan staat stil,
+            Dynamic-standen terug naar normaal (Self-consumption / Charge PV)
 
   - id: batterijplan_instellingen_terugzetten
     alias: Batterijplan — instellingen terugzetten uit back-up
@@ -717,3 +949,8 @@ automation:
           entity_id: input_select.house_battery_strategy_dynamic_expensive
         data:
           option: Self-consumption
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.house_battery_strategy_dynamic_default
+        data:
+          option: Charge PV

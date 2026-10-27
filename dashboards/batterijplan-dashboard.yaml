@@ -1,6 +1,6 @@
-# Batterijplan — dashboard (Home Assistant 'sections'-weergave)
-# Installeren: Instellingen > Dashboards > Dashboard toevoegen > Nieuw dashboard,
-# open het, ⋮ > Bewerken > ⋮ > Raw-configuratie-editor, en plak dit bestand.
+# Batterijplan v1.0.0-dev1 — dashboard (Nederlands)
+# Plakken in: Instellingen → Dashboards → (jouw dashboard) → ✏️ → ⋮ → Raw-configuratie-editor
+# Nodig: de kaarten (www/batterijplan/batterijplan-cards.js) als dashboard-bron, zie docs/01-installatie.
 title: Batterijplan
 views:
 - title: Batterijplan
@@ -8,6 +8,14 @@ views:
   icon: mdi:battery-clock
   type: sections
   max_columns: 3
+  header:
+    layout: responsive
+    badges_position: bottom
+    badges_wrap: wrap
+    card:
+      type: markdown
+      text_only: true
+      content: <img src="/local/batterijplan/logo.webp?v=1" height="88" alt="HBC-Batterijplan">
   badges:
   - type: entity
     entity: sensor.batterijplan_meerwaarde
@@ -123,115 +131,32 @@ views:
         | | | |
         |---|---|---|
         | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if live else '<img src="/local/batterijplan/spook.png?v=1" height="22" alt="">' }} | Modus | {{ '**live** — stuurt HBC' if live else '**schaduw** — rekent mee, stuurt niet' }} |
-        | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if is_state(p,'prima') else '<img src="/local/batterijplan/zandloper.png?v=1" height="22" alt="">' }} | Verbruik leren | **{{ states(p) }}** · {{ (state_attr(p,'dagen') or 0) | string | replace('.', ',') }} van 14 dagen · {{ geleerd }} van 24 uren |
+        | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if is_state(p,'prima') else '<img src="/local/batterijplan/zandloper.png?v=1" height="22" alt="">' }} | Verbruik leren | {%- set nn = state_attr(p,'n') or [] %}{%- set dag = [((nn | sum) / 96) | int + 1, 14] | min if nn is not string else 1 %}{%- set bt = state_attr('sensor.batterijplan_voorspelling','betrouwbaarheid') %}{{ ('**klaar met leren**' ~ (' · voorspelling ' ~ bt ~ ' % raak' if bt is number else '')) if is_state(p,'prima') else ('**aan het leren** · dag ' ~ dag ~ ' van 14 · ' ~ ('alle uren van de dag al gezien' if geleerd | int(0) >= 24 else geleerd ~ ' van 24 uren al gezien')) }} |
         | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if is_state('input_select.house_battery_strategy','Dynamic') else '<img src="/local/batterijplan/zandloper.png?v=1" height="22" alt="">' }} | HBC-strategie | {{ states('input_select.house_battery_strategy') }}{{ '' if is_state('input_select.house_battery_strategy','Dynamic') else ' — plan wacht tot Dynamic' }} |
         | <img src="/local/batterijplan/kalender-klok.png?v=1" height="22" alt=""> | Komend kwartier ({{ state_attr('sensor.batterijplan','kwartier') }}) | **{{ states('sensor.batterijplan') }}** |
       grid_options:
         columns: full
-    - type: markdown
-      content: |-
-        ## <sub><img src="/local/batterijplan/kalender-klok.png?v=1" height="22" alt=""></sub> Plan tot {{ (state_attr('sensor.batterijplan','segment_tot') or '') | replace('Mon','ma') | replace('Tue','di') | replace('Wed','wo') | replace('Thu','do') | replace('Fri','vr') | replace('Sat','za') | replace('Sun','zo') }}
-        {%- set b = 'sensor.batterijplan' %}
-        {%- set o = state_attr(b,'ontladen') or [] %}
-        {%- set v = state_attr(b,'vasthouden') or [] %}
-        {%- set nk = state_attr(b,'nachtladen_kwartieren') or [] %}
-        {%- macro kw(lijst, kleur) -%}
-        {%- set out = namespace(l=[]) -%}
-        {%- for k in lijst -%}
-        {%- set start = today_at(k) -%}
-        {%- set actief = start <= now() < start + timedelta(minutes=15) -%}
-        {%- set out.l = out.l + [('<font color="' ~ kleur ~ '"><b>' ~ k ~ ' nu</b></font>') if actief else k] -%}
-        {%- endfor -%}
-        {{ out.l | join(', ') if out.l else '—' }}
-        {%- endmacro %}
-        | | |
-        |---|---|
-        | Lading beschikbaar | {{ state_attr(b,'energie_kwh') | string | replace('.', ',') }} kWh |
-        | Dure kwartieren | {{ state_attr(b,'dure_kwartieren') }} |
-        | Ontladen | {{ kw(o, '#4caf50') }} |
-        | Vasthouden | {{ kw(v, '#e0a526') }} |
-        | Tekort voor alle dure kwartieren | {{ state_attr(b,'tekort_kwh') | string | replace('.', ',') }} kWh |
-        | Verwachte meerwaarde t.o.v. HBC | € {{ ('%.2f' | format(state_attr(b,'meerwaarde_segment_eur') | float(0))) | replace('.', ',') }} |
-        | Advies extra nachtladen | {{ (nk | join(', ') ~ ' · ' ~ (state_attr(b,'nachtladen_kwh') | string | replace('.', ',')) ~ ' kWh · ± € ' ~ ('%.2f' | format(state_attr(b,'nachtladen_winst_eur') | float(0))) | replace('.', ',')) if nk else 'niet nodig' }} |
-      grid_options:
-        columns: full
+    - type: custom:batterijplan-advies
+      title: Advies voor HBC
+      icon: batterijplan:schuifregelaars
+    - type: custom:batterijplan-opbrengst
+      title: Wat levert het op
+      icon: batterijplan:euro
   - type: grid
+    column_span: 2
     cards:
-    - type: markdown
-      content: |-
-        ## <sub><img src="/local/batterijplan/euro.png?v=1" height="22" alt=""></sub> Wat levert het op
-        {%- set m = 'sensor.batterijplan_meerwaarde' %}
-        | | |
-        |---|---|
-        | Totaal sinds {{ state_attr(m,'sinds') or 'start' }} | **€ {{ ('%.2f' | format(states(m) | float(0))) | replace('.', ',') }}** |
-        | waarvan schaduw (zou opleveren) | € {{ ('%.2f' | format(state_attr(m,'eur_schaduw') | float(0))) | replace('.', ',') }} |
-        | waarvan live (echt gestuurd) | € {{ ('%.2f' | format(state_attr(m,'eur_live') | float(0))) | replace('.', ',') }} |
-        | Kwartieren vastgehouden / ontladen | {{ state_attr(m,'kwartieren_vastgehouden') or 0 }} / {{ state_attr(m,'kwartieren_ontladen') or 0 }} |
-        | Lading verschoven naar duurdere momenten | {{ (state_attr(m,'kwh_vastgehouden') or 0) | string | replace('.', ',') }} kWh |
-
-        <small>Schatting: per vastgehouden kwartier telt de lading mee tegen de gemiddelde prijs van de dure kwartieren waar het plan haar later voor inzet (incl. btw). Dat is het verschil met HBC alleen.</small>
-      grid_options:
-        columns: full
+    - type: custom:batterijplan-plan
+      title: Plan vandaag en morgen
+      icon: batterijplan:kalender-klok
     - type: energy-date-selection
       grid_options:
         columns: full
-    - type: statistics-graph
-      entities:
-      - sensor.batterijplan_meerwaarde
-      stat_types:
-      - change
-      chart_type: bar
-      energy_date_selection: true
-      hide_legend: true
-      grid_options:
-        columns: full
+    - type: custom:batterijplan-grafiek
+      title: Prijs en batterij
+      icon: batterijplan:euro-klok
   - type: grid
+    column_span: 3
     cards:
-    - type: markdown
-      content: |-
-        ## <sub><img src="/local/batterijplan/monitor-grafiek.png?v=1" height="22" alt=""></sub> Plan komende uren
-        {%- set b = 'sensor.batterijplan' %}
-        {%- set o = state_attr(b, 'ontladen') or [] %}
-        {%- set v = state_attr(b, 'vasthouden') or [] %}
-        {%- set marks = state_attr('sensor.hbc_energy_prices_data', 'marks') or [] %}
-        {%- set kl = {'o': '#4caf50', 'v': '#e0a526', 'z': '#2196f3', 'r': '#546e7a', 'l': '#9e9e9e'} %}
-        {%- set nm = {'o': 'ontladen', 'v': 'vasthouden (bijsturen)', 'z': 'zon laden', 'r': 'rust (geen zon)', 'l': 'laden van het net'} %}
-        {%- set zn = namespace(l=[]) %}
-        {%- for f in (state_attr('sensor.solcast_pv_forecast_forecast_today', 'detailedForecast') or []) + (state_attr('sensor.solcast_pv_forecast_forecast_tomorrow', 'detailedForecast') or []) %}
-          {%- if f.pv_estimate10 | float(0) > 0.05 %}{%- set zn.l = zn.l + [(as_timestamp(f.period_start) * 1000) | int] %}{%- endif %}
-        {%- endfor %}
-        {%- set nu = now().timestamp() * 1000 %}
-        {%- set ns = namespace(q=[], gezien_duur=false, klaar=false) %}
-        {%- for m in marks if m.start + 900000 > nu and not ns.klaar %}
-          {%- set t = (m.start / 1000) | timestamp_custom('%H:%M') %}
-          {%- if m.mark == 'low' %}{%- set c = 'l' %}
-          {%- elif m.mark == 'high' %}{%- set c = 'v' if t in v else 'o' %}
-          {%- else %}{%- set c = 'z' if ((m.start // 1800000) * 1800000) | int in zn.l else 'r' %}{%- endif %}
-          {%- set ns.q = ns.q + [[t, c, m.start]] %}
-          {%- if c == 'l' and ns.q | count > 1 and ns.q[-2][1] != 'l' %}{%- set ns.klaar = true %}{%- endif %}
-          {%- if ns.q | count >= 64 %}{%- set ns.klaar = true %}{%- endif %}
-        {%- endfor %}
-        {%- set r = namespace(l=[]) %}
-        {%- for q in ns.q %}
-          {%- if r.l and r.l[-1][2] == q[1] %}{%- set last = r.l[-1] %}{%- set r.l = r.l[:-1] + [[last[0], q[2], q[1]]] %}
-          {%- else %}{%- set r.l = r.l + [[q[2], q[2], q[1]]] %}{%- endif %}
-        {%- endfor %}
-
-        {% for q in ns.q %}<font color="{{ kl[q[1]] }}">▌</font>{% endfor %}
-        {%- set dn = {'Mon':'ma','Tue':'di','Wed':'wo','Thu':'do','Fri':'vr','Sat':'za','Sun':'zo'} %}
-        {%- if ns.q %}
-        <small><font color="#9e9e9e">{{ dn[(ns.q[0][2]/1000) | timestamp_custom('%a')] }} {{ ns.q[0][0] }} → {{ dn[((ns.q[-1][2]+900000)/1000) | timestamp_custom('%a')] }} {{ ((ns.q[-1][2]+900000)/1000) | timestamp_custom('%H:%M') }}</font></small>
-        {%- endif %}
-
-        | | | |
-        |---|---|---|
-        {%- for x in r.l %}
-        | <font color="{{ kl[x[2]] }}">■</font> | {{ (x[0]/1000) | timestamp_custom('%a %H:%M') | replace('Mon','ma') | replace('Tue','di') | replace('Wed','wo') | replace('Thu','do') | replace('Fri','vr') | replace('Sat','za') | replace('Sun','zo') }} – {{ ((x[1]+900000)/1000) | timestamp_custom('%H:%M') }} | {{ nm[x[2]] }} |
-        {%- endfor %}
-
-        <small><font color="#4caf50">■</font> ontladen · <font color="#e0a526">■</font> vasthouden = Batterijplan stuurt bij · <font color="#2196f3">■</font> zon laden · <font color="#546e7a">■</font> rust (geen zon) · <font color="#9e9e9e">■</font> laden van het net</small>
-      grid_options:
-        columns: full
     - type: markdown
       content: '## <sub><img src="/local/batterijplan/schuifregelaars.png?v=1" height="22" alt=""></sub> Instellingen'
       grid_options:
@@ -248,12 +173,13 @@ views:
         tap_action:
           action: perform-action
           perform_action: input_button.press
-          target: &id001
+          target:
             entity_id: input_button.batterijplan_backup
         icon_tap_action:
           action: perform-action
           perform_action: input_button.press
-          target: *id001
+          target:
+            entity_id: input_button.batterijplan_backup
       - type: tile
         entity: input_button.batterijplan_terugzetten
         name: Back-up terugzetten
@@ -264,15 +190,17 @@ views:
         tap_action:
           action: perform-action
           perform_action: input_button.press
-          target: &id002
+          target:
             entity_id: input_button.batterijplan_terugzetten
-          confirmation: &id003
+          confirmation:
             text: Alle instellingen van Batterijplan terugzetten naar de laatste back-up?
         icon_tap_action:
           action: perform-action
           perform_action: input_button.press
-          target: *id002
-          confirmation: *id003
+          target:
+            entity_id: input_button.batterijplan_terugzetten
+          confirmation:
+            text: Alle instellingen van Batterijplan terugzetten naar de laatste back-up?
       - type: tile
         entity: input_button.batterijplan_standaard
         name: Standaardwaarden
@@ -283,15 +211,39 @@ views:
         tap_action:
           action: perform-action
           perform_action: input_button.press
-          target: &id004
+          target:
             entity_id: input_button.batterijplan_standaard
-          confirmation: &id005
+          confirmation:
             text: Veiligheidsmarge en rendement terugzetten naar de standaardwaarden (0,3 kWh en 75 %)? Eerst wordt er een back-up gemaakt, dus je kunt dit ongedaan maken met "Back-up terugzetten".
         icon_tap_action:
           action: perform-action
           perform_action: input_button.press
-          target: *id004
-          confirmation: *id005
+          target:
+            entity_id: input_button.batterijplan_standaard
+          confirmation:
+            text: Veiligheidsmarge en rendement terugzetten naar de standaardwaarden (0,3 kWh en 75 %)? Eerst wordt er een back-up gemaakt, dus je kunt dit ongedaan maken met "Back-up terugzetten".
+      - type: tile
+        entity: input_boolean.batterijplan_live
+        name: Live
+        icon: mdi:battery-sync
+        hide_state: false
+        vertical: true
+        features_position: inline
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: toggle
+      - type: tile
+        entity: input_boolean.batterijplan_toon_instellingen
+        name: Instellingen
+        icon: mdi:tune-vertical
+        hide_state: false
+        vertical: true
+        features_position: inline
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: toggle
       grid_options:
         columns: full
     - type: markdown
@@ -299,33 +251,11 @@ views:
       content: <small><ha-icon icon="mdi:content-save-outline"></ha-icon> {%- set b = 'sensor.batterijplan_instellingen_backup' %} {{ ('Back-up ' ~ states(b)[:5] ~ states(b)[10:] ~ ' · 8 instellingen') if has_value(b) else 'Nog geen back-up' }}</small>
       grid_options:
         columns: full
-    - type: horizontal-stack
-      cards:
-      - type: tile
-        entity: input_boolean.batterijplan_live
-        name: Live
-        icon: mdi:battery-sync
-        hide_state: true
-        vertical: false
-        features_position: inline
-        features:
-        - type: toggle
-      - type: tile
-        entity: input_boolean.batterijplan_toon_instellingen
-        name: Instellingen
-        icon: mdi:tune-vertical
-        hide_state: true
-        vertical: false
-        features_position: inline
-        features:
-        - type: toggle
-      grid_options:
-        columns: full
     - type: entities
       title: Waarden
       grid_options:
         columns: full
-      visibility: &id006
+      visibility:
       - condition: or
         conditions:
         - condition: state
@@ -354,7 +284,20 @@ views:
       title: Sensoren
       grid_options:
         columns: full
-      visibility: *id006
+      visibility:
+      - condition: or
+        conditions:
+        - condition: state
+          entity: input_boolean.batterijplan_toon_instellingen
+          state: 'on'
+        - condition: state
+          entity: input_text.batterijplan_sensor_net
+          state:
+          - ''
+          - unknown
+        - condition: numeric_state
+          entity: input_number.batterijplan_capaciteit
+          below: 1.05
       entities:
       - entity: input_text.batterijplan_sensor_net
         name: Netvermogen (W)

@@ -1,5 +1,49 @@
 # Changelog
 
+## 1.0.0-rc1 — knoppenrij, vergelijking met HBC alleen, sneller leren (release candidate)
+
+**Nieuw**
+- **Knoppenrij met vensters.** Bovenaan één rij over de volle breedte: de schakelaar *Live* vooraan (groen als hij aan staat), daarna *Opbrengst*, *Advies HBC*, *Instellingen* en *Sensoren*. Die openen als venster over het scherm. Een oranje stip betekent: hier is iets te doen. De schakelaar *Instellingen tonen*, het logo bovenaan en de badges zijn weg; de hele pagina past op één scherm.
+- **Statuskaart met logo** naast *Plan vandaag en morgen*.
+- **Vergelijking met HBC alleen:** de grafiek toont als rode stippellijn hoe de lading was verlopen zonder Batterijplan, met een chip *Extra t.o.v. HBC alleen* in euro.
+- **Datumkiezer in de kopregel van de grafiek**, rechts. De grafiek is lager, zodat alles op één scherm past.
+- **Prijzen van HBC:** nieuwe instelling *kaal* of *all-in*. Bij all-in telt Batterijplan zelf geen belasting, opslag en btw meer op.
+- **Jouw eigen HBC-standen** voor de dure en gewone periode worden onthouden (bij *Live* aan, of als je ze verandert terwijl *Live* uit staat) en teruggezet bij *Live* uit of als HBC Dynamic verlaat.
+- **Batterijplan blijft van Sell af:** stuurt alleen bij in de dure periode als jouw stand daar *Self-consumption* is, en in de gewone periode als die *Charge PV* is.
+- **Nieuwe sensor** `sensor.batterijplan_prijs`: de prijs van het huidige kwartier volgens HBC, voor de geschiedenis in de grafiek.
+- **(i) opent een venster** *Hoe lees je dit?* met **‹ Terug**.
+- **Alles in de huisstijl:**
+  - eigen invoervelden in *Instellingen*: schuifbalk, keuzeknopjes en − waarde +;
+  - **sensoren kiezen uit een lijst**: tik op een sensorveld en je krijgt de vermogenssensoren uit je eigen Home Assistant, de meest waarschijnlijke bovenaan, met wat ze nu melden; typen filtert, zelf typen kan ook;
+  - *Instellingen* heeft twee tabbladen: **Basis** en **Expert**;
+  - elk veld heeft een eigen (i);
+  - de statuskaart is een eigen kaart, met een (i) bij elke regel;
+  - een eigen *Live*-schakelaar;
+  - de vensters hebben ‹ Terug en ✕.
+- **De back-up bewaart nu ook** de ingangsdatum en *Prijzen van HBC* (10 instellingen).
+- **Terugzetten en standaardwaarden vragen eerst** "Zeker? Tik nog een keer".
+
+**Verbeterd**
+- **Sneller leren:** klaar na 7 dagen in plaats van 14 (een proef op 89 dagen echte meetdata gaf met een kort geheugen een betere voorspelling).
+- **Voorspelling per blok van 3 uur**, met alleen een oordeel: *wisselvallig*, *redelijk* (vanaf 55 %), *goed* (vanaf 65 %), *zeer goed* (vanaf 75 %) of *uitstekend* (vanaf 85 %), lichtgroen tot het donkerste groen.
+- **Extra marge bij wisselvallig verbruik:** is de voorspelling wisselvallig, dan rekent het plan zelf met extra marge (de gemiddelde afwijking per blok van 3 uur, maximaal 1 kWh). De statuskaart laat zien hoeveel. Wordt de voorspelling beter, dan valt die vanzelf weg.
+- **Bedragen overal hetzelfde:** meer dan 0 is *+ €* in groen, precies 0 is *€ 0,00* in grijs, minder dan 0 is *– €* in oranje.
+- **Kleur voor overschot ontladen** is nu paars, duidelijk anders dan het groen van ontladen.
+- Labels *ct* en *kWh* staan niet meer over de bovenste getallen van de grafiek.
+
+**Opgelost**
+- Een klik op een knopje bovenaan ging soms verloren, omdat de knoppenrij steeds opnieuw werd opgebouwd.
+- Het plan bleef na een herstart soms hangen op een oud kwartier (het werd als tekst bewaard).
+- *t is not a function* bij aanwijzen in de kaarten.
+- *Huisverbruik nu* werd 's nachts *Niet beschikbaar* bij omvormers die dan niets melden. Zon zonder waarde telt nu als 0 W.
+- De prijs in de grafiek komt niet meer van een vaste Nord Pool-sensor, maar van HBC zelf.
+- Het icoon *schuifregelaars* was leeg in de zip van 1.0.0-dev1, en het icoon *info* ontbrak.
+
+**Let op bij bijwerken**
+- Vervang het pakket, de map `www/batterijplan/` en het hele dashboard, en verhoog het nummer achter de kaarten-bron. Herstart Home Assistant (nieuwe helpers).
+- Recorder met include-lijst: zet `sensor.batterijplan_prijs` erop.
+- Geeft HBC all-in prijzen? Zet *Prijzen van HBC* op *all-in*.
+
 ## 1.0.0-dev1 — nieuw dashboard, drie talen, overschot en advies voor HBC (testversie)
 
 **Nieuw**

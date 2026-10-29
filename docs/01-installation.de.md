@@ -13,7 +13,7 @@
 |---|---|
 | Home Assistant mit Packages | Batterijplan ist eine Datei in `/config/packages/`. |
 | HBC Version 4.14 oder neuer, in **Full control** und Strategie **Dynamic** | Batterijplan liest die Labels, die HBC pro Viertelstunde vergibt (günstig, teuer, normal), und die Ladung pro Speicher. |
-| Ein dynamischer Stromtarif mit Viertelstunden- oder Stundenpreisen | Ohne Preisunterschiede gibt es nichts zu verteilen. |
+| Ein dynamischer Stromtarif mit Viertelstunden- oder Stundenpreisen | Ohne Preisunterschiede gibt es nichts zu verteilen. HBC darf die Preise als reinen Börsenpreis oder all-in liefern; das stellst du bei *Preise von HBC* ein. |
 | Solcast-Solarprognose (Integration *Solcast PV Forecast*) | Für die erwartete Sonne pro halbe Stunde. Die niederländischen und englischen Namen der Sensoren funktionieren beide. Keine Solarpaneele? Dann rechnet Batterijplan mit 0 Sonne. |
 | Sensoren für Netzleistung, Solarleistung und Speicherleistung, in Watt (W) | Um den Hausverbrauch zu messen und zu lernen. Es geht immer um die Leistung von genau jetzt, nicht um eine Tagessumme in kWh. |
 
@@ -30,6 +30,8 @@ Stelle HBC auf **Full control** und Strategie **Dynamic**. Wähle auf dem Tab Ti
 | Teuer (high) | Self-consumption |
 
 > **Wichtig:** Der normale Zeitraum muss auf **Charge PV** stehen. Batterijplan geht davon aus, dass der Speicher außerhalb der teuren Viertelstunden nur entlädt, wenn Batterijplan das verlangt (Überschuss entladen).
+
+Nutzt du andere Stellungen, zum Beispiel *Sell* im teuren Zeitraum, um für Geld einzuspeisen? Dann lässt Batterijplan diesen Zeitraum in Ruhe. Es merkt sich deine Stellungen und stellt sie wieder her, wenn du *Live* ausschaltest. Siehe [03 · So funktioniert es](03-how-it-works.de.md#deine-eigenen-hbc-stellungen).
 
 ## Schritt 2 — Dateien ablegen
 
@@ -57,6 +59,7 @@ recorder:
     entities:
       - sensor.batterijplan
       - sensor.batterijplan_meerwaarde
+      - sensor.batterijplan_prijs
       - sensor.batterijplan_lading
       - sensor.batterijplan_advies_huisverbruik
       - input_select.house_battery_strategy_dynamic_expensive
@@ -73,7 +76,7 @@ Geh zu *Entwicklerwerkzeuge → YAML*, wähle **Konfiguration prüfen** und star
 
 **Die Karten anmelden (einmalig):**
 1. *Einstellungen → Dashboards*, oben rechts ⋮ → **Ressourcen**. Siehst du das nicht, schalte zuerst in deinem Profil den *Erweiterten Modus* ein.
-2. **Ressource hinzufügen**: Adresse `/local/batterijplan/batterijplan-cards.js?v=1`, Typ **JavaScript-Modul**.
+2. **Ressource hinzufügen**: Adresse `/local/batterijplan/batterijplan-cards.js?v=2`, Typ **JavaScript-Modul**.
 3. Lade den Browser neu (am Handy: App schließen und wieder öffnen).
 
 **Das Dashboard hinzufügen:**
@@ -81,11 +84,17 @@ Geh zu *Entwicklerwerkzeuge → YAML*, wähle **Konfiguration prüfen** und star
 2. Öffne das Dashboard, wähle oben rechts ✏️ (bearbeiten), dann ⋮ → **Raw-Konfigurationseditor**.
 3. Füge den Inhalt von `dashboards/batterijplan-dashboard.yaml` (Niederländisch), `batterijplan-dashboard.en.yaml` (Englisch) oder `batterijplan-dashboard.de.yaml` (Deutsch) ein und speichere.
 
-Die Karten folgen der Sprache deines Profils in Home Assistant. Die Dashboard-Datei bestimmt die Sprache vom Rest (Status, Einstellungen).
+Die Karten folgen der Sprache deines Profils in Home Assistant. Die Dashboard-Datei bestimmt die Sprache vom Rest (Status, Knöpfe, Einstellungen).
 
 ## Schritt 6 — Einstellungen ausfüllen
 
-Schalte auf dem Dashboard den Schalter **Einstellungen** ein. Darunter erscheinen die Felder mit Erklärung:
+Klicke auf dem Dashboard auf den Knopf **Einstellungen**. Es öffnet sich ein Fenster mit zwei Reitern: **Basis** (Kapazität, Preise von HBC, Beginn des Stromvertrags, Sicherung) und **Experte** (Reserve, Wirkungsgrad, Energiesteuer + Einkaufsaufschlag). Die Sensoren stehen hinter dem Knopf **Sensoren**. Jedes Feld hat ein **(i)** mit Erklärung.
+
+So funktionieren die Felder:
+- ein **Schieberegler** für Kapazität, Reserve und Wirkungsgrad;
+- **Auswahlknöpfe** für *kaal* oder *all-in*;
+- ein **− Wert +**-Knopf für Energiesteuer + Einkaufsaufschlag; tippe auf die Zahl, um sie genau einzugeben;
+- eine **Auswahlliste** für die Sensoren: tippe auf ein Sensorfeld und du bekommst die Leistungssensoren in deinem Home Assistant, die wahrscheinlichsten oben, rechts mit dem, was sie gerade melden. Tippe auf den richtigen. Tippen filtert die Liste; du kannst den Namen auch ganz selbst eingeben und Enter oder OK drücken. Unter jedem gewählten Sensor siehst du, was er gerade meldet.
 
 | Einstellung | Was du einträgst | Beispiel |
 |---|---|---|
@@ -93,7 +102,8 @@ Schalte auf dem Dashboard den Schalter **Einstellungen** ein. Darunter erscheine
 | Nutzbare Kapazität der Speicher | was deine Speicher zusammen wirklich liefern können, oberhalb der Untergrenze in HBC | 2 × 5,12 kWh mit 12 % Untergrenze ≈ 9,0 kWh |
 | Sicherheitsreserve | Ladung, die der Plan nie einrechnet | 0,3 kWh |
 | Wirkungsgrad Laden + Entladen | wie viel % des geladenen Stroms wieder herauskommt | 75 % |
-| Energiesteuer + Einkaufsaufschlag (ohne MwSt.) | was du pro kWh **zusätzlich** zum Börsenpreis zahlst: die Energiesteuer plus den Einkaufsaufschlag deines Anbieters (so ist es in den Niederlanden aufgebaut) | 0,09161 + 0,0165 = 0,1081 |
+| Energiesteuer + Einkaufsaufschlag (ohne MwSt.) | was du pro kWh **zusätzlich** zum reinen Börsenpreis zahlst: die Energiesteuer plus den Einkaufsaufschlag deines Anbieters (so ist es in den Niederlanden aufgebaut) | 0,09161 + 0,0165 = 0,1081 |
+| Preise von HBC | *kaal* (niederländisch für "ohne Aufschläge"), wenn HBC den reinen Börsenpreis liefert (Standard); *all-in*, wenn HBC den Preis mit Steuer, Aufschlag und MwSt. liefert. Bei all-in rechnet Batterijplan selbst nichts mehr dazu. | kaal |
 | Sensor Netzleistung | dein Sensor in W, Bezug = +, Einspeisung = − | `sensor.p1_vermogen` |
 | Sensor Solarleistung | was alle deine Solarpaneele zusammen **jetzt** erzeugen, in W (nicht den Tagesertrag) | `sensor.zon_totaal` |
 | Sensor Speicherleistung | Summe aller deiner Speicher in W, entladen = + | bei HBC meist `sensor.house_total_battery_power` |
@@ -103,15 +113,15 @@ Hast du mehrere Wechselrichter und keinen Sensor mit der Summe? Lege einen Helfe
 
 > Solange die nutzbare Kapazität nicht ausgefüllt ist, zeigt der Plan "Nicht eingerichtet" und tut nichts.
 
-**Kontrolle:** Auf der Karte Sensoren steht *Kontrolle: Hausverbrauch jetzt*. Das muss ungefähr zu dem passen, was dein Haus wirklich verbraucht, und ist nie negativ.
+**Kontrolle:** Im Fenster Sensoren steht unten *Hausverbrauch jetzt*. Das muss ungefähr zu dem passen, was dein Haus wirklich verbraucht, und ist nie negativ.
 
-**Back-up erstellen.** Alles ausgefüllt? Drücke **Back-up erstellen**. Nach einer Neuinstallation oder einem Versehen stellt **Back-up wiederherstellen** alles wieder her. Das Back-up bleibt bei einem Neustart und bei einer neuen Version erhalten.
+**Sicherung erstellen.** Alles ausgefüllt? Drücke im Reiter Basis auf **Sicherung erstellen**. Nach einer Neuinstallation oder einem Versehen stellt **Sicherung wiederherstellen** alles wieder her. Dieser Knopf fragt zuerst "Sicher? Nochmal tippen". Die Sicherung speichert alle 10 Einstellungen und bleibt bei einem Neustart und bei einer neuen Version erhalten.
 
-Schalte danach den Schalter **Einstellungen** wieder aus.
+Schließe danach das Fenster. Fehlt noch etwas, behält der Knopf einen orangefarbenen Punkt.
 
-## Die ersten 14 Tage: zuschauen und lernen
+## Die ersten 7 Tage: zuschauen und lernen
 
-Batterijplan startet im **Schattenmodus**: Es rechnet und zeigt, was es tun würde, ändert aber nichts an HBC. Auf der Statuskarte siehst du bei *Verbrauch lernen*, wie weit es ist ("Tag 3 von 14").
+Batterijplan startet im **Schattenmodus**: Es rechnet und zeigt, was es tun würde, ändert aber nichts an HBC. Auf der Statuskarte siehst du bei *Verbrauch lernen*, wie weit es ist ("Tag 3 von 7").
 
 Schau ab und zu auf *Plan heute und morgen* und *Preis und Batterie*:
 - Sagt der Plan "für später halten"? Kam später am Tag tatsächlich ein teurerer Moment?

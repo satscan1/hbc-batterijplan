@@ -15,9 +15,10 @@
 | **Advice for HBC turns orange** | Change *Solar reserved for house* in HBC to the number in the advice. This happens mostly when the seasons change. |
 | **New energy contract** | Change *Energy tax + purchase fee* and the *start date*. |
 | **Battery added or removed, or less capacity because of wear** | Change the *usable capacity*. |
-| **Big change in usage** (heat pump, new appliance) | Do nothing: the profile adapts by itself within about 14 days. |
+| **Big change in usage** (heat pump, new appliance) | Do nothing: the profile adapts by itself within about 1 to 2 weeks. |
 | **HBC update** | Check that HBC is still on Dynamic and the regular period on Charge PV. |
-| **Other sensors** (new P1 meter, inverter) | Turn on the *Settings* switch and change the sensor names. Then make a new back-up. |
+| **Other sensors** (new P1 meter, inverter) | Open the *Sensors* button and change the sensor names. Then make a new back-up (*Settings* button). |
+| **Other energy contract with all-in prices in HBC** | Set *Prices from HBC* to *all-in* (*Settings* button). |
 
 ## Installing a new version
 
@@ -29,10 +30,18 @@
 
 Your settings, the learned usage and the counter are kept. Still missing something? Press **Restore back-up**.
 
-**From 0.1.x to 1.0.0-dev1:** add the cards as a resource (step 5 of the installation) and replace the dashboard. If you use a recorder with an include list, also add `sensor.batterijplan_lading` and `sensor.batterijplan_advies_huisverbruik` to the list and restart.
+**From 1.0.0-dev1 to 1.0.0-rc1:**
+- Replace the package and the `www/batterijplan/` folder, raise the number after the cards resource and paste the new dashboard. The dashboard is completely new (a row of buttons with windows), so replace it as a whole.
+- Recorder with an include list: also add `sensor.batterijplan_prijs`.
+- Restart Home Assistant: there are new helpers (*Prices from HBC* and two fields in which Batterijplan remembers your HBC settings).
+- Then make a new back-up. It now also saves the contract start date and *Prices from HBC* (10 settings instead of 8).
+- Does HBC give all-in prices? Set *Prices from HBC* to *all-in*.
+- The learned usage is kept. The forecast starts measuring again, now per block of 3 hours.
+
+**From 0.1.x to 1.0.0:** add the cards as a resource (step 5 of the installation) and replace the dashboard. If you use a recorder with an include list, also add `sensor.batterijplan_lading`, `sensor.batterijplan_advies_huisverbruik` and `sensor.batterijplan_prijs` to the list and restart.
 
 ## Removing it completely
 
-1. Turn **Live** off, so HBC goes back to its normal settings.
+1. Turn **Live** off, so HBC goes back to your own settings.
 2. Remove `packages/batterijplan.yaml`, the `www/batterijplan/` folder, the resource `/local/batterijplan/batterijplan-cards.js` and the dashboard.
 3. Restart Home Assistant.

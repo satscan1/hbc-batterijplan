@@ -6,7 +6,7 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md)*
 
-*Version 1.0.0-dev1 · Testversion*
+*Version 1.0.0-rc1 · Release Candidate*
 
 Batterijplan sorgt dafür, dass dein Hausspeicher seine Ladung für die **teuersten** Momente des Tages aufhebt. Es arbeitet mit [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) zusammen und übernimmt HBC nicht: HBC steuert weiter den Speicher, Batterijplan gibt nur pro Viertelstunde einen Hinweis.
 
@@ -18,19 +18,20 @@ Batterijplan sorgt dafür, dass dein Hausspeicher seine Ladung für die **teuers
 
 - **Hebt Ladung für die teuersten Viertelstunden auf.** HBC (Strategie Dynamic) entlädt in jeder teuren Viertelstunde der Reihe nach, auch wenn eine Stunde später ein noch teurerer Moment kommt. Batterijplan rechnet bis zum nächsten günstigen Moment voraus und gibt die Ladung zuerst den teuersten Viertelstunden. In den anderen teuren Viertelstunden hält der Speicher seine Ladung.
 - **Nutzt Überschuss schlau.** Ist mehr im Speicher, als bis zum nächsten günstigen Moment nötig ist? Dann gibt Batterijplan diesen Überschuss schon in den teuersten normalen Viertelstunden ans Haus ab, statt mit einem vollen Speicher laden zu gehen.
-- **Lernt deinen Verbrauch.** Pro Stunde des Tages, über 14 Tage, und danach gleitend mit den Jahreszeiten. Mit der Solarprognose von Solcast dazu.
+- **Lernt deinen Verbrauch.** Pro Stunde des Tages, in 7 Tagen, und danach gleitend mit den Jahreszeiten. Mit der Solarprognose von Solcast dazu.
 - **Gibt eine Empfehlung für HBC.** Wie viel Solarstrom dein Haus selbst verbraucht (die HBC-Einstellung *Solar reserved for house*), auf Basis der letzten 7 Tage. Batterijplan ändert diese Einstellung nie selbst.
 - **Zeigt, was es bringt.** Eine ehrliche Schätzung zusätzlich zu HBC allein: Beim Überschuss entladen zählt nur, was wirklich aus dem Speicher kam.
 - **Startet sicher.** Zuerst im Schattenmodus (rechnet mit, steuert nichts). Erst wenn du *Live* einschaltest, steuert es HBC nach.
 
-## Neu in 1.0.0-dev1
+## Neu in 1.0.0-rc1
 
-- **Neues Dashboard** im Stil von HESC, mit eigenen Karten: *Plan heute und morgen*, *Preis und Batterie* (mit Datumsauswahl: Tag, Woche, Monat), *Empfehlung für HBC* und *Was bringt es*. Jede Karte hat ein (i) mit Erklärung.
-- **Drei Sprachen:** Niederländisch, Englisch und Deutsch. Die Karten folgen der Sprache deines Profils in Home Assistant; pro Sprache gibt es ein Dashboard.
-- **Überschuss entladen** in den teuersten normalen Viertelstunden.
-- **Pause außerhalb von Dynamic:** Steht HBC auf einer anderen Strategie, steuert Batterijplan nichts und zählt nichts dazu. Das Lernen geht weiter.
-- **Funktioniert mit jeder HBC-Version und jeder Sprache von Solcast:** Startzeiten als Zahl oder Text, Solcast-Sensoren werden selbst gefunden.
-- **Ehrlicherer Zähler** und **Ladung im Verlauf**, damit die Grafik auch zeigt, was passiert ist.
+- **Ruhigeres Dashboard:** alles auf einem Bildschirm. Oben eine Knopfleiste mit *Live* ganz vorne; Einstellungen, Sensoren, Empfehlung und Ertrag öffnen sich als Fenster. Ein orangefarbener Punkt zeigt, wo etwas zu tun ist.
+- **Ganz im Hausstil:** eigene Eingabefelder (Schieberegler, Auswahlknöpfe, − Wert +), Sensoren aus einer Liste passender Kandidaten wählen, Einstellungen in den Reitern Basis und Experte, und ein (i) mit Erklärung bei jeder Zeile.
+- **Vergleich mit HBC allein** in der Grafik: eine rote gepunktete Linie und der Unterschied in Euro pro Tag.
+- **Schneller lernen:** fertig nach 7 Tagen. Die Prognose wird pro Block von 3 Stunden bewertet, und du siehst nur ein Urteil (ordentlich, gut, sehr gut, ausgezeichnet). Bei schwankendem Verbrauch rechnet der Plan selbst mit zusätzlicher Reserve.
+- **Börsenpreise oder All-in-Preise:** neue Einstellung *Preise von HBC*.
+- **Deine eigenen HBC-Stellungen** werden gemerkt und wiederhergestellt. Nutzt du *Sell*, lässt Batterijplan diesen Zeitraum in Ruhe.
+- **Behoben:** Der Plan blieb nach einem Neustart manchmal hängen, ein Fehler beim Zeigen mit der Maus in den Karten, und der *Hausverbrauch* fiel nachts weg bei Wechselrichtern, die nichts melden.
 
 Alles auf einen Blick: [CHANGELOG.md](CHANGELOG.md).
 
@@ -44,9 +45,9 @@ Alles auf einen Blick: [CHANGELOG.md](CHANGELOG.md).
 | [04 · Pflege und Aktualisieren](docs/04-maintenance.de.md) | Was du ab und zu tust, neue Version, Entfernen |
 | [05 · Probleme lösen](docs/05-troubleshooting.de.md) | Bekannte Meldungen und was du dagegen tust |
 
-## Testversion
+## Release Candidate
 
-Dies ist eine **Testversion** (dev). Sie läuft beim Macher schon täglich, hat aber noch wenige andere Installationen gesehen. Starte sie zuerst im Schattenmodus, schau ein paar Tage zu und melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues) oder auf Discord. Nenne deine HBC-Version und, bei einer Fehlermeldung, einen Screenshot.
+Dies ist ein **Release Candidate** (rc): die letzte Testversion vor 1.0.0. Er läuft täglich beim Macher und bei ein paar Testern. Starte ihn zuerst im Schattenmodus, schau ein paar Tage zu und melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues) oder auf Discord. Nenne deine HBC-Version und, bei einer Fehlermeldung, einen Screenshot.
 
 ## Lizenz
 

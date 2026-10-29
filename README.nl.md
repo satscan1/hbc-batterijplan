@@ -6,7 +6,7 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Versie 1.0.0-dev1 · testversie*
+*Versie 1.0.0-rc1 · release candidate*
 
 Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** momenten van de dag. Het werkt samen met [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) en neemt HBC niet over: HBC blijft de batterij aansturen, Batterijplan geeft alleen per kwartier een aanwijzing.
 
@@ -18,19 +18,20 @@ Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** 
 
 - **Bewaart lading voor de duurste kwartieren.** HBC (strategie Dynamic) ontlaadt in elk duur kwartier op volgorde, ook als er een uur later een nog duurder moment komt. Batterijplan rekent vooruit tot het volgende goedkope moment en geeft de lading eerst aan de duurste kwartieren. In de andere dure kwartieren houdt de batterij zijn lading vast.
 - **Gebruikt overschot slim.** Zit er meer in de batterij dan nodig is tot het volgende goedkope moment? Dan levert Batterijplan dat overschot al aan het huis in de duurste gewone kwartieren, in plaats van met een volle batterij te gaan laden.
-- **Leert je verbruik.** Per uur van de dag, over 14 dagen, en daarna glijdend mee met de seizoenen. Met de zonverwachting van Solcast erbij.
+- **Leert je verbruik.** Per uur van de dag, in 7 dagen, en daarna glijdend mee met de seizoenen. Met de zonverwachting van Solcast erbij.
 - **Geeft advies voor HBC.** Hoeveel zonne-energie je huis zelf gebruikt (de HBC-instelling *Solar reserved for house*), op basis van de laatste 7 dagen. Batterijplan verandert die instelling zelf nooit.
 - **Laat zien wat het oplevert.** Een eerlijke schatting bovenop HBC alleen: bij overschot ontladen telt alleen wat er echt uit de batterij ging.
 - **Begint veilig.** Eerst in schaduwmodus (rekent mee, stuurt niets). Pas als jij *Live* aanzet, stuurt het HBC bij.
 
-## Nieuw in 1.0.0-dev1
+## Nieuw in 1.0.0-rc1
 
-- **Nieuw dashboard** in de huisstijl van HESC, met eigen kaarten: *Plan vandaag en morgen*, *Prijs en batterij* (met datumkiezer: dag, week, maand), *Advies voor HBC* en *Wat levert het op*. Elke kaart heeft een (i) met uitleg.
-- **Drie talen:** Nederlands, Engels en Duits. De kaarten volgen de taal van je profiel in Home Assistant; per taal is er een dashboard.
-- **Overschot ontladen** in de duurste gewone kwartieren.
-- **Stilstand buiten Dynamic:** staat HBC op een andere strategie, dan stuurt Batterijplan niets en telt het niets op. Het leren gaat door.
-- **Werkt met elke HBC-versie en elke taal van Solcast:** starttijden als getal of tekst, Solcast-sensoren worden zelf gevonden.
-- **Eerlijkere teller** en **lading in de geschiedenis**, zodat de grafiek ook laat zien wat er gebeurde.
+- **Rustiger dashboard:** alles op één scherm. Bovenaan een knoppenrij met *Live* vooraan; instellingen, sensoren, advies en opbrengst openen als venster. Een oranje stip laat zien waar iets te doen is.
+- **Helemaal in de huisstijl:** eigen invoervelden (schuifbalk, keuzeknopjes, − waarde +), sensoren kiezen uit een lijst met de juiste kandidaten, instellingen in de tabbladen Basis en Expert, en een (i) met uitleg bij elke regel.
+- **Vergelijking met HBC alleen** in de grafiek: een rode stippellijn en het verschil in euro per dag.
+- **Sneller leren:** klaar na 7 dagen. De voorspelling wordt per blok van 3 uur beoordeeld en je ziet alleen een oordeel (redelijk, goed, zeer goed, uitstekend). Bij wisselvallig verbruik rekent het plan zelf met extra marge.
+- **Kale of all-in prijzen:** nieuwe instelling *Prijzen van HBC*.
+- **Jouw eigen HBC-standen** worden onthouden en teruggezet. Gebruik je *Sell*, dan blijft Batterijplan van die periode af.
+- **Opgelost:** het plan bleef na een herstart soms hangen, een fout bij aanwijzen in de kaarten, en *huisverbruik* viel 's nachts weg bij omvormers die niets melden.
 
 Alles op een rij: [CHANGELOG.md](CHANGELOG.md).
 
@@ -44,9 +45,9 @@ Alles op een rij: [CHANGELOG.md](CHANGELOG.md).
 | [04 · Onderhoud en bijwerken](docs/04-maintenance.nl.md) | Wat je af en toe doet, nieuwe versie, verwijderen |
 | [05 · Problemen oplossen](docs/05-troubleshooting.nl.md) | Bekende meldingen en wat je eraan doet |
 
-## Testversie
+## Release candidate
 
-Dit is een **testversie** (dev). Ze draait al dagelijks bij de maker, maar heeft nog weinig andere installaties gezien. Zet hem eerst in schaduwmodus, kijk een paar dagen mee en meld wat je opvalt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues) of op Discord. Vermeld je HBC-versie en, bij een foutmelding, een schermafdruk.
+Dit is een **release candidate** (rc): de laatste testversie voor 1.0.0. Ze draait dagelijks bij de maker en bij een paar testers. Zet hem eerst in schaduwmodus, kijk een paar dagen mee en meld wat je opvalt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues) of op Discord. Vermeld je HBC-versie en, bij een foutmelding, een schermafdruk.
 
 ## Licentie
 

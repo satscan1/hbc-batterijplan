@@ -13,7 +13,7 @@
 |---|---|
 | Home Assistant with packages | Batterijplan is one file in `/config/packages/`. |
 | HBC version 4.14 or newer, in **Full control** and strategy **Dynamic** | Batterijplan reads the labels HBC makes for each quarter (cheap, expensive, regular) and the charge of each battery. |
-| A dynamic energy contract with quarter-hour or hourly prices | Without price differences there is nothing to divide. |
+| A dynamic energy contract with quarter-hour or hourly prices | Without price differences there is nothing to divide. HBC may give the prices bare or all-in; you set that under *Prices from HBC*. |
 | Solcast solar forecast (integration *Solcast PV Forecast*) | For the expected sun per half hour. Both the Dutch and the English sensor names work. No solar panels? Then Batterijplan calculates with 0 sun. |
 | Sensors for grid power, solar power and battery power, in watts (W) | To measure and learn the house usage. It is always the power of *this* moment, not a daily total in kWh. |
 
@@ -30,6 +30,8 @@ Set HBC to **Full control** and strategy **Dynamic**. On the Timed/Dynamic tab, 
 | Expensive (high) | Self-consumption |
 
 > **Important:** the regular period must be set to **Charge PV**. Batterijplan assumes that outside the expensive quarters the battery only discharges when Batterijplan asks for it (surplus discharging).
+
+Do you use other settings, for example *Sell* in the expensive period to export for money? Then Batterijplan leaves that period alone. It remembers your settings and puts them back when you turn *Live* off. See [03 · How it works](03-how-it-works.md#your-own-hbc-settings).
 
 ## Step 2 — Place the files
 
@@ -57,6 +59,7 @@ recorder:
     entities:
       - sensor.batterijplan
       - sensor.batterijplan_meerwaarde
+      - sensor.batterijplan_prijs
       - sensor.batterijplan_lading
       - sensor.batterijplan_advies_huisverbruik
       - input_select.house_battery_strategy_dynamic_expensive
@@ -73,7 +76,7 @@ Go to *Developer tools → YAML*, choose **Check configuration** and restart Hom
 
 **Register the cards (once):**
 1. *Settings → Dashboards*, top right ⋮ → **Resources**. Don't see it? Then first turn on *Advanced mode* in your profile.
-2. **Add resource**: URL `/local/batterijplan/batterijplan-cards.js?v=1`, type **JavaScript module**.
+2. **Add resource**: URL `/local/batterijplan/batterijplan-cards.js?v=2`, type **JavaScript module**.
 3. Refresh the browser (on a phone: close and reopen the app).
 
 **Add the dashboard:**
@@ -81,11 +84,17 @@ Go to *Developer tools → YAML*, choose **Check configuration** and restart Hom
 2. Open the dashboard, choose ✏️ (edit) at the top right, then ⋮ → **Raw configuration editor**.
 3. Paste the contents of `dashboards/batterijplan-dashboard.yaml` (Dutch), `batterijplan-dashboard.en.yaml` (English) or `batterijplan-dashboard.de.yaml` (German) and save.
 
-The cards follow the language of your Home Assistant profile. The dashboard file sets the language of the rest (status, settings).
+The cards follow the language of your Home Assistant profile. The dashboard file sets the language of the rest (status, buttons, settings).
 
 ## Step 6 — Fill in the settings
 
-On the dashboard, turn on the **Settings** switch. The fields appear below it, with explanations:
+On the dashboard, click the **Settings** button. A window opens with two tabs: **Basic** (capacity, prices from HBC, contract start date, back-up) and **Expert** (margin, efficiency, energy tax + purchase fee). The sensors are behind the **Sensors** button. Every field has an **(i)** with an explanation.
+
+The fields work like this:
+- a **slider** for capacity, margin and efficiency;
+- **choice buttons** for *kaal* (bare) or *all-in*;
+- a **− value +** control for energy tax + purchase fee; tap the number to type it exactly;
+- a **pick list** for the sensors: tap a sensor field and you get the power sensors in your Home Assistant, the most likely at the top, with what they report now on the right. Tap the right one. Typing filters the list; you can also type the full name yourself and press Enter or OK. Below each chosen sensor you see what it reports now.
 
 | Setting | What to fill in | Example |
 |---|---|---|
@@ -94,6 +103,7 @@ On the dashboard, turn on the **Settings** switch. The fields appear below it, w
 | Safety margin | charge the plan never counts on | 0.3 kWh |
 | Charge + discharge efficiency | what % of the charged power comes out again | 75 % |
 | Energy tax + purchase fee (excl. VAT) | what you pay per kWh *on top of* the bare market price: energy tax plus your supplier's purchase fee | 0.09161 + 0.0165 = 0.1081 |
+| Prices from HBC | *kaal* (bare) if HBC gives the bare market price (the default); *all-in* if HBC gives the price with tax, mark-up and VAT. With all-in, Batterijplan adds nothing itself. | kaal |
 | Grid power sensor | your sensor in W, import = +, export = − | `sensor.p1_vermogen` |
 | Solar power sensor | what all your solar panels together produce **now**, in W (not the daily yield) | `sensor.zon_totaal` |
 | Battery power sensor | total of all your batteries in W, discharging = + | with HBC usually `sensor.house_total_battery_power` |
@@ -103,15 +113,15 @@ Several inverters and no sensor with the total? Create a helper: *Settings → D
 
 > As long as the usable capacity is not filled in, the plan says "Not set up" and does nothing.
 
-**Check:** the Sensors card shows *Check: house usage now*. That should roughly match what your house really uses, and is never negative.
+**Check:** at the bottom of the Sensors window you see *House consumption now*. That should roughly match what your house really uses, and is never negative.
 
-**Make a back-up.** Everything filled in? Press **Make back-up**. After a reinstall or a mistake, **Restore back-up** puts everything back. The back-up is kept across a restart and a new version.
+**Make a back-up.** Everything filled in? On the Basic tab, press **Make back-up**. After a reinstall or a mistake, **Restore back-up** puts everything back. That button first asks "Sure? Tap once more". The back-up saves all 10 settings and is kept across a restart and a new version.
 
-Then turn the **Settings** switch off again.
+Then close the window. If something is still missing, the button keeps an orange dot.
 
-## The first 14 days: watch and learn
+## The first 7 days: watch and learn
 
-Batterijplan starts in **shadow mode**: it calculates and shows what it would do, but changes nothing in HBC. On the status card, *Learning usage* shows how far along it is ("day 3 of 14").
+Batterijplan starts in **shadow mode**: it calculates and shows what it would do, but changes nothing in HBC. On the status card, *Learning usage* shows how far along it is ("day 3 of 7").
 
 Now and then, look at *Plan today and tomorrow* and *Price and battery*:
 - Does the plan say "holding for later"? Did a more expensive moment indeed come later in the day?

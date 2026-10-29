@@ -46,11 +46,15 @@ Batterijplan meet het huisverbruik per kwartier (net + zon + batterij, min de la
 
 | Status | Na | Betekenis |
 |---|---|---|
-| aan het leren | 0–6 dagen | Na de eerste dag doet het al mee, maar het is nog onrustig. |
-| grof | 7–13 dagen | Bruikbaar, maar één rare dag weegt nog zwaar. |
-| prima | 14+ dagen | Goed ingeregeld. Daarna leert het glijdend door: oude dagen doven langzaam uit, zodat het met de seizoenen meegaat. |
+| aan het leren | 0–3 dagen | Na de eerste dag doet het al mee, maar het is nog onrustig. |
+| grof | 4–6 dagen | Bruikbaar, maar één rare dag weegt nog zwaar. |
+| prima | 7+ dagen | Goed ingeregeld. Daarna leert het glijdend door over ongeveer 4 weken: oude dagen doven langzaam uit, zodat het met de seizoenen meegaat. |
 
-De **trefzekerheid** legt elk kwartier de voorspelling naast het echte verbruik. Het cijfer is 100 % min de gemiddelde afwijking (als deel van het gemiddelde verbruik), glijdend over 14 dagen.
+Waarom 7 dagen? Een proef met 89 dagen echte meetdata liet zien dat een kort geheugen het verbruik iets beter voorspelt dan een lang geheugen.
+
+De **voorspelling** legt de verwachting naast het echte verbruik, per blok van 3 uur (00–03, 03–06 enzovoort). Een kwartier is te grillig om te voorspellen; een blok van 3 uur is wat er voor het plan echt toe doet. Je ziet een oordeel: *wisselvallig* (onder 55 %), *redelijk* (55 % of meer), *goed* (65 % of meer) *zeer goed* (75 % of meer) of *uitstekend* (85 % of meer). Het percentage zelf staat in de sensor `sensor.batterijplan_voorspelling` (eigenschap *betrouwbaarheid*), glijdend over de laatste 7 dagen.
+
+**Wisselvallig verbruik.** Is de voorspelling *wisselvallig*, dan rekent het plan zelf met **extra marge** bovenop je eigen veiligheidsmarge: de gemiddelde afwijking per blok van 3 uur, maximaal 1 kWh. Het plan ontlaadt dan in iets minder dure kwartieren en houdt wat meer vast, zodat de batterij minder vaak te vroeg leeg raakt. Op de statuskaart staat dan bijvoorbeeld "extra marge 0,5 kWh". Wordt de voorspelling weer redelijk of beter, dan valt de extra marge vanzelf weg.
 
 Het leren loopt altijd door, ook in schaduwmodus en ook als HBC niet op Dynamic staat.
 
@@ -58,14 +62,28 @@ Het leren loopt altijd door, ook in schaduwmodus en ook als HBC niet op Dynamic 
 
 Zet op het dashboard **Live** aan. Vanaf dat moment past Batterijplan elk kwartier de twee Dynamic-standen van HBC aan zoals in de tabel hierboven. Elke wijziging komt in het logboek.
 
-**Live weer uit?** Dan zet Batterijplan beide standen direct terug: dure stand *Self-consumption*, gewone stand *Charge PV*. HBC is dan weer helemaal zoals voorheen.
+**Live weer uit?** Dan zet Batterijplan beide standen direct terug naar jouw eigen standen. HBC is dan weer helemaal zoals voorheen.
+
+## Jouw eigen HBC-standen
+
+Batterijplan onthoudt jouw standen voor de dure en de gewone periode:
+- op het moment dat je *Live* aanzet;
+- en elke keer dat je ze verandert terwijl *Live* uit staat.
+
+Die standen zet het terug als *Live* uitgaat of als HBC Dynamic verlaat. Nog niets onthouden? Dan zet het *Self-consumption* en *Charge PV* terug.
+
+Batterijplan stuurt alleen bij waar dat past:
+- de **dure periode** alleen als jouw stand daar *Self-consumption* is;
+- de **gewone periode** alleen als jouw stand daar *Charge PV* is.
+
+Gebruik je in de dure periode bijvoorbeeld **Sell** (terugleveren voor geld), dan blijft Batterijplan daar af. HBC doet dan zijn eigen werk.
 
 ## Als HBC niet op Dynamic staat
 
 Kies jij (of een automatisering, bijvoorbeeld bij een negatieve prijs) een andere strategie in HBC, dan:
 - staat Batterijplan stil: de plankaart zegt "Batterijplan staat stil: HBC staat op …";
 - telt de teller niets op;
-- zet Batterijplan, als *Live* aan stond, de twee Dynamic-standen terug naar normaal;
+- zet Batterijplan, als *Live* aan stond, de twee Dynamic-standen terug naar jouw eigen standen;
 - gaat het leren gewoon door.
 
 Zodra HBC weer op Dynamic staat, rekent het plan direct opnieuw en stuurt het meteen weer bij.
@@ -87,9 +105,15 @@ Elk kwartier rekent Batterijplan het vorige kwartier af:
 
 Alle bedragen zijn inclusief btw. **Schaduw** telt apart van **live**. Het blijft een schatting; je energierekening is het echte bewijs.
 
+**Kale of all-in prijzen.** Geeft HBC kale beursprijzen, dan telt Batterijplan zelf de energiebelasting, de inkoopvergoeding en de btw erbij. Geeft HBC all-in prijzen, kies dan bij *Prijzen van HBC* voor *all-in*: Batterijplan rekent dan met de prijs zoals hij is.
+
+## Vergelijking met HBC alleen
+
+In de grafiek *Prijs en batterij* rekent Batterijplan ook uit hoe de lading was verlopen als HBC het alleen had gedaan: ontladen in elk duur kwartier, op volgorde. Dat is de rode stippellijn. De chip *Extra t.o.v. HBC alleen* is het geschatte verschil in euro voor die dag.
+
 ## Wat het (nog) niet doet
 
 - **Zelf extra laden 's nachts:** dat wordt alleen uitgerekend en getoond.
 - **Een goedkope middag die HBC niet als goedkoop markeert** (door de grens van uren per dag of het minimale prijsverschil in HBC) telt niet als bijladen.
 - **Verschil tussen werkdag en weekend** in het verbruik.
-- **Terugleveren aan het net voor geld** (Sell): Batterijplan is gericht op eigen verbruik.
+- **Terugleveren aan het net voor geld** (Sell): Batterijplan is gericht op eigen verbruik. Gebruik je Sell in HBC, dan blijft Batterijplan van die periode af (zie [Jouw eigen HBC-standen](#jouw-eigen-hbc-standen)). Wat Sell oplevert, laat Batterijplan (nog) niet zien.

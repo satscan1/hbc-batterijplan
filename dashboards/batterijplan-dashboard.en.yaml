@@ -1,6 +1,6 @@
-# Batterijplan v1.0.0-dev1 — dashboard (English)
-# Paste into: Settings → Dashboards → (your dashboard) → ✏️ → ⋮ → Raw configuration editor
-# Needed: the cards (www/batterijplan/batterijplan-cards.js) as a dashboard resource, see docs/01-installation.
+# Batterijplan v1.0.0-rc1 — dashboard (English)
+# Paste into: Settings → Dashboards → (your dashboard) → edit (pencil) → ⋮ → Raw configuration editor
+# Needed: the cards (www/batterijplan/batterijplan-cards.js) as a dashboard resource, see docs/01-installation.md.
 title: Batterijplan
 views:
 - title: Batterijplan
@@ -8,341 +8,198 @@ views:
   icon: mdi:battery-clock
   type: sections
   max_columns: 3
-  header:
-    layout: responsive
-    badges_position: bottom
-    badges_wrap: wrap
-    card:
-      type: markdown
-      text_only: true
-      content: <img src="/local/batterijplan/logo.webp?v=1" height="88" alt="HBC-Batterijplan">
-  badges:
-  - type: entity
-    entity: sensor.batterijplan_meerwaarde
-    name: Saved in total
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:cash-plus
-    color: green
-  - type: entity
-    entity: sensor.batterijplan_meerwaarde_periode
-    name: This energy period
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:calendar-check
-    color: teal
-  - type: entity
-    entity: sensor.batterijplan_voorspelling
-    name: Forecast accuracy
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:crystal-ball
-    color: '#cfcfcf'
-    visibility:
-    - condition: state
-      entity: sensor.batterijplan_voorspelling_kleur
-      state: grijs1
-  - type: entity
-    entity: sensor.batterijplan_voorspelling
-    name: Forecast accuracy
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:crystal-ball
-    color: '#9e9e9e'
-    visibility:
-    - condition: state
-      entity: sensor.batterijplan_voorspelling_kleur
-      state: grijs2
-  - type: entity
-    entity: sensor.batterijplan_voorspelling
-    name: Forecast accuracy
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:crystal-ball
-    color: '#616161'
-    visibility:
-    - condition: state
-      entity: sensor.batterijplan_voorspelling_kleur
-      state: grijs3
-  - type: entity
-    entity: sensor.batterijplan_voorspelling
-    name: Forecast accuracy
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:crystal-ball
-    color: '#c5e1a5'
-    visibility:
-    - condition: state
-      entity: sensor.batterijplan_voorspelling_kleur
-      state: groen1
-  - type: entity
-    entity: sensor.batterijplan_voorspelling
-    name: Forecast accuracy
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:crystal-ball
-    color: '#9ccc65'
-    visibility:
-    - condition: state
-      entity: sensor.batterijplan_voorspelling_kleur
-      state: groen2
-  - type: entity
-    entity: sensor.batterijplan_voorspelling
-    name: Forecast accuracy
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:crystal-ball
-    color: '#66bb6a'
-    visibility:
-    - condition: state
-      entity: sensor.batterijplan_voorspelling_kleur
-      state: groen3
-  - type: entity
-    entity: sensor.batterijplan_voorspelling
-    name: Forecast accuracy
-    show_name: true
-    show_state: true
-    show_icon: true
-    icon: mdi:crystal-ball
-    color: '#1b5e20'
-    visibility:
-    - condition: state
-      entity: sensor.batterijplan_voorspelling_kleur
-      state: groen4
   sections:
   - type: grid
+    column_span: 3
     cards:
-    - type: markdown
-      content: |-
-        ## <sub><img src="/local/batterijplan/thuisbatterij.png?v=1" height="22" alt=""></sub> Batterijplan <small>{{ 'v' ~ state_attr('sensor.batterijplan', 'versie') if state_attr('sensor.batterijplan', 'versie') else '' }}</small>
-        **Does the battery get more out of the most expensive quarters than HBC alone?**
+    - type: custom:batterijplan-knoppen
+      live: input_boolean.batterijplan_live
+      knoppen:
+      - naam: Earnings
+        kaarten:
+        - type: custom:batterijplan-opbrengst
+          title: What does it earn
+          icon: batterijplan:euro
+      - naam: HBC advice
+        melding: advies
+        kaarten:
+        - type: custom:batterijplan-advies
+          title: Advice for HBC
+          icon: batterijplan:schuifregelaars
+      - naam: Settings
+        melding: instellingen
+        kaarten:
+        - type: custom:batterijplan-velden
+          title: Settings
+          icon: batterijplan:schuifregelaars
+          info: |-
+            Here you set Batterijplan up for your batteries and your energy contract.
 
-        {%- set live = is_state('input_boolean.batterijplan_live','on') %}
-        {%- set p = 'sensor.batterijplan_verbruiksprofiel' %}
-        {%- set geleerd = (state_attr(p,'uur') or []) | select('number') | list | count %}
-        | | | |
-        |---|---|---|
-        | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if live else '<img src="/local/batterijplan/spook.png?v=1" height="22" alt="">' }} | Mode | {{ '**live** — steers HBC' if live else '**shadow** — calculates along, does not steer' }} |
-        | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if is_state(p,'prima') else '<img src="/local/batterijplan/zandloper.png?v=1" height="22" alt="">' }} | Learning usage | {%- set nn = state_attr(p,'n') or [] %}{%- set dag = [((nn | sum) / 96) | int + 1, 14] | min if nn is not string else 1 %}{%- set bt = state_attr('sensor.batterijplan_voorspelling','betrouwbaarheid') %}{{ ('**done learning**' ~ (' · forecast ' ~ bt ~ ' % on target' if bt is number else '')) if is_state(p,'prima') else ('**learning** · day ' ~ dag ~ ' of 14 · ' ~ ('all hours of the day seen' if geleerd | int(0) >= 24 else geleerd ~ ' of 24 hours seen')) }} |
-        | {{ '<img src="/local/batterijplan/vinkje-cirkel.png?v=1" height="22" alt="">' if is_state('input_select.house_battery_strategy','Dynamic') else '<img src="/local/batterijplan/zandloper.png?v=1" height="22" alt="">' }} | HBC strategy | {{ states('input_select.house_battery_strategy') }}{{ '' if is_state('input_select.house_battery_strategy','Dynamic') else ' — plan waits for Dynamic' }} |
-        | <img src="/local/batterijplan/kalender-klok.png?v=1" height="22" alt=""> | Next quarter ({{ state_attr('sensor.batterijplan','kwartier') }}) | {%- set tr = {'Ontladen':'Discharging','Vasthouden':'Holding','Overschot ontladen':'Surplus discharging','Laden (HBC)':'Charging (HBC)','Zon laden (HBC)':'Solar charging (HBC)','Niet ingesteld':'Not set up','Geen batterijdata':'No battery data','Geen prijsdata':'No price data','HBC niet op Dynamic':'HBC not on Dynamic'} %} **{{ tr.get(states('sensor.batterijplan'), states('sensor.batterijplan')) }}** |
-      grid_options:
-        columns: full
-    - type: custom:batterijplan-advies
-      title: Advice for HBC
-      icon: batterijplan:schuifregelaars
-    - type: custom:batterijplan-opbrengst
-      title: What does it earn
-      icon: batterijplan:euro
+            **Basic** is filled in once. **Expert** usually does not need changing.
+
+            If something essential is missing, the Settings button gets an orange dot.
+
+            Make a **back-up** after filling in. It is kept through a restart and a new version.
+          tabs:
+          - naam: Basic
+            sub: Set and forget
+            rows:
+            - entity: input_number.batterijplan_capaciteit
+              name: Usable battery capacity
+              info: |-
+                What your batteries together can really deliver, above the lower limit set in HBC.
+
+                Example: 2 batteries of 5.12 kWh with a 12 % lower limit ≈ 9.0 kWh.
+
+                As long as this is not filled in, the plan does nothing.
+            - entity: input_select.batterijplan_hbc_prijzen
+              name: Prices from HBC
+              info: |-
+                If HBC gives the bare exchange price (without tax and mark-up), choose **kaal** (bare).
+
+                If HBC gives all-in prices (with energy tax, mark-up and VAT), choose **all-in**. Batterijplan then adds nothing itself, and Energy tax + purchase fee is not needed.
+            - entity: input_datetime.batterijplan_contract_start
+              name: Energy contract start date
+              info: |-
+                The day your contract year starts. The year does not matter.
+
+                The earnings for "this energy period" count from this date and start again every contract year.
+            - type: section
+              name: Back-up
+            - type: buttons
+              buttons:
+              - name: Make back-up
+                entity: input_button.batterijplan_backup
+              - name: Restore back-up
+                entity: input_button.batterijplan_terugzetten
+                confirm: true
+              - name: Defaults
+                entity: input_button.batterijplan_standaard
+                confirm: true
+              name: Keep settings
+              info: |-
+                **Make back-up** saves all these settings, including the sensors.
+
+                **Restore back-up** puts everything back from the last back-up, for example after a reinstall or a mistake.
+
+                **Defaults** sets the safety margin and efficiency back to 0.3 kWh and 75 %. A back-up is made first, so you can undo this.
+
+                For restore and defaults the button first asks: Sure?
+            - type: backup
+          - naam: Expert
+            sub: Only change if you know why
+            rows:
+            - entity: input_number.batterijplan_marge
+              name: Safety margin
+              info: |-
+                Charge the plan never counts on, so it does not plan too tightly.
+
+                0.3 kWh is a good start. If the battery often runs empty too early, raise the margin.
+            - entity: input_number.batterijplan_rendement
+              name: Round-trip efficiency
+              info: |-
+                How many percent of the charged energy comes back out.
+
+                Not sure? Start with 75 %.
+            - entity: input_number.batterijplan_opslag
+              name: Energy tax + purchase fee (excl. VAT)
+              kind: stepper
+              step: 0.001
+              info: |-
+                What you pay per kWh on top of the bare exchange price, without VAT: the energy tax (2026: € 0.09161) plus your supplier's purchase fee (on your contract).
+
+                Example: 0.09161 + 0.0165 = 0.1081.
+
+                Tap the number to type it exactly. Not needed when Prices from HBC = all-in.
+      - naam: Sensors
+        melding: sensoren
+        kaarten:
+        - type: custom:batterijplan-velden
+          title: Sensors
+          icon: batterijplan:thuisbatterij
+          info: |-
+            Tap a field: you get a list of the power sensors in your Home Assistant, the most likely at the top, with what they report now on the right. Tap the right one. Typing filters the list; you can also type the full name yourself.
+
+            It is always the power **at this moment in watts (W)**, not a daily total in kWh.
+
+            Below each chosen name you see what that sensor reports now.
+
+            **House consumption now** should roughly match what your house really uses.
+          rows:
+          - entity: input_text.batterijplan_sensor_net
+            name: Grid power (W)
+            info: Import from the grid is +, export is −.
+            pick: true
+            suggest:
+            - p1
+            - grid
+            - net
+            - meter
+            - dsmr
+            - consumption
+            - afname
+            pick_hint: Import is +, export is −. Pick the sensor that reports the grid power of your whole house now.
+          - entity: input_text.batterijplan_sensor_zon
+            name: Solar power now (W)
+            info: |-
+              What all your solar panels together produce right now.
+
+              Several inverters? Create a helper Combine the state of several sensors, with type Sum.
+            pick: true
+            suggest:
+            - pv
+            - solar
+            - zon
+            - inverter
+            - omvormer
+            - opbrengst
+            - production
+            pick_hint: Pick the sensor with what all your solar panels together produce now.
+          - entity: input_text.batterijplan_sensor_batterij
+            name: Battery power (W)
+            info: |-
+              Total of all your batteries, discharging is +.
+
+              With HBC usually sensor.house_total_battery_power.
+            pick: true
+            suggest:
+            - house_total_battery
+            - battery
+            - batterij
+            - accu
+            - marstek
+            pick_hint: 'Pick the total of all your batteries (discharging is +). With HBC usually: house total battery power.'
+          - entity: input_text.batterijplan_sensor_ev
+            name: Charger (W, optional)
+            info: Charging power of your EV charger. It is subtracted from the house consumption. May stay empty.
+            pick: true
+            suggest:
+            - wallbox
+            - charger
+            - laad
+            - ev
+            - charge
+            pick_hint: Pick the charging power of your EV charger.
+          - type: section
+            name: Check
+          - entity: sensor.batterijplan_huisverbruik
+            name: House consumption now
+            info: Grid power + solar power + battery power − charger. Should roughly match what your house really uses, and is never negative.
+  - type: grid
+    cards:
+    - type: custom:batterijplan-status
   - type: grid
     column_span: 2
     cards:
     - type: custom:batterijplan-plan
       title: Plan today and tomorrow
       icon: batterijplan:kalender-klok
-    - type: energy-date-selection
-      grid_options:
-        columns: full
-    - type: custom:batterijplan-grafiek
-      title: Price and battery
-      icon: batterijplan:euro-klok
   - type: grid
     column_span: 3
     cards:
-    - type: markdown
-      content: '## <sub><img src="/local/batterijplan/schuifregelaars.png?v=1" height="22" alt=""></sub> Settings'
-      grid_options:
-        columns: full
-    - type: horizontal-stack
-      cards:
-      - type: tile
-        entity: input_button.batterijplan_backup
-        name: Make back-up
-        icon: mdi:content-save-cog-outline
-        color: blue
-        hide_state: true
-        vertical: true
-        tap_action:
-          action: perform-action
-          perform_action: input_button.press
-          target:
-            entity_id: input_button.batterijplan_backup
-        icon_tap_action:
-          action: perform-action
-          perform_action: input_button.press
-          target:
-            entity_id: input_button.batterijplan_backup
-      - type: tile
-        entity: input_button.batterijplan_terugzetten
-        name: Restore back-up
-        icon: mdi:backup-restore
-        color: amber
-        hide_state: true
-        vertical: true
-        tap_action:
-          action: perform-action
-          perform_action: input_button.press
-          target:
-            entity_id: input_button.batterijplan_terugzetten
-          confirmation:
-            text: Restore all Batterijplan settings to the last back-up?
-        icon_tap_action:
-          action: perform-action
-          perform_action: input_button.press
-          target:
-            entity_id: input_button.batterijplan_terugzetten
-          confirmation:
-            text: Restore all Batterijplan settings to the last back-up?
-      - type: tile
-        entity: input_button.batterijplan_standaard
-        name: Default values
-        icon: mdi:restore
-        color: red
-        hide_state: true
-        vertical: true
-        tap_action:
-          action: perform-action
-          perform_action: input_button.press
-          target:
-            entity_id: input_button.batterijplan_standaard
-          confirmation:
-            text: Set the safety margin and efficiency back to the default values (0.3 kWh and 75 %)? A back-up is made first, so you can undo this with "Restore back-up".
-        icon_tap_action:
-          action: perform-action
-          perform_action: input_button.press
-          target:
-            entity_id: input_button.batterijplan_standaard
-          confirmation:
-            text: Set the safety margin and efficiency back to the default values (0.3 kWh and 75 %)? A back-up is made first, so you can undo this with "Restore back-up".
-      - type: tile
-        entity: input_boolean.batterijplan_live
-        name: Live
-        icon: mdi:battery-sync
-        hide_state: false
-        vertical: true
-        features_position: inline
-        tap_action:
-          action: toggle
-        icon_tap_action:
-          action: toggle
-      - type: tile
-        entity: input_boolean.batterijplan_toon_instellingen
-        name: Settings
-        icon: mdi:tune-vertical
-        hide_state: false
-        vertical: true
-        features_position: inline
-        tap_action:
-          action: toggle
-        icon_tap_action:
-          action: toggle
-      grid_options:
-        columns: full
-    - type: markdown
-      text_only: true
-      content: <small><ha-icon icon="mdi:content-save-outline"></ha-icon> {%- set b = 'sensor.batterijplan_instellingen_backup' %} {{ ('Back-up ' ~ states(b)[:5] ~ states(b)[10:] ~ ' · 8 settings') if has_value(b) else 'No back-up yet' }}</small>
-      grid_options:
-        columns: full
-    - type: entities
-      title: Values
-      grid_options:
-        columns: full
-      visibility:
-      - condition: or
-        conditions:
-        - condition: state
-          entity: input_boolean.batterijplan_toon_instellingen
-          state: 'on'
-        - condition: state
-          entity: input_text.batterijplan_sensor_net
-          state:
-          - ''
-          - unknown
-        - condition: numeric_state
-          entity: input_number.batterijplan_capaciteit
-          below: 1.05
-      entities:
-      - entity: input_number.batterijplan_capaciteit
-        name: Usable battery capacity
-      - entity: input_number.batterijplan_marge
-        name: Safety margin
-      - entity: input_number.batterijplan_rendement
-        name: Charge + discharge efficiency
-      - entity: input_number.batterijplan_opslag
-        name: Energy tax + purchase fee (excl. VAT)
-      - entity: input_datetime.batterijplan_contract_start
-        name: Energy contract start date
-    - type: entities
-      title: Sensors
-      grid_options:
-        columns: full
-      visibility:
-      - condition: or
-        conditions:
-        - condition: state
-          entity: input_boolean.batterijplan_toon_instellingen
-          state: 'on'
-        - condition: state
-          entity: input_text.batterijplan_sensor_net
-          state:
-          - ''
-          - unknown
-        - condition: numeric_state
-          entity: input_number.batterijplan_capaciteit
-          below: 1.05
-      entities:
-      - entity: input_text.batterijplan_sensor_net
-        name: Grid power (W)
-      - entity: input_text.batterijplan_sensor_zon
-        name: Solar power now (W)
-      - entity: input_text.batterijplan_sensor_batterij
-        name: Battery power (W)
-      - entity: input_text.batterijplan_sensor_ev
-        name: EV charger (W, optional)
-      - entity: sensor.batterijplan_huisverbruik
-        name: 'Check: house usage now'
-    - type: markdown
-      grid_options:
-        columns: full
-      visibility:
-      - condition: or
-        conditions:
-        - condition: state
-          entity: input_boolean.batterijplan_toon_instellingen
-          state: 'on'
-        - condition: state
-          entity: input_text.batterijplan_sensor_net
-          state:
-          - ''
-          - unknown
-        - condition: numeric_state
-          entity: input_number.batterijplan_capaciteit
-          below: 1.05
-      content: |-
-        <sub><img src="/local/batterijplan/info.png?v=1" height="22" alt=""></sub> **What do you fill in?**
-
-        | | |
-        |---|---|
-        | **Live** | Off = shadow: the plan only calculates along. On = the plan steers HBC in the expensive quarters. |
-        | **Usable capacity** | What your batteries together can *really* deliver, above the lower limit set in HBC. Example: 2 batteries of 5.12 kWh with a 12 % lower limit ≈ 9.0 kWh. As long as this is not filled in, the plan does nothing. |
-        | **Safety margin** | Charge the plan never counts on, so it does not plan too tightly. 0.3 kWh is a good start. |
-        | **Efficiency** | What % of the charged power comes out again. Not sure? Start with 75 %. |
-        | **Energy tax + purchase fee** | What you pay per kWh *on top of* the bare market price, without VAT: the energy tax (2026: € 0.09161) plus your supplier's purchase fee (it is on your contract). Example: 0.09161 + 0.0165 = 0.1081. Only used for the advice about charging at night. |
-        | **Sensors** | Type the name of your own sensor, e.g. `sensor.p1_vermogen`. Always the power of **this moment in watts (W)**, not a daily total in kWh. |
-        | – Grid | Import from the grid is +, export is −. |
-        | – Solar | What all your solar panels together produce now. Several inverters? Create a helper *Combine the state of several sensors* with type *Sum*. |
-        | – Battery | Total of all your batteries, discharging is +. With HBC usually `sensor.house_total_battery_power`. |
-        | – EV charger | Charging power of your car charger. May stay empty. |
-        | **Check** | *House usage now* should roughly match what your house really uses. |
-        | **Back-up** | *Make back-up* saves all these settings. After a reinstall or a mistake, *Restore back-up* puts everything back. The back-up is kept across a restart and a new version. |
-        | **Default values** | Sets the safety margin and efficiency back to 0.3 kWh and 75 %. A back-up is made first. |
-
-        All set? Turn the *Settings* switch off, and the values, the sensors and this explanation disappear. As long as something is missing, they stay open by themselves.
+    - type: custom:batterijplan-grafiek
+      title: Price and battery
+      icon: batterijplan:euro-klok
+      datumkiezer: true
+      height: 240
+      vergelijk: true

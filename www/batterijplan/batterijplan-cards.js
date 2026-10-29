@@ -3,6 +3,9 @@
 //   custom:batterijplan-grafiek   Prijs per kwartier met gekleurde vlakken (wat de batterij doet) en de lading
 //   custom:batterijplan-advies    Advies voor HBC (Solar reserved for house), op basis van 7 dagen
 //   custom:batterijplan-opbrengst Wat levert het op (tellers), uitleg achter de (i)
+//   custom:batterijplan-knoppen   Knoppenrij met vensters (Live vooraan)
+//   custom:batterijplan-velden    Eigen invoervelden in de huisstijl (schuifbalk, − waarde + pil, chips, tekst op de regel), met tabbladen
+//   custom:batterijplan-status    Status met logo; elke regel een (i) met uitleg
 // Teksten in het Nederlands, Engels en Duits; de taal volgt het profiel van de gebruiker in Home Assistant.
 (() => {
   if (customElements.get("batterijplan-plan")) return;
@@ -22,9 +25,9 @@
     solar_tomorrow: "sensor.solcast_pv_forecast_forecast_tomorrow",
   };
   const CAT = {
-    o: { color: "#4caf50", name: "ontladen voor het huis" },
-    v: { color: "#e0a526", name: "vasthouden (Batterijplan stuurt bij)" },
-    x: { color: "#9ccc65", name: "overschot ontladen" },
+    o: { color: "#66bb6a", name: "ontladen voor het huis" },
+    v: { color: "#ff9800", name: "vasthouden (Batterijplan stuurt bij)" },
+    x: { color: "#b388ff", name: "overschot ontladen" },
     n: { color: "#3a4651", name: "gewoon — HBC laadt met zon (of doet niets)" },
     l: { color: "#9e9e9e", name: "laden van het net (goedkoop)" },
     H: { color: "#7d5a3c", name: "duur volgens HBC — nog niet ingepland" },
@@ -38,7 +41,9 @@
     "Overschot ontladen": "Lading die er tot het volgende goedkope moment te veel in zit. Batterijplan levert die nu al aan het huis, in plaats van met een volle batterij te gaan laden. Met de geschatte opbrengst.",
     "Kale prijs nu": "Inkoopprijs van stroom dit kwartier, zonder energiebelasting, opslag en btw.",
     "Gemiddelde kale prijs": "Gemiddelde inkoopprijs van die dag, zonder energiebelasting, opslag en btw.",
-    "Laagste – hoogste": "Goedkoopste en duurste kwartier van die dag (kale prijs).",
+    "Laagste – hoogste": "Goedkoopste en duurste kwartier van die dag.",
+    "Prijs nu (all-in)": "Prijs van stroom dit kwartier zoals HBC hem geeft: inclusief energiebelasting, opslag en btw.",
+    "Gemiddelde prijs (all-in)": "Gemiddelde prijs van die dag zoals HBC hem geeft: inclusief energiebelasting, opslag en btw.",
     "Opgeleverd in deze periode": "Geschatte opbrengst bovenop wat HBC alleen had gedaan, opgeteld over de gekozen periode.",
   };
   // talen: Nederlands is de bron; Engels en Duits uit I18N (zie onderaan). Taal volgt het profiel in Home Assistant.
@@ -49,6 +54,26 @@
   let DAG = DAGEN.nl, MAAND = MAANDEN.nl;
   const I18N = {
    "en": {
+    "Goedkoopste en duurste kwartier van die dag.": "Cheapest and most expensive quarter of that day.",
+    "Gemiddelde prijs van die dag zoals HBC hem geeft: inclusief energiebelasting, opslag en btw.": "Average price of that day as HBC gives it: including energy tax, supplier mark-up and VAT.",
+    "Prijs van stroom dit kwartier zoals HBC hem geeft: inclusief energiebelasting, opslag en btw.": "Electricity price this quarter as HBC gives it: including energy tax, supplier mark-up and VAT.",
+    "prijs all-in": "price all-in",
+    "prijs all-in (ct)": "price all-in (ct)",
+    "Gemiddelde prijs (all-in)": "Average price (all-in)",
+    "Prijs nu (all-in)": "Price now (all-in)",
+    "Terug": "Back",
+    "Hoe lees je dit?": "How to read this?",
+    "lading als HBC het alleen deed": "charge if HBC did it alone",
+    "Extra t.o.v. HBC alleen": "Extra vs HBC alone",
+    "Sensoren": "Sensors",
+    "Instellingen": "Settings",
+    "Advies HBC": "HBC advice",
+    "Opbrengst": "Earnings",
+    "Uit = schaduw: het plan rekent alleen mee. Aan = Batterijplan stuurt HBC bij.": "Off = shadow: the plan only calculates along. On = Batterijplan steers HBC.",
+    "Hier is iets te doen": "Something needs attention here",
+    "Sluiten": "Close",
+    "schaduw": "shadow",
+    "stuurt HBC": "steering HBC",
     "7 dagen": "7 days",
     "Aanpassen naar": "Change to",
     "Advies volgt als je verbruik geleerd is en er een week gemeten is": "Advice follows once your consumption is learned and a week has been measured",
@@ -136,7 +161,7 @@
     "lading (kWh): doorgetrokken = gemeten, gestreept = verwacht volgens plan": "charge (kWh): solid = measured, dashed = expected by plan",
     "lading daarna ±": "charge afterwards ±",
     "lading vasthouden voor een later, duurder kwartier": "holding charge for a later, more expensive quarter",
-    "lichtgroen": "light green",
+    "paars": "purple",
     "nu ingesteld": "now set to",
     "om": "at",
     "ontladen in een duur kwartier": "discharging in an expensive quarter",
@@ -154,9 +179,80 @@
     "waarvan live (echt gestuurd)": "of which live (really steered)",
     "waarvan schaduw (zou opleveren)": "of which shadow (would earn)",
     "wat het had opgeleverd terwijl Live uit stond (niet echt verdiend).": "what it would have earned while Live was off (not really earned).",
-    "wat het opleverde terwijl Batterijplan echt stuurde.": "what it earned while Batterijplan was really steering."
+    "wat het opleverde terwijl Batterijplan echt stuurde.": "what it earned while Batterijplan was really steering.",
+    "Laatste back-up": "Last back-up",
+    "instellingen": "settings",
+    "Nog geen back-up": "No back-up yet",
+    "Zeker? Tik nog een keer": "Sure? Tap once more",
+    "niet gevonden": "not found",
+    "Tik om te typen": "Tap to type",
+    "minder": "less",
+    "meer": "more",
+    "nu": "now",
+    "sensor niet gevonden": "sensor not found",
+    "leeg · tik om in te vullen": "empty · tap to fill in",
+    "Uitvoeren": "Run",
+    "klaar met leren": "done learning",
+    "voorspelling": "forecast",
+    "aan het leren": "learning",
+    "dag": "day",
+    "van": "of",
+    "van 24 uren al gezien": "of 24 hours seen so far",
+    "Haalt de batterij meer uit de duurste kwartieren dan HBC alleen?": "Does the battery get more out of the most expensive quarters than HBC alone?",
+    "Modus": "Mode",
+    "live": "live",
+    "rekent mee, stuurt niet": "calculates along, does not steer",
+    "Verbruik leren": "Learning usage",
+    "HBC-strategie": "HBC strategy",
+    "plan wacht tot Dynamic": "plan waits for Dynamic",
+    "Komend kwartier": "Next quarter",
+    "zeer goed": "very good",
+    "goed": "good",
+    "redelijk": "fair",
+    "wisselvallig": "variable",
+    "nog aan het meten": "still measuring",
+    "Ontladen": "Discharging",
+    "Vasthouden": "Holding",
+    "Laden (HBC)": "Charging (HBC)",
+    "Zon laden (HBC)": "Solar charging (HBC)",
+    "Niet ingesteld": "Not set up",
+    "Geen batterijdata": "No battery data",
+    "Geen prijsdata": "No price data",
+    "HBC niet op Dynamic": "HBC not on Dynamic",
+    "**Live**: Batterijplan zet elk kwartier de twee Dynamic-standen van HBC.\n\n**Schaduw**: Batterijplan rekent mee en laat zien wat het zou doen, maar verandert niets aan HBC.\n\nAan- en uitzetten doe je met de schakelaar Live bovenaan.": "**Live**: Batterijplan sets the two Dynamic settings of HBC every quarter.\n\n**Shadow**: Batterijplan calculates along and shows what it would do, but changes nothing in HBC.\n\nTurn it on and off with the Live switch at the top.",
+    "Batterijplan leert per uur van de dag hoeveel je huis gebruikt. Na 7 dagen is het klaar met leren. Daarna leert het glijdend door, zodat het met de seizoenen meegaat.\n\nDe **voorspelling** zegt hoe goed het geleerde verbruik het echte verbruik raakt, per blok van 3 uur:\n- wisselvallig: minder dan 55 %\n- redelijk: 55 % of meer\n- goed: 65 % of meer\n- zeer goed: 75 % of meer\n- uitstekend: 85 % of meer\n\nZolang er nog geen blok van 3 uur gemeten is, staat er: nog aan het meten.\n\nIs de voorspelling **wisselvallig**, dan rekent het plan zelf met **extra marge**: de gemiddelde afwijking per blok van 3 uur, maximaal 1 kWh, bovenop je eigen veiligheidsmarge. De batterij raakt dan minder vaak te vroeg leeg. Wordt de voorspelling beter, dan valt die extra marge vanzelf weg.": "Batterijplan learns per hour of the day how much your house uses. After 7 days it is done learning. After that it keeps learning gradually, so it follows the seasons.\n\nThe **forecast** says how well the learned usage matches the real usage, per 3-hour block:\n- variable: less than 55 %\n- fair: 55 % or more\n- good: 65 % or more\n- very good: 75 % or more\n- excellent: 85 % or more\n\nAs long as no 3-hour block has been measured yet, it says: still measuring.\n\nIf the forecast is **variable**, the plan adds an **extra margin** itself: the average deviation per 3-hour block, at most 1 kWh, on top of your own safety margin. The battery then runs empty too early less often. When the forecast improves, the extra margin goes away by itself.",
+    "Batterijplan werkt alleen als HBC op **Dynamic** staat. Staat HBC op iets anders, dan wacht het plan en verandert Batterijplan niets. Het leren gaat gewoon door.": "Batterijplan only works when HBC is on **Dynamic**. If HBC is on something else, the plan waits and Batterijplan changes nothing. Learning simply continues.",
+    "Wat Batterijplan voor het volgende kwartier besluit:\n- **Ontladen**: de batterij levert aan het huis in een duur kwartier.\n- **Vasthouden**: de lading wordt bewaard voor een nog duurder moment.\n- **Overschot ontladen**: er zit meer in de batterij dan nodig is tot het volgende goedkope moment.\n- **Laden (HBC)** of **Zon laden (HBC)**: HBC doet het gewoon.": "What Batterijplan decides for the next quarter:\n- **Discharging**: the battery supplies the house in an expensive quarter.\n- **Holding**: the charge is kept for an even more expensive moment.\n- **Surplus discharging**: there is more in the battery than needed until the next cheap moment.\n- **Charging (HBC)** or **Solar charging (HBC)**: HBC simply does its own thing.",
+    "Geen vermogenssensor gevonden. Typ de naam zelf.": "No power sensor found. Type the name yourself.",
+    "Kies je sensor; rechts staat wat hij nu meldt.": "Pick your sensor; on the right is what it reports now.",
+    "Afname is +, teruglevering is −. Kies de sensor die nu het netvermogen van je hele huis meldt.": "Import is +, export is −. Pick the sensor that reports the grid power of your whole house now.",
+    "Kies de sensor met wat al je zonnepanelen samen nu opwekken.": "Pick the sensor with what all your solar panels together produce now.",
+    "Kies het totaal van al je batterijen (ontladen is +). Bij HBC meestal: house total battery power.": "Pick the total of all your batteries (discharging is +). With HBC usually: house total battery power.",
+    "Kies het laadvermogen van je auto-lader.": "Pick the charging power of your EV charger.",
+    "uitstekend": "excellent",
+    "extra marge": "extra margin"
    },
    "de": {
+    "Goedkoopste en duurste kwartier van die dag.": "Günstigste und teuerste Viertelstunde dieses Tages.",
+    "Gemiddelde prijs van die dag zoals HBC hem geeft: inclusief energiebelasting, opslag en btw.": "Durchschnittspreis dieses Tages, wie HBC ihn liefert: inklusive Energiesteuer, Aufschlag und MwSt.",
+    "Prijs van stroom dit kwartier zoals HBC hem geeft: inclusief energiebelasting, opslag en btw.": "Strompreis dieser Viertelstunde, wie HBC ihn liefert: inklusive Energiesteuer, Aufschlag und MwSt.",
+    "prijs all-in": "Preis all-in",
+    "prijs all-in (ct)": "Preis all-in (ct)",
+    "Gemiddelde prijs (all-in)": "Durchschnittspreis (all-in)",
+    "Prijs nu (all-in)": "Preis jetzt (all-in)",
+    "Terug": "Zurück",
+    "Hoe lees je dit?": "Wie liest man das?",
+    "lading als HBC het alleen deed": "Ladung, wenn HBC es allein täte",
+    "Extra t.o.v. HBC alleen": "Mehr als HBC allein",
+    "Sensoren": "Sensoren",
+    "Instellingen": "Einstellungen",
+    "Advies HBC": "HBC-Empfehlung",
+    "Opbrengst": "Ertrag",
+    "Uit = schaduw: het plan rekent alleen mee. Aan = Batterijplan stuurt HBC bij.": "Aus = Schatten: der Plan rechnet nur mit. An = Batterijplan steuert HBC.",
+    "Hier is iets te doen": "Hier ist etwas zu tun",
+    "Sluiten": "Schließen",
+    "schaduw": "Schatten",
+    "stuurt HBC": "steuert HBC",
     "7 dagen": "7 Tage",
     "Aanpassen naar": "Ändern auf",
     "Advies volgt als je verbruik geleerd is en er een week gemeten is": "Empfehlung folgt, sobald dein Verbrauch gelernt ist und eine Woche gemessen wurde",
@@ -244,7 +340,7 @@
     "lading (kWh): doorgetrokken = gemeten, gestreept = verwacht volgens plan": "Ladung (kWh): durchgezogen = gemessen, gestrichelt = laut Plan erwartet",
     "lading daarna ±": "Ladung danach ±",
     "lading vasthouden voor een later, duurder kwartier": "Ladung halten für eine spätere, teurere Viertelstunde",
-    "lichtgroen": "hellgrün",
+    "paars": "lila",
     "nu ingesteld": "jetzt eingestellt",
     "om": "um",
     "ontladen in een duur kwartier": "Entladen in einer teuren Viertelstunde",
@@ -262,7 +358,58 @@
     "waarvan live (echt gestuurd)": "davon live (wirklich gesteuert)",
     "waarvan schaduw (zou opleveren)": "davon Schatten (würde bringen)",
     "wat het had opgeleverd terwijl Live uit stond (niet echt verdiend).": "was es gebracht hätte, während Live aus war (nicht wirklich verdient).",
-    "wat het opleverde terwijl Batterijplan echt stuurde.": "was es gebracht hat, während Batterijplan wirklich gesteuert hat."
+    "wat het opleverde terwijl Batterijplan echt stuurde.": "was es gebracht hat, während Batterijplan wirklich gesteuert hat.",
+    "Laatste back-up": "Letzte Sicherung",
+    "instellingen": "Einstellungen",
+    "Nog geen back-up": "Noch keine Sicherung",
+    "Zeker? Tik nog een keer": "Sicher? Nochmal tippen",
+    "niet gevonden": "nicht gefunden",
+    "Tik om te typen": "Tippen zum Eingeben",
+    "minder": "weniger",
+    "meer": "mehr",
+    "nu": "jetzt",
+    "sensor niet gevonden": "Sensor nicht gefunden",
+    "leeg · tik om in te vullen": "leer · zum Ausfüllen tippen",
+    "Uitvoeren": "Ausführen",
+    "klaar met leren": "fertig gelernt",
+    "voorspelling": "Prognose",
+    "aan het leren": "lernt",
+    "dag": "Tag",
+    "van": "von",
+    "van 24 uren al gezien": "von 24 Stunden schon gesehen",
+    "Haalt de batterij meer uit de duurste kwartieren dan HBC alleen?": "Holt die Batterie mehr aus den teuersten Viertelstunden als HBC allein?",
+    "Modus": "Modus",
+    "live": "live",
+    "rekent mee, stuurt niet": "rechnet mit, steuert nicht",
+    "Verbruik leren": "Verbrauch lernen",
+    "HBC-strategie": "HBC-Strategie",
+    "plan wacht tot Dynamic": "Plan wartet auf Dynamic",
+    "Komend kwartier": "Nächste Viertelstunde",
+    "zeer goed": "sehr gut",
+    "goed": "gut",
+    "redelijk": "ordentlich",
+    "wisselvallig": "schwankend",
+    "nog aan het meten": "wird noch gemessen",
+    "Ontladen": "Entladen",
+    "Vasthouden": "Halten",
+    "Laden (HBC)": "Laden (HBC)",
+    "Zon laden (HBC)": "Solarladen (HBC)",
+    "Niet ingesteld": "Nicht eingerichtet",
+    "Geen batterijdata": "Keine Batteriedaten",
+    "Geen prijsdata": "Keine Preisdaten",
+    "HBC niet op Dynamic": "HBC nicht auf Dynamic",
+    "**Live**: Batterijplan zet elk kwartier de twee Dynamic-standen van HBC.\n\n**Schaduw**: Batterijplan rekent mee en laat zien wat het zou doen, maar verandert niets aan HBC.\n\nAan- en uitzetten doe je met de schakelaar Live bovenaan.": "**Live**: Batterijplan stellt jede Viertelstunde die beiden Dynamic-Stellungen von HBC ein.\n\n**Schatten**: Batterijplan rechnet mit und zeigt, was es tun würde, ändert aber nichts an HBC.\n\nEin- und ausschalten mit dem Schalter Live oben.",
+    "Batterijplan leert per uur van de dag hoeveel je huis gebruikt. Na 7 dagen is het klaar met leren. Daarna leert het glijdend door, zodat het met de seizoenen meegaat.\n\nDe **voorspelling** zegt hoe goed het geleerde verbruik het echte verbruik raakt, per blok van 3 uur:\n- wisselvallig: minder dan 55 %\n- redelijk: 55 % of meer\n- goed: 65 % of meer\n- zeer goed: 75 % of meer\n- uitstekend: 85 % of meer\n\nZolang er nog geen blok van 3 uur gemeten is, staat er: nog aan het meten.\n\nIs de voorspelling **wisselvallig**, dan rekent het plan zelf met **extra marge**: de gemiddelde afwijking per blok van 3 uur, maximaal 1 kWh, bovenop je eigen veiligheidsmarge. De batterij raakt dan minder vaak te vroeg leeg. Wordt de voorspelling beter, dan valt die extra marge vanzelf weg.": "Batterijplan lernt pro Stunde des Tages, wie viel dein Haus verbraucht. Nach 7 Tagen ist es fertig. Danach lernt es gleitend weiter, damit es den Jahreszeiten folgt.\n\nDie **Prognose** sagt, wie gut der gelernte Verbrauch den echten Verbrauch trifft, pro Block von 3 Stunden:\n- schwankend: weniger als 55 %\n- ordentlich: 55 % oder mehr\n- gut: 65 % oder mehr\n- sehr gut: 75 % oder mehr\n- ausgezeichnet: 85 % oder mehr\n\nSolange noch kein 3-Stunden-Block gemessen ist, steht dort: wird noch gemessen.\n\nIst die Prognose **schwankend**, rechnet der Plan selbst mit **zusätzlicher Reserve**: die durchschnittliche Abweichung pro 3-Stunden-Block, höchstens 1 kWh, zusätzlich zu deiner eigenen Sicherheitsreserve. Die Batterie ist dann seltener zu früh leer. Wird die Prognose besser, fällt die zusätzliche Reserve von selbst weg.",
+    "Batterijplan werkt alleen als HBC op **Dynamic** staat. Staat HBC op iets anders, dan wacht het plan en verandert Batterijplan niets. Het leren gaat gewoon door.": "Batterijplan arbeitet nur, wenn HBC auf **Dynamic** steht. Steht HBC auf etwas anderem, wartet der Plan und Batterijplan ändert nichts. Das Lernen läuft einfach weiter.",
+    "Wat Batterijplan voor het volgende kwartier besluit:\n- **Ontladen**: de batterij levert aan het huis in een duur kwartier.\n- **Vasthouden**: de lading wordt bewaard voor een nog duurder moment.\n- **Overschot ontladen**: er zit meer in de batterij dan nodig is tot het volgende goedkope moment.\n- **Laden (HBC)** of **Zon laden (HBC)**: HBC doet het gewoon.": "Was Batterijplan für die nächste Viertelstunde entscheidet:\n- **Entladen**: die Batterie versorgt das Haus in einer teuren Viertelstunde.\n- **Halten**: die Ladung wird für einen noch teureren Moment aufbewahrt.\n- **Überschuss entladen**: es ist mehr in der Batterie als bis zum nächsten günstigen Moment nötig.\n- **Laden (HBC)** oder **Solarladen (HBC)**: HBC macht es einfach selbst.",
+    "Geen vermogenssensor gevonden. Typ de naam zelf.": "Kein Leistungssensor gefunden. Gib den Namen selbst ein.",
+    "Kies je sensor; rechts staat wat hij nu meldt.": "Wähle deinen Sensor; rechts steht, was er gerade meldet.",
+    "Afname is +, teruglevering is −. Kies de sensor die nu het netvermogen van je hele huis meldt.": "Bezug ist +, Einspeisung ist −. Wähle den Sensor, der gerade die Netzleistung deines ganzen Hauses meldet.",
+    "Kies de sensor met wat al je zonnepanelen samen nu opwekken.": "Wähle den Sensor mit dem, was alle deine Solarmodule zusammen gerade erzeugen.",
+    "Kies het totaal van al je batterijen (ontladen is +). Bij HBC meestal: house total battery power.": "Wähle die Summe aller deiner Batterien (Entladen ist +). Bei HBC meist: house total battery power.",
+    "Kies het laadvermogen van je auto-lader.": "Wähle die Ladeleistung deiner Wallbox.",
+    "uitstekend": "ausgezeichnet",
+    "extra marge": "zusätzliche Reserve"
    }
   };
   const t = (s) => (LANG !== "nl" && I18N[LANG] && I18N[LANG][s] != null ? I18N[LANG][s] : s);
@@ -274,6 +421,10 @@
   const hm = (d) => pad(d.getHours()) + ":" + pad(d.getMinutes());
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const nl = (v, d) => (Number.isFinite(v) ? v.toLocaleString(LOC[LANG] || "nl-NL", { minimumFractionDigits: d, maximumFractionDigits: d }) : "—");
+  const allin = (pa) => (pa || {}).prijzen === "all-in";
+  // money in the house style: more than 0 = "+ € x" green, exactly 0 = "€ 0,00" grey, less than 0 = "– € x" orange
+  const geld = (v) => { const r = Math.round((Number(v) || 0) * 100) / 100;
+    return r > 0 ? { txt: "+ € " + nl(r, 2), kleur: "#66bb6a" } : r < 0 ? { txt: "– € " + nl(-r, 2), kleur: "#ff9800" } : { txt: "€ " + nl(0, 2), kleur: "var(--secondary-text-color)" }; };
   const arr = (v) => { if (Array.isArray(v)) return v; try { return JSON.parse(v); } catch (e) { return []; } };
 
   // Alle kwartieren van vandaag 00:00 tot het einde van de bekende prijzen, met wat de batterij doet.
@@ -333,20 +484,39 @@
         ".chips{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}" +
         ".chip{display:flex;flex-direction:column}.chip .v{font-size:24px;line-height:1.2}.chip .u{font-size:15px;margin-left:2px;opacity:.9}" +
         ".chip .n{font-size:12px;color:var(--secondary-text-color)}.chip[title]{cursor:help}.chip[title] .n{text-decoration:underline dotted;text-underline-offset:3px}" +
-        ".i{--mdc-icon-size:20px;color:#8ab4f8;cursor:pointer}.uitleg{display:none;padding:10px 12px;border-radius:8px;background:rgba(138,180,248,0.08);border-left:3px solid #8ab4f8;font-size:13px;line-height:1.55;color:var(--primary-text-color)}.uitleg.open{display:block}.uitleg p{margin:0 0 6px}.uitleg p:last-child{margin:0}" +
+        ".i{--mdc-icon-size:20px;color:#8ab4f8;cursor:pointer}.uitleg{display:none}" +
+        ".ui-scherm{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}" +
+        ".ui-paneel{width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:12px;background:var(--card-background-color);border:1px solid var(--divider-color);box-shadow:0 8px 30px rgba(0,0,0,.5);padding:14px 16px;font-size:13px;line-height:1.55;color:var(--primary-text-color)}" +
+        ".ui-kop{display:flex;align-items:center;gap:10px;margin-bottom:10px}.ui-kop b{font-size:15px}.terug{cursor:pointer;color:var(--primary-color);font-size:13px;padding:2px 10px;border:1px solid var(--divider-color);border-radius:14px;user-select:none}" +
+        ".ui-paneel p{margin:0 0 8px}.ui-paneel p:last-child{margin:0}" +
         ".body{position:relative;padding:0 16px 16px}.tip{position:absolute;pointer-events:none;z-index:2;display:none}" +
         "table{border-collapse:collapse;font-size:13px;margin-top:10px}td{padding:3px 10px 3px 0;vertical-align:top}" +
         ".leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--secondary-text-color);margin-top:8px}" +
         ".leg span{display:inline-flex;align-items:center;gap:4px}.dot{width:10px;height:10px;border-radius:2px;display:inline-block}" +
         "</style><ha-card><div class='hdr'><div class='title'>" + (c.icon ? "<ha-icon icon='" + esc(c.icon) + "'></ha-icon>" : "") +
-        "<span>" + esc(t(c.title || "")) + "</span><ha-icon class='i' icon='mdi:information-outline' title='" + esc(t("Uitleg: wat zie ik hier?")) + "'></ha-icon></div><div class='uitleg'></div><div class='chips'></div></div><div class='body'></div></ha-card>";
+        "<span>" + esc(t(c.title || "")) + "</span><ha-icon class='i' icon='mdi:information-outline' title='" + esc(t("Hoe lees je dit?")) + "'></ha-icon></div><div class='uitleg'></div><div class='chips'></div></div><div class='body'></div></ha-card>";
       this._card = this.shadowRoot.querySelector("ha-card");
       this._chips = this.shadowRoot.querySelector(".chips");
       this._body = this.shadowRoot.querySelector(".body");
       this._uitlegEl = this.shadowRoot.querySelector(".uitleg");
-      this.shadowRoot.querySelector(".i").addEventListener("click", () => this._uitlegEl.classList.toggle("open"));
+      this.shadowRoot.querySelector(".i").addEventListener("click", () => this._toonUitleg());
     }
-    _setUitleg(html) { if (this._uitlegEl && this._uitlegEl.innerHTML !== html) this._uitlegEl.innerHTML = html; }
+    // uitleg als venster (huisstijl): kop "Hoe lees je dit?" met ‹ Terug; sluiten ook met Esc of een klik ernaast
+    _toonUitleg() {
+      if (this._uiScherm) return;
+      const scherm = document.createElement("div"); scherm.className = "ui-scherm";
+      scherm.innerHTML = "<div class='ui-paneel'><div class='ui-kop'><span class='terug'>‹ " + esc(t("Terug")) + "</span><b>" + esc(t("Hoe lees je dit?")) + "</b></div><div class='ui-tekst'></div></div>";
+      scherm.querySelector(".ui-tekst").innerHTML = this._uitlegHtml || "";
+      const dicht = () => { scherm.remove(); this._uiScherm = null; document.removeEventListener("keydown", esc_); };
+      const esc_ = (e) => { if (e.key === "Escape") dicht(); };
+      scherm.addEventListener("click", (e) => { if (e.target === scherm || e.target.classList.contains("terug")) dicht(); });
+      document.addEventListener("keydown", esc_);
+      this.shadowRoot.appendChild(scherm); this._uiScherm = scherm;
+    }
+    _setUitleg(html) {
+      this._uitlegHtml = html;
+      if (this._uiScherm) { const el = this._uiScherm.querySelector(".ui-tekst"); if (el && el.innerHTML !== html) el.innerHTML = html; }
+    }
     _setChips(list) {
       this._chips.innerHTML = list.map((c) => "<div class='chip'" + (TIP[c.name] ? ' title="' + esc(t(TIP[c.name])) + '"' : "") + "><span class='v' style='color:" + c.color + "'>" + esc(c.value) +
         (c.unit ? "<span class='u'>" + esc(c.unit) + "</span>" : "") + "</span><span class='n'>" + esc(t(c.name)) + "</span></div>").join("");
@@ -377,7 +547,7 @@
       }
       this._setUitleg("<p><b>" + t("Wat zie je?") + "</b> " + t("Alleen de momenten waarop Batterijplan iets anders doet dan HBC.") + " " +
         "<font color='" + CAT.o.color + "'>" + t("Groen") + "</font> = " + t("ontladen in een duur kwartier") + ", <font color='" + CAT.v.color + "'>" + t("oranje") + "</font> = " + t("lading vasthouden voor een later, duurder kwartier") + ", " +
-        "<font color='" + CAT.x.color + "'>" + t("lichtgroen") + "</font> = " + t("overschot ontladen") + ".</p>" +
+        "<font color='" + CAT.x.color + "'>" + t("paars") + "</font> = " + t("overschot ontladen") + ".</p>" +
         "<p>" + t("Lege stukken in de balk: daar doet HBC het gewoon (laden met zon, of niets). De blauwe streep is nu.") + "</p>" +
         "<p>" + t("Het plan loopt tot het volgende goedkope moment") + (einde ? " (" + DAG[new Date(einde).getDay()] + " " + hm(new Date(einde)) + ")" : "") +
         ". " + t("Daar laadt HBC weer bij en maakt Batterijplan een nieuw plan. Ga met de muis over een cijfer voor meer uitleg.") + "</p>");
@@ -459,8 +629,35 @@
       }
       if (n < 20) this._koppelT = setTimeout(() => this._koppel(n + 1), 500);
     }
+    // De datumkiezer van HA in de titelregel van de grafiek, zodat er geen aparte balk boven nodig is.
+    async _datumkiezer() {
+      if (this._dk && this._dk !== true && !this._dk.isConnected) this._dk = null;
+      if (this._dk) { if (this._dk !== true) this._dk.hass = this._hass; return; }
+      this._dk = true;
+      const dash = location.pathname.split("/")[1];
+      const helpers = await window.loadCardHelpers();
+      const el = helpers.createCardElement({ type: "energy-date-selection", collection_key: this._config.collection_key || "energy_" + dash });
+      el.style.cssText = "flex:1;min-width:0;margin:-10px 0;--ha-card-background:transparent;--ha-card-border-width:0;--ha-card-box-shadow:none;--ha-card-border-color:transparent";
+      el.hass = this._hass;
+      const titel = this.shadowRoot.querySelector(".title"); titel.appendChild(el);
+      this._dk = el;
+      if (!this._unsub) { clearTimeout(this._koppelT); this._koppel(0); }
+      // datum en knoppen samen rechts zetten (de kiezer zet ze standaard uit elkaar)
+      const zoek = (r, d) => { if (!r || d > 6) return null; const x = r.querySelector("hui-energy-period-selector"); if (x) return x;
+        for (const e of r.querySelectorAll("*")) if (e.shadowRoot) { const y = zoek(e.shadowRoot, d + 1); if (y) return y; } return null; };
+      for (let i = 0; i < 40; i++) {
+        const ps = zoek(el.shadowRoot, 0);
+        if (ps && ps.shadowRoot && ps.shadowRoot.querySelector(".content")) {
+          if (!ps.shadowRoot.querySelector("style[data-bp]")) { const st = document.createElement("style"); st.dataset.bp = "1";
+            st.textContent = ".content{justify-content:flex-end!important;gap:4px}.date-range{flex:0 1 auto!important}"; ps.shadowRoot.appendChild(st); }
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 250));
+      }
+    }
     _ids() {
-      return { prijs: this._config.price_entity || "sensor.nordpool_kwh_nl_eur_3_10_021", lading: "sensor.batterijplan_lading", meerwaarde: "sensor.batterijplan_meerwaarde" };
+      // prijs terug in de tijd: eigen sensor van Batterijplan (ct/kWh, zoals HBC hem geeft), of een eigen prijssensor (price_entity, standaard in €/kWh)
+      return { prijs: this._config.price_entity || "sensor.batterijplan_prijs", lading: "sensor.batterijplan_lading", meerwaarde: "sensor.batterijplan_meerwaarde" };
     }
     _render() {
       if (!this._hass) return;
@@ -472,6 +669,7 @@
         this._plot.addEventListener("mouseleave", () => { this._tip.style.display = "none"; });
         if (window.ResizeObserver) { this._ro = new ResizeObserver(() => this._draw()); this._ro.observe(this._body); }
       }
+      if (this._config.datumkiezer) this._datumkiezer();
       if (!this._unsub) this._koppel(20);
       this._setUitleg("<p><b>" + t("Per dag:") + "</b> " + t("de grijze lijn is de kale stroomprijs per kwartier. De gekleurde vlakken zijn de kwartieren waarin Batterijplan bijstuurt (zelfde kleuren als het plan).") + " " +
         t("De blauwe lijn is de lading in kWh (as rechts): doorgetrokken = gemeten, gestreept = verwacht volgens het plan. Links van Nu is voorbij en iets gedempt.") + "</p>" +
@@ -498,7 +696,7 @@
           entity_ids: [ids.prijs, IDS.plan, ids.lading], minimal_response: true, no_attributes: true })
           .then((h) => {
             const reeks = (id, f) => (h[id] || []).map((x) => [Math.round((x.lu || x.last_updated || 0) * 1000), f(x.s)]).sort((a, b) => a[0] - b[0]);
-            this._hist = { dag, prijs: reeks(ids.prijs, (s) => (isFinite(parseFloat(s)) ? parseFloat(s) * 100 : null)),
+            this._hist = { dag, prijs: reeks(ids.prijs, (s) => (isFinite(parseFloat(s)) ? parseFloat(s) * (this._config.price_entity ? (this._config.price_factor || 100) : 1) : null)),
               besluit: reeks(IDS.plan, (s) => s), lading: reeks(ids.lading, (s) => (isFinite(parseFloat(s)) ? parseFloat(s) : null)) };
             if (this._modus === "dag" && this._dag === dag) this._bouwDag();
             // nog geen geschiedenis van de lading-sensor (bijv. niet in de recorder): lees de lading uit het plan zelf
@@ -541,18 +739,23 @@
       let ld = hist.lading.filter((p) => p[1] != null && p[0] < nu + KW).map((p) => [Math.max(p[0], x0), p[1]]);
       if (ld.length) ld.push([Math.min(Date.now(), x1), ld[ld.length - 1][1]]);
       const vl = !live.stil && dag <= vandaag && vandaag < dag + DAGMS ? arr((this._hass.states[IDS.plan] || {}).attributes.verloop).map((p) => [p[0] * 1000, Number(p[1])]) : [];
-      this._data = { modus: "dag", q, x0, x1, nu, ld, vl, pa: live.pa, vandaag: dag === vandaag };
+      // ter vergelijking: hoe de lading zou lopen als HBC het alleen deed (optie vergelijk: true)
+      const vh = this._config.vergelijk && vl.length ? arr((this._hass.states[IDS.plan] || {}).attributes.verloop_hbc).map((p) => [p[0] * 1000, Number(p[1])]) : [];
+      // extra t.o.v. HBC alleen tot het volgende goedkope moment: slimmer verdelen over dure kwartieren + overschot ontladen
+      const extra = (Number(live.pa.meerwaarde_segment_eur) || 0) + (Number(live.pa.overschot_eur) || 0);
+      this._data = { modus: "dag", q, x0, x1, nu, ld, vl, vh, pa: live.pa, vandaag: dag === vandaag };
       const cur = q.find((x) => x.t === nu);
       const prijzen = q.map((x) => x.p);
       if (this._data.vandaag) {
         this._setChips([
-          { value: cur ? nl(cur.p, 1) : "—", unit: "ct", name: "Kale prijs nu", color: "#cbd5e1" },
+          { value: cur ? nl(cur.p, 1) : "—", unit: "ct", name: allin(live.pa) ? "Prijs nu (all-in)" : "Kale prijs nu", color: "#cbd5e1" },
+          ...(vh.length > 1 ? [{ value: geld(extra).txt, name: "Extra t.o.v. HBC alleen", color: geld(extra).kleur }] : []),
           { value: nl(Number(live.pa.lading_kwh), 2), unit: "kWh", name: "In de batterij nu", color: "#06B6D4" },
         ]);
       } else {
         const d = new Date(dag);
         this._setChips([
-          { value: prijzen.length ? nl(prijzen.reduce((a, b) => a + b, 0) / prijzen.length, 1) : "—", unit: "ct", name: "Gemiddelde kale prijs", color: "#cbd5e1" },
+          { value: prijzen.length ? nl(prijzen.reduce((a, b) => a + b, 0) / prijzen.length, 1) : "—", unit: "ct", name: allin(live.pa) ? "Gemiddelde prijs (all-in)" : "Gemiddelde kale prijs", color: "#cbd5e1" },
           { value: prijzen.length ? nl(Math.min(...prijzen), 0) + " – " + nl(Math.max(...prijzen), 0) : "—", unit: "ct", name: "Laagste – hoogste", color: "#cbd5e1" },
           { value: DAG[d.getDay()] + " " + d.getDate() + " " + MAAND[d.getMonth()], name: dag < vandaag ? t("Wat er gebeurde") : t("Plan"), color: "var(--primary-text-color)" },
         ]);
@@ -575,9 +778,9 @@
           const tot = rows.reduce((a, b) => a + b.v, 0), beste = rows.reduce((a, b) => (b.v > a.v ? b : a), { v: 0, t: null });
           const n = rows.length || 1;
           this._setChips([
-            { value: "€ " + nl(tot, 2), name: "Opgeleverd in deze periode", color: "#4caf50" },
+            { value: geld(tot).txt, name: "Opgeleverd in deze periode", color: geld(tot).kleur },
             { value: "€ " + nl(tot / n, 2), name: per === "month" ? t("Gemiddeld per maand") : t("Gemiddeld per dag"), color: "var(--primary-text-color)" },
-            { value: beste.t ? "€ " + nl(beste.v, 2) : "—", name: beste.t ? (per === "month" ? t("Beste maand:") + " " + MAAND[new Date(beste.t).getMonth()] : t("Beste dag:") + " " + DAG[new Date(beste.t).getDay()] + " " + new Date(beste.t).getDate() + " " + MAAND[new Date(beste.t).getMonth()]) : t("Beste dag"), color: "#4caf50" },
+            { value: beste.t ? "€ " + nl(beste.v, 2) : "—", name: beste.t ? (per === "month" ? t("Beste maand:") + " " + MAAND[new Date(beste.t).getMonth()] : t("Beste dag:") + " " + DAG[new Date(beste.t).getDay()] + " " + new Date(beste.t).getDate() + " " + MAAND[new Date(beste.t).getMonth()]) : t("Beste dag"), color: "#66bb6a" },
           ]);
           this._draw();
         })
@@ -588,17 +791,17 @@
       if (!this._data || !this._plot) return;
       if (this._data.modus === "periode") return this._drawPeriode();
       const W = Math.max(this._body.clientWidth - 32, 260), H = this._config.height || 300;
-      const L = 40, R = 40, T = 12, B = 34, iw = W - L - R, ih = H - T - B;
-      const { q, x0, x1, nu, ld, vl } = this._data;
+      const L = 40, R = 40, T = 24, B = 34, iw = W - L - R, ih = H - T - B;
+      const { q, x0, x1, nu, ld, vl } = this._data, vh = this._data.vh || [];
       if (!q.length) { this._plot.innerHTML = "<div style='padding:12px;color:var(--secondary-text-color)'>" + t("Voor deze dag zijn (nog) geen prijzen bekend.") + "</div>"; this._geo = null; return; }
       let lo = Math.min(0, ...q.map((x) => x.p)), hi = Math.max(...q.map((x) => x.p)); const st = nice(hi - lo, 5); lo = Math.floor(lo / st) * st; hi = Math.ceil(hi / st) * st;
-      const cap = Math.max(1, ...ld.map((p) => p[1]), ...vl.map((p) => p[1])); const st2 = nice(cap, 4), hi2 = Math.ceil(cap / st2) * st2;
+      const cap = Math.max(1, ...ld.map((p) => p[1]), ...vl.map((p) => p[1]), ...vh.map((p) => p[1])); const st2 = nice(cap, 4), hi2 = Math.ceil(cap / st2) * st2;
       const X = (t) => L + (t - x0) / (x1 - x0) * iw, Y = (v) => T + (hi - v) / (hi - lo) * ih, Y2 = (v) => T + (hi2 - v) / hi2 * ih, base = Y(Math.max(lo, 0));
       let g = "";
       for (let v = lo; v <= hi + st / 2; v += st) g += "<line x1='" + L + "' x2='" + (W - R) + "' y1='" + Y(v) + "' y2='" + Y(v) + "' stroke='var(--divider-color)' stroke-dasharray='2,2'/><text x='" + (L - 6) + "' y='" + (Y(v) + 3) + "' text-anchor='end' font-size='10' fill='var(--secondary-text-color)'>" + Math.round(v) + "</text>";
       const metLading = ld.length > 1 || vl.length > 1;
       if (metLading) for (let v = 0; v <= hi2 + st2 / 2; v += st2) g += "<text x='" + (W - R + 6) + "' y='" + (Y2(v) + 3) + "' font-size='10' fill='#06B6D4'>" + nl(v, Number.isInteger(v) ? 0 : Math.round(v * 10) === v * 10 ? 1 : 2) + "</text>";
-      g += "<text x='" + (L - 6) + "' y='" + (T - 2) + "' text-anchor='end' font-size='10' fill='var(--secondary-text-color)'>ct</text>" + (metLading ? "<text x='" + (W - R + 6) + "' y='" + (T - 2) + "' font-size='10' fill='#06B6D4'>kWh</text>" : "");
+      g += "<text x='" + (L - 6) + "' y='" + (T - 10) + "' text-anchor='end' font-size='10' fill='var(--secondary-text-color)'>ct</text>" + (metLading ? "<text x='" + (W - R + 6) + "' y='" + (T - 10) + "' font-size='10' fill='#06B6D4'>kWh</text>" : "");
       const stap = (x1 - x0) > 1.5 * DAGMS ? 3 : 2;
       for (let t = x0; t <= x1; t += stap * 3600000) { const x = X(t), d = new Date(t); g += "<line x1='" + x + "' x2='" + x + "' y1='" + T + "' y2='" + (T + ih) + "' stroke='var(--divider-color)' stroke-dasharray='2,2'/>" + (x < W - 20 ? "<text x='" + x + "' y='" + (T + ih + 14) + "' text-anchor='middle' font-size='10' fill='var(--secondary-text-color)'>" + hm(d) + "</text>" : ""); if (d.getHours() === 0 && t > x0) g += "<text x='" + x + "' y='" + (T + ih + 27) + "' text-anchor='middle' font-size='10' font-weight='700' fill='var(--secondary-text-color)'>" + DAG[d.getDay()] + "</text>"; }
       let body = "";
@@ -630,13 +833,17 @@
         body += "<path d='M" + xa + "," + Y2(0) + "L" + d + "L" + xu + "," + Y2(0) + "Z' fill='url(#bpuit)' fill-opacity='0.18'/>" +
           "<path d='M" + d + "' fill='none' stroke='url(#bpuit)' stroke-width='2' stroke-dasharray='4,3'/>";
       }
+      // ter vergelijking: lading als HBC het alleen deed (rode stippellijn)
+      const vhz = vh.filter((p) => p[0] <= x1);
+      if (vhz.length > 1) body += "<path d='M" + vhz.map((p) => X(p[0]) + "," + Y2(p[1])).join("L") + "' fill='none' stroke='#ef9a9a' stroke-width='1.5' stroke-dasharray='2,3'/>";
       if (Date.now() >= x0 && Date.now() <= x1) {
         const xn = X(Date.now());
         body += "<line x1='" + xn + "' x2='" + xn + "' y1='" + T + "' y2='" + (T + ih) + "' stroke='#009ac7' stroke-width='1.5'/><rect x='" + (xn - 15) + "' y='" + T + "' width='30' height='14' rx='2' fill='#009ac7'/><text x='" + xn + "' y='" + (T + 10.5) + "' text-anchor='middle' font-size='10' fill='#fff'>" + t("Nu") + "</text>";
       }
       this._geo = { L, iw, x0, x1 };
       this._plot.innerHTML = "<svg width='" + W + "' height='" + H + "' style='display:block;font-family:inherit'>" + g + body + "</svg>" +
-        this._legend(["o", "v", "x"]).replace("<div class='leg'>", "<div class='leg'><span><span class='dot' style='background:#cbd5e1'></span>" + t("kale prijs (ct)") + "</span><span><span class='dot' style='background:#06B6D4'></span>" + t("lading (kWh): doorgetrokken = gemeten, gestreept = verwacht volgens plan") + "</span>");
+        this._legend(["o", "v", "x"]).replace("<div class='leg'>", "<div class='leg'><span><span class='dot' style='background:#cbd5e1'></span>" + t(allin(this._data.pa) ? "prijs all-in (ct)" : "kale prijs (ct)") + "</span><span><span class='dot' style='background:#06B6D4'></span>" + t("lading (kWh): doorgetrokken = gemeten, gestreept = verwacht volgens plan") + "</span>" +
+          (vhz.length > 1 ? "<span><span class='dot' style='background:#ef9a9a'></span>" + t("lading als HBC het alleen deed") + "</span>" : ""));
     }
     _drawPeriode() {
       const W = Math.max(this._body.clientWidth - 32, 260), H = this._config.height || 300;
@@ -656,12 +863,12 @@
       const elke = vakken.length > 16 ? 4 : 1;
       vakken.forEach((t, i) => {
         const v = map.get(t), x = L + i * bw, dt = new Date(t);
-        if (v != null) g += "<rect x='" + (x + bw * 0.15) + "' y='" + Math.min(Y(v), Y(0)) + "' width='" + Math.max(bw * 0.7, 1) + "' height='" + Math.max(Math.abs(Y(0) - Y(v)), 1) + "' rx='2' fill='#4caf50' fill-opacity='0.8'/>";
+        if (v != null) g += "<rect x='" + (x + bw * 0.15) + "' y='" + Math.min(Y(v), Y(0)) + "' width='" + Math.max(bw * 0.7, 1) + "' height='" + Math.max(Math.abs(Y(0) - Y(v)), 1) + "' rx='2' fill='#66bb6a' fill-opacity='0.8'/>";
         if (i % elke === 0) g += "<text x='" + (x + bw / 2) + "' y='" + (T + ih + 14) + "' text-anchor='middle' font-size='10' fill='var(--secondary-text-color)'>" + (per === "month" ? MAAND[dt.getMonth()] : (vakken.length <= 7 ? DAG[dt.getDay()] + " " : "") + dt.getDate()) + "</text>";
       });
       this._geo = { periode: true, L, bw, vakken, map, per };
       this._plot.innerHTML = "<svg width='" + W + "' height='" + H + "' style='display:block;font-family:inherit'>" + g + "</svg>" +
-        "<div class='leg'><span><span class='dot' style='background:#4caf50'></span>" + t(per === "month" ? "opgeleverd bovenop HBC (geschat, € per maand)" : "opgeleverd bovenop HBC (geschat, € per dag)") + "</span></div>";
+        "<div class='leg'><span><span class='dot' style='background:#66bb6a'></span>" + t(per === "month" ? "opgeleverd bovenop HBC (geschat, € per maand)" : "opgeleverd bovenop HBC (geschat, € per dag)") + "</span></div>";
     }
     _hover(e) {
       if (!this._geo) return;
@@ -677,7 +884,7 @@
         const x = this._data.q.find((y) => tt >= y.t && tt < y.t + KW); if (!x) return;
         const lv = x.voorbij ? opMoment(this._data.ld, x.t + KW) : opMoment(this._data.vl, x.t + KW);
         html = "<b>" + DAG[new Date(x.t).getDay()] + " " + hm(new Date(x.t)) + "</b>" + (x.voorbij ? " <span style='color:var(--secondary-text-color)'>(" + t("voorbij") + ")</span>" : "") +
-          "<br>" + t("kale prijs") + " " + nl(x.p, 1) + " ct" +
+          "<br>" + t(allin(this._data.pa) ? "prijs all-in" : "kale prijs") + " " + nl(x.p, 1) + " ct" +
           (x.c && CAT[x.c] ? "<br><span class='dot' style='background:" + CAT[x.c].color + "'></span> " + esc(t(CAT[x.c].name)) : "") +
           (lv != null ? "<br>" + t(x.voorbij ? "lading" : "lading daarna ±") + " " + nl(Number(lv), 2) + " kWh" : "");
       }
@@ -696,7 +903,7 @@
       if (!this._hass) return;
       this._shell();
       const m = this._hass.states["sensor.batterijplan_meerwaarde"] || { state: 0, attributes: {} }, a = m.attributes || {};
-      const eur = (v) => "€ " + nl(Number(v) || 0, 2);
+      const eur = (v) => { const g = geld(v); return "<span style='color:" + g.kleur + "'>" + g.txt + "</span>"; };
       this._chips.style.display = "none";
       this._setUitleg("<p><b>" + t("Wat telt hier?") + "</b> " + t("Elk kwartier schat Batterijplan het verschil tussen HBC alleen en HBC met Batterijplan, inclusief btw.") + " " +
         t("Bij vasthouden telt de lading mee tegen de gemiddelde prijs van de dure kwartieren waar het plan haar later voor inzet.") + " " +
@@ -724,32 +931,12 @@
       const S = this._hass.states, ad = S["sensor.batterijplan_advies_huisverbruik"] || { state: null, attributes: {} }, a = ad.attributes || {};
       const pa = (S[IDS.plan] || {}).attributes || {};
       this._chips.style.display = "none";
-      // gemiddeld advies over de laatste 7 dagen (dagstatistiek van de sensor), eens per uur ophalen
-      const uur = Math.floor(Date.now() / 3600000);
-      if (this._gemUur !== uur) {
-        this._gemUur = uur;
-        this._hass.callWS({ type: "recorder/statistics_during_period", start_time: new Date(Date.now() - 7 * 86400000).toISOString(),
-          statistic_ids: ["sensor.batterijplan_advies_huisverbruik"], period: "day", types: ["mean"] })
-          .then((r) => { const l = (r["sensor.batterijplan_advies_huisverbruik"] || []).map((x) => Number(x.mean)).filter((v) => Number.isFinite(v));
-            this._gem = { v: l.length ? l.reduce((p, q) => p + q, 0) / l.length : null, n: l.length }; this._render(); })
-          .catch(() => {});
-      }
+      adviesGem(this._hass, this._terug || (this._terug = () => this._render()));
       this._setUitleg("<p><b>" + t("Wat is dit?") + "</b> " + t("In HBC vul je in hoeveel zonne-energie je huis op een dag zelf direct opmaakt (Solar reserved for house).") + " " +
         t("Staat dat te hoog, dan laadt HBC meer van het net dan nodig; te laag, dan is de batterij 's avonds te leeg voor de dure uren.") + "</p>" +
         "<p>" + t("Batterijplan rekent elke dag uit wat je huis op zon kan gebruiken (geleerd verbruik naast de zonverwachting) en vergelijkt het gemiddelde van de laatste 7 dagen met jouw instelling.") + " " +
         t("Pas als het 1 kWh of meer afwijkt, krijg je een advies. Batterijplan verandert zelf niets in HBC.") + "</p>");
-      const ing = Number(a.ingesteld), lerend = String(a.voorlopig) === "true" || a.voorlopig === true, g = this._gem;
-      const n = g ? g.n : 0, gem = g && g.v != null ? g.v : null;
-      let kop, kleur, sub;
-      if (lerend || n < 7 || gem == null) {
-        kop = t("Nog aan het meten"); kleur = "var(--secondary-text-color)";
-        sub = t("Advies volgt als je verbruik geleerd is en er een week gemeten is") + (Number.isFinite(ing) ? " · " + t("nu ingesteld") + " " + nl(ing, 1) + " kWh" : "");
-      } else if (Math.abs(gem - ing) < 1) {
-        kop = t("Staat goed"); kleur = "#4caf50"; sub = t("Ingesteld") + " " + nl(ing, 1) + " kWh · " + t("gemiddeld nodig") + " " + nl(gem, 1) + " kWh (" + t("7 dagen") + ")";
-      } else {
-        const naar = Math.round(gem * 2) / 2;
-        kop = t("Aanpassen naar") + " " + nl(naar, 1) + " kWh"; kleur = "#e0a526"; sub = t("Nu ingesteld") + " " + nl(ing, 1) + " kWh · " + t("gemiddeld nodig") + " " + nl(gem, 1) + " kWh (" + t("7 dagen") + ")";
-      }
+      const { kop, kleur, sub } = adviesOordeel(this._hass);
       const nk = Number(pa.nachtladen_kwh) || 0, nkw = arr(pa.nachtladen_kwartieren);
       const nacht = nk > 0 ? "<div style='font-size:13px;margin-top:8px'>" + t("Vannacht extra laden:") + " " + nl(nk, 1) + " kWh" + (nkw.length ? " " + t("om") + " " + nkw[0] : "") + "</div>" : "";
       this._body.innerHTML = "<div style='font-size:12px;color:var(--secondary-text-color);margin-top:2px'>" + t("Huisverbruik op zon (Solar reserved for house)") + "</div>" +
@@ -758,11 +945,389 @@
     }
   }
 
+
+  // Advies voor HBC: gemiddelde van de laatste 7 dagen (dagstatistiek van de sensor), eens per uur opgehaald
+  // en gedeeld door de advieskaart en het knopje "Advies HBC".
+  const ADV = { uur: null, v: null, n: 0, wacht: [] };
+  function adviesGem(hass, klaar) {
+    const uur = Math.floor(Date.now() / 3600000);
+    if (ADV.uur === uur && !ADV.bezig) return;
+    if (klaar && !ADV.wacht.includes(klaar)) ADV.wacht.push(klaar);
+    if (ADV.uur === uur) return;
+    ADV.uur = uur; ADV.bezig = true;
+    hass.callWS({ type: "recorder/statistics_during_period", start_time: new Date(Date.now() - 7 * 86400000).toISOString(),
+      statistic_ids: ["sensor.batterijplan_advies_huisverbruik"], period: "day", types: ["mean"] })
+      .then((r) => { const l = (r["sensor.batterijplan_advies_huisverbruik"] || []).map((x) => Number(x.mean)).filter((v) => Number.isFinite(v));
+        ADV.v = l.length ? l.reduce((p, q) => p + q, 0) / l.length : null; ADV.n = l.length;
+        ADV.bezig = false; const w = ADV.wacht; ADV.wacht = []; w.forEach((f) => { try { f(); } catch (e) {} }); })
+      .catch(() => { ADV.bezig = false; ADV.wacht = []; });
+  }
+  function adviesOordeel(hass) {
+    const a = (hass.states["sensor.batterijplan_advies_huisverbruik"] || {}).attributes || {};
+    const ing = Number(a.ingesteld), lerend = String(a.voorlopig) === "true" || a.voorlopig === true;
+    const n = ADV.n, gem = ADV.v;
+    if (lerend || n < 7 || gem == null)
+      return { stand: "meten", kop: t("Nog aan het meten"), kleur: "var(--secondary-text-color)",
+        sub: t("Advies volgt als je verbruik geleerd is en er een week gemeten is") + (Number.isFinite(ing) ? " · " + t("nu ingesteld") + " " + nl(ing, 1) + " kWh" : "") };
+    if (Math.abs(gem - ing) < 1)
+      return { stand: "goed", kop: t("Staat goed"), kleur: "#66bb6a", sub: t("Ingesteld") + " " + nl(ing, 1) + " kWh · " + t("gemiddeld nodig") + " " + nl(gem, 1) + " kWh (" + t("7 dagen") + ")" };
+    const naar = Math.round(gem * 2) / 2;
+    return { stand: "aanpassen", kop: t("Aanpassen naar") + " " + nl(naar, 1) + " kWh", kleur: "#ff9800",
+      sub: t("Nu ingesteld") + " " + nl(ing, 1) + " kWh · " + t("gemiddeld nodig") + " " + nl(gem, 1) + " kWh (" + t("7 dagen") + ")" };
+  }
+
+  // ------------------------------------------------------------------------------------------------
+  // Knoppen: een rij knopjes die elk een venster openen met gewone HA-kaarten erin (zelfde patroon als
+  // batt-mon), plus de schakelaar Live. Zo blijft de startpagina compact.
+  //   knoppen: [{ naam, melding: advies|instellingen|sensoren, kaarten: [kaartconfig, ...] }]
+  class BpKnoppen extends HTMLElement {
+    setConfig(c) { this._config = Object.assign({ live: "input_boolean.batterijplan_live", knoppen: [] }, c || {}); this._open = null; this._teken(); }
+    set hass(h) {
+      this._hass = h; zetTaal(h);
+      (this._kaarten || []).forEach((k) => { k.hass = h; });
+      const S = h.states, ids = [this._config.live, "sensor.batterijplan_advies_huisverbruik", "input_number.batterijplan_capaciteit",
+        "input_text.batterijplan_sensor_net", "input_text.batterijplan_sensor_zon", "input_text.batterijplan_sensor_batterij", "input_text.batterijplan_sensor_ev"];
+      const sen = this._sensoren(), key = ids.concat(sen).map((id) => (S[id] || {}).state).join("|") + LANG;
+      if (key !== this._key) { this._key = key; this._teken(); }
+      adviesGem(h, this._terug || (this._terug = () => { this._key = null; this._teken(); }));
+    }
+    getCardSize() { return 1; }
+    getGridOptions() { return { columns: "full", rows: "auto" }; }
+    _sensoren() {
+      const S = (this._hass || {}).states || {};
+      return ["net", "zon", "batterij", "ev"].map((k) => String((S["input_text.batterijplan_sensor_" + k] || {}).state || "").trim()).filter((v) => v && v !== "unknown");
+    }
+    _melding(m) {
+      const S = this._hass.states;
+      const leeg = (k) => { const v = String((S["input_text.batterijplan_sensor_" + k] || {}).state || "").trim(); return !v || v === "unknown"; };
+      if (m === "advies") return adviesOordeel(this._hass).stand === "aanpassen";
+      if (m === "instellingen") return !(Number((S["input_number.batterijplan_capaciteit"] || {}).state) > 1.05);
+      if (m === "sensoren") return ["net", "zon", "batterij"].some(leeg) ||
+        this._sensoren().some((id) => { const st = (S[id] || {}).state; return st == null || st === "unavailable" || st === "unknown"; });
+      return false;
+    }
+    _teken() {
+      if (!this._hass || !this._config) return;
+      if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+      const c = this._config, S = this._hass.states, live = (S[c.live] || {}).state === "on";
+      if (!this._card) {
+        this.shadowRoot.innerHTML = "<style>:host{display:block}" +
+          ".rij{display:flex;align-items:center;gap:12px;padding:10px 14px;flex-wrap:wrap}.streep{width:1px;align-self:stretch;background:var(--divider-color)}.pillen{flex:1;display:flex;flex-wrap:wrap;gap:6px}" +
+          ".pil{position:relative;font-size:13px;padding:3px 13px;border:1px solid var(--divider-color);border-radius:14px;color:var(--secondary-text-color);cursor:pointer;user-select:none}" +
+          ".pil:hover,.pil.aan{color:var(--primary-text-color);border-color:var(--secondary-text-color);background:rgba(138,180,248,0.08)}" +
+          ".pil .stip{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#ff9800;border:2px solid var(--card-background-color)}" +
+          ".live{display:flex;align-items:center;gap:10px;font:inherit;font-size:13px;color:var(--primary-text-color);cursor:pointer;padding:4px 14px 4px 5px;border-radius:999px;border:1px solid var(--divider-color);background:var(--secondary-background-color,#262932);transition:background .2s}.live.aan{background:rgba(102,187,106,0.15);border-color:#66bb6a}.live.aan .s{color:#66bb6a}.live .s{font-size:11px;color:var(--secondary-text-color)}.sw{width:42px;height:24px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid var(--divider-color);position:relative;flex:none}.sw::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--secondary-text-color);transition:left .2s}.live.aan .sw::after{left:20px;background:#66bb6a}" +
+          ".scherm{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}" +
+          ".paneel{position:relative;width:100%;max-width:640px;max-height:88vh;overflow:auto;border-radius:14px;background:var(--primary-background-color);box-shadow:0 8px 30px rgba(0,0,0,.5);padding:8px;display:flex;flex-direction:column;gap:8px}" +
+          ".balk{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between}.sluit{cursor:pointer;font-size:13px;color:var(--primary-color);padding:3px 12px;border:1px solid var(--divider-color);border-radius:14px;background:var(--card-background-color);user-select:none}.kruis{cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--secondary-text-color);background:var(--card-background-color);border:1px solid var(--divider-color);user-select:none}.kruis:hover{color:var(--primary-text-color)}" +
+          "</style><ha-card><div class='rij'><button class='live' role='switch'><span class='sw'></span><span class='tx'></span></button><span class='streep'></span><div class='pillen'></div></div></ha-card><div class='laag'></div>";
+        this._card = this.shadowRoot.querySelector("ha-card");
+        this._pillen = this.shadowRoot.querySelector(".pillen");
+        this._laag = this.shadowRoot.querySelector(".laag");
+        this._sw = this.shadowRoot.querySelector(".live");
+        this._liveTxt = this.shadowRoot.querySelector(".live .tx");
+        this._sw.addEventListener("click", () => this._hass.callService("input_boolean", this._sw.classList.contains("aan") ? "turn_off" : "turn_on", { entity_id: this._config.live }));
+        this._pillen.addEventListener("click", (e) => { const p = e.target.closest(".pil"); if (p) this._openen(Number(p.dataset.i)); });
+        this._esc = (e) => { if (e.key === "Escape" && this._open != null) this._openen(null); };
+      }
+      const pilHtml = (c.knoppen || []).map((k, i) => "<span class='pil" + (this._open === i ? " aan" : "") + "' data-i='" + i + "'>" + esc(t(k.naam || "")) +
+        (k.melding && this._melding(k.melding) ? "<span class='stip' title='" + esc(t("Hier is iets te doen")) + "'></span>" : "") + "</span>").join("");
+      // only rebuild the pills when they really change, so a click is never lost halfway
+      if (pilHtml !== this._pilHtml) { this._pilHtml = pilHtml; this._pillen.innerHTML = pilHtml; }
+      this._sw.setAttribute("aria-checked", String(live));
+      this._liveTxt.innerHTML = "<b>" + t("Live") + "</b> <span class='s'>" + esc(live ? t("stuurt HBC") : t("schaduw")) + "</span>";
+      this.shadowRoot.querySelector(".live").classList.toggle("aan", live);
+      this.shadowRoot.querySelector(".live").title = t("Uit = schaduw: het plan rekent alleen mee. Aan = Batterijplan stuurt HBC bij.");
+    }
+    async _openen(i) {
+      this._open = (i == null || this._open === i) ? null : i;
+      this._laag.innerHTML = ""; this._kaarten = [];
+      document.removeEventListener("keydown", this._esc);
+      this._key = null; this._teken();
+      if (this._open == null) return;
+      const k = this._config.knoppen[this._open];
+      const scherm = document.createElement("div"); scherm.className = "scherm";
+      const paneel = document.createElement("div"); paneel.className = "paneel";
+      const balk = document.createElement("div"); balk.className = "balk";
+      const sluit = document.createElement("span"); sluit.className = "sluit"; sluit.textContent = "‹ " + t("Terug"); sluit.title = t("Terug");
+      const kruis = document.createElement("span"); kruis.className = "kruis"; kruis.textContent = "✕"; kruis.title = t("Sluiten");
+      balk.appendChild(sluit); balk.appendChild(kruis); paneel.appendChild(balk); scherm.appendChild(paneel); this._laag.appendChild(scherm);
+      scherm.addEventListener("click", (e) => { if (e.target === scherm || e.target === sluit || e.target === kruis) this._openen(null); });
+      document.addEventListener("keydown", this._esc);
+      const helpers = await window.loadCardHelpers();
+      if (this._open == null || this._laag.firstChild !== scherm) return;
+      (k.kaarten || []).forEach((cfg) => {
+        const el = helpers.createCardElement(cfg); el.hass = this._hass;
+        paneel.appendChild(el); this._kaarten.push(el);
+      });
+    }
+    disconnectedCallback() { document.removeEventListener("keydown", this._esc); }
+  }
+
+  // ---------- custom:batterijplan-velden — own input fields in the house style (copy of the HESC v4 fields, own element name) ----------
+  // Rows: entity (number = slider or − value + pill, select = chips, text = edit on the line, date, button = pill), "section", "backup" (last back-up line).
+  // Optional "tabs: [{naam, rows}]" for setting levels; "info" on the card or on a row opens a "Hoe lees je dit?" window.
+  const VCSS =
+    ":host{display:block;--line:var(--divider-color,#30333c);--muted:var(--secondary-text-color,#9aa0aa);--card2:var(--secondary-background-color,#262932)}" +
+    "ha-card{padding:16px 18px 8px;container-type:inline-size}" +
+    ".title{font-size:20px;font-weight:700;color:var(--primary-text-color);display:flex;align-items:center;gap:8px;margin-bottom:6px}.title ha-icon{--mdc-icon-size:24px}" +
+    ".i{--mdc-icon-size:20px;color:#8ab4f8;cursor:pointer}.title .i{margin-left:auto}" +
+    ".tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--card2);border-radius:12px;padding:4px;gap:4px;margin:6px 0 4px}" +
+    ".tab{font:inherit;font-size:14px;border:0;border-radius:9px;background:none;color:var(--muted);padding:8px 6px;cursor:pointer}" +
+    ".tab.on{background:var(--primary-color);color:var(--text-primary-color,#fff);font-weight:600}" +
+    ".tabsub{font-size:12px;color:var(--muted);margin:2px 2px 0}" +
+    ".f{display:grid;grid-template-columns:minmax(110px,1fr) minmax(0,auto);gap:6px 16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}" +
+    ".rows>.f:first-child,.sec+.f{border-top:0}" +
+    ".sec{font-size:15px;font-weight:500;margin:14px 0 2px;padding-top:12px;border-top:2px solid var(--line)}.rows>.sec:first-child{border-top:0;margin-top:4px;padding-top:0}" +
+    ".nm{font-size:14px;line-height:1.3;display:flex;align-items:flex-start;gap:6px}.nm small{display:block;color:var(--muted);font-size:12px}.nm .i{--mdc-icon-size:17px;flex:none;margin-top:1px}" +
+    ".f.wide{grid-template-columns:minmax(0,1fr)}.f.na{opacity:.45}" +
+    ".stp{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:999px;background:var(--card2);height:36px;justify-self:end}" +
+    ".stp button{width:36px;height:36px;border:0;background:none;color:var(--primary-text-color);font-size:19px;cursor:pointer;border-radius:50%}" +
+    ".stp button:hover{background:color-mix(in srgb,var(--c) 25%,transparent)}" +
+    ".stp b{min-width:64px;text-align:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;cursor:text}" +
+    ".stp input{width:96px;font:inherit;font-size:15px;font-weight:600;text-align:center;border:0;background:none;color:var(--primary-text-color);outline:none}" +
+    ".sl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}" +
+    ".sl output{font-size:15px;font-weight:600;min-width:74px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}" +
+    ".sl input{-webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:999px;margin:0;cursor:pointer;background:linear-gradient(90deg,var(--c) 0 var(--v),var(--card2) var(--v) 100%);border:1px solid var(--line)}" +
+    ".sl input::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--c);box-shadow:0 1px 4px rgba(0,0,0,.4)}" +
+    ".sl input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--c)}" +
+    ".tg{width:48px;height:28px;border-radius:999px;border:0;background:var(--card2);box-shadow:inset 0 0 0 1.5px var(--line);position:relative;cursor:pointer;justify-self:end}" +
+    ".tg::after{content:'';position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:left .15s,background .15s}" +
+    ".tg.on{background:var(--c);box-shadow:none}.tg.on::after{left:24px;background:#fff}" +
+    ".chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}" +
+    ".chip{font:inherit;font-size:13px;border-radius:999px;border:1.5px solid var(--line);background:none;color:var(--primary-text-color);padding:6px 12px;cursor:pointer}" +
+    ".chip.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 25%,transparent);font-weight:600}" +
+    ".knoppen{display:flex;gap:8px;flex-wrap:wrap}" +
+    ".btn{font:inherit;font-size:13px;border-radius:999px;border:1.5px solid var(--primary-color);background:none;color:var(--primary-text-color);padding:7px 16px;cursor:pointer}" +
+    ".btn:hover{background:color-mix(in srgb,var(--primary-color) 22%,transparent)}.btn.zeker{border-color:#ff9800;background:rgba(255,152,0,.18)}" +
+    ".val{font-size:14px;font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}.val small{display:block;color:var(--muted);font-weight:400;font-size:12px}" +
+    ".bk{font-size:12px;color:var(--muted);padding:2px 0 10px}" +
+    ".txt{font:inherit;font-size:14px;font-weight:600;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--primary-text-color);padding:7px 12px;cursor:pointer;text-align:left;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".txt.empty{color:var(--muted);font-weight:400;font-style:italic}" +
+    ".ed{display:flex;gap:8px;align-items:center}" +
+    ".ed input{font:inherit;font-size:14px;flex:1;min-width:0;border-radius:10px;border:1.5px solid var(--c);background:var(--card2);color:var(--primary-text-color);padding:7px 12px;outline:none}" +
+    ".date{font:inherit;font-size:14px;font-weight:600;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--primary-text-color);padding:6px 10px;color-scheme:dark;justify-self:end}" +
+    ".f.wide .txt,.f.wide .ed{width:100%}" +
+    ".kies{display:grid;gap:4px;margin-top:8px;max-height:260px;overflow:auto}.kies .hulp{font-size:12px;color:var(--muted);margin:2px 2px 4px}" +
+    ".opt{font:inherit;text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;border:1.5px solid var(--line);border-radius:10px;background:none;color:var(--primary-text-color);padding:7px 12px;cursor:pointer}" +
+    ".opt:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent)}.opt.top{border-color:color-mix(in srgb,var(--c) 60%,var(--line))}.opt b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".opt small{grid-column:1;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.opt span{grid-row:1/3;grid-column:2;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}" +
+    "@container (max-width:460px){.f.tx{grid-template-columns:minmax(0,1fr)}}" +
+    ".ui-scherm{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}" +
+    ".ui-paneel{width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:12px;background:var(--card-background-color);border:1px solid var(--divider-color);box-shadow:0 8px 30px rgba(0,0,0,.5);padding:14px 16px;font-size:13px;line-height:1.55;color:var(--primary-text-color)}" +
+    ".ui-kop{display:flex;align-items:center;gap:10px;margin-bottom:10px}.ui-kop b{font-size:15px}.terug{cursor:pointer;color:var(--primary-color);font-size:13px;padding:2px 10px;border:1px solid var(--divider-color);border-radius:14px;user-select:none}" +
+    ".ui-paneel p{margin:0 0 8px}.ui-paneel p:last-child,.ui-paneel ul:last-child{margin-bottom:0}.ui-paneel ul{margin:0 0 8px;padding-left:18px}";
+  // info text: blank line = new paragraph, "- " lines = list, **bold**
+  const infoHtml = (text) => String(t(text)).split(/\n\s*\n/).map((blk) => {
+    const e = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>"), lines = blk.split("\n");
+    return lines.every((l) => l.startsWith("- ")) ? "<ul>" + lines.map((l) => "<li>" + e(l.slice(2)) + "</li>").join("") + "</ul>" : "<p>" + e(blk) + "</p>";
+  }).join("");
+
+  class BpVelden extends HTMLElement {
+    setConfig(c) { this._config = Object.assign({}, c || {}); this._tab = 0; this._sig = ""; this._busy = null; this._edit = undefined; this._zeker = null; if (this._hass) this._render(); }
+    set hass(h) {
+      this._hass = h; const oud = LANG; zetTaal(h);
+      const sig = this._rows(true).map((r) => { const s = r.entity && h.states[r.entity]; const x = s && r.type !== "backup" && /^[a-z_]+\.[a-z0-9_]+$/.test(s.state) && h.states[s.state];
+        return s ? s.state + (x ? x.state : "") : "-"; }).join("|") + LANG;
+      if ((sig === this._sig && oud === LANG) || this._busy || this._edit !== undefined) return;
+      this._sig = sig; this._render();
+    }
+    getCardSize() { return 1 + this._rows().length; }
+    getGridOptions() { return { columns: "full", rows: "auto" }; }
+    _rows(all) {
+      const c = this._config || {};
+      if (!c.tabs) return c.rows || [];
+      return all ? c.tabs.reduce((a, tb) => a.concat(tb.rows || []), []) : ((c.tabs[this._tab] || {}).rows || []);
+    }
+    _num(v, step) { const d = String(step).includes(".") ? String(step).split(".")[1].length : 0; return nl(Number(v), d); }
+    _naam(r, i) { return "<div class='nm'><div>" + esc(r.name || r.entity || "") + (r.hint ? "<small>" + esc(r.hint) + "</small>" : "") + "</div>" +
+      (r.info ? "<ha-icon class='i' data-info='" + i + "' icon='mdi:information-outline' title='" + esc(t("Hoe lees je dit?")) + "'></ha-icon>" : "") + "</div>"; }
+    _row(r, i) {
+      const H = this._hass.states;
+      if (r.type === "section") return "<div class='sec'>" + esc(r.name || "") + "</div>";
+      if (r.type === "backup") {
+        const s = H[r.entity || "sensor.batterijplan_instellingen_backup"], ok = s && !["unknown", "unavailable", ""].includes(s.state);
+        const n = ok ? Object.keys(s.attributes).filter((k) => !["friendly_name", "icon"].includes(k)).length : 0;
+        return "<div class='bk'>" + (ok ? esc(t("Laatste back-up")) + " " + esc(s.state.slice(0, 5) + s.state.slice(10)) + " · " + n + " " + esc(t("instellingen")) : esc(t("Nog geen back-up"))) + "</div>";
+      }
+      if (r.type === "buttons") return "<div class='f wide'>" + (r.name ? this._naam(r, i) : "") + "<div class='knoppen'>" + (r.buttons || []).map((b, j) =>
+        "<button class='btn" + (this._zeker === i + "." + j ? " zeker" : "") + "' data-b='" + i + "." + j + "'>" + esc(this._zeker === i + "." + j ? t("Zeker? Tik nog een keer") : b.name) + "</button>").join("") + "</div></div>";
+      if (!r.entity) return "";
+      const s = H[r.entity], dom = r.entity.split(".")[0];
+      if (!s) return "<div class='f na'>" + this._naam(Object.assign({}, r, { hint: t("niet gevonden") + ": " + r.entity }), i) + "<span></span></div>";
+      const a = s.attributes, unit = a.unit_of_measurement ? " " + a.unit_of_measurement : "";
+      if (dom === "input_number" || dom === "number") {
+        const min = +a.min, max = +a.max, step = +a.step || 1, v = +s.state, n = Math.round((max - min) / step);
+        if (n <= 400 && r.kind !== "stepper") {
+          const pc = (v - min) / (max - min) * 100;
+          return "<div class='f'>" + this._naam(r, i) + "<div class='sl' style='min-width:min(320px,52cqw)'><input type='range' min='" + min + "' max='" + max + "' step='" + step + "' value='" + v + "' data-i='" + i + "' style='--v:" + pc + "%' aria-label='" + esc(r.name || "") + "'><output>" + this._num(v, step) + esc(unit) + "</output></div></div>";
+        }
+        const shown = this._edit === i ? "<input data-ni='" + i + "' inputmode='decimal' value='" + esc(String(v).replace(".", LANG === "en" ? "." : ",")) + "'>" : "<b data-ne='" + i + "' title='" + esc(t("Tik om te typen")) + "'>" + this._num(v, step) + esc(unit) + "</b>";
+        return "<div class='f'>" + this._naam(r, i) + "<div class='stp' data-i='" + i + "'><button data-dir='-1' aria-label='" + esc(t("minder")) + "'>−</button>" + shown + "<button data-dir='1' aria-label='" + esc(t("meer")) + "'>+</button></div></div>";
+      }
+      if (dom === "input_boolean" || dom === "switch") return "<div class='f'>" + this._naam(r, i) + "<button class='tg" + (s.state === "on" ? " on" : "") + "' role='switch' aria-checked='" + (s.state === "on") + "' data-i='" + i + "'></button></div>";
+      if (dom === "input_select" || dom === "select") {
+        const opts = a.options || [], lab = r.labels || {};
+        if (opts.length <= 6) return "<div class='f'>" + this._naam(r, i) + "<div class='chips'>" + opts.map((o) => "<button class='chip" + (o === s.state ? " on" : "") + "' data-i='" + i + "' data-o='" + esc(o) + "'>" + esc(lab[o] || o) + "</button>").join("") + "</div></div>";
+        return "<div class='f'>" + this._naam(r, i) + "<div class='stp' data-i='" + i + "' data-sel='1'><button data-dir='-1'>‹</button><b>" + esc(lab[s.state] || s.state) + "</b><button data-dir='1'>›</button></div></div>";
+      }
+      if (dom === "input_text" || dom === "text") {
+        const v = ["unknown", "unavailable"].includes(s.state) ? "" : s.state, x = /^[a-z_]+\.[a-z0-9_]+$/.test(v) ? H[v] : null;
+        const nu = v ? (x ? "<small>" + esc(t("nu")) + ": " + esc(x.state) + esc(x.attributes.unit_of_measurement ? " " + x.attributes.unit_of_measurement : "") + "</small>" : "<small style='color:#ff9800'>" + esc(t("sensor niet gevonden")) + "</small>") : "";
+        if (this._edit === i) return "<div class='f wide'>" + this._naam(r, i) + "<div class='ed'><input data-ti='" + i + "' value='" + esc(v || (r.pick ? "sensor." : "")) + "' autocomplete='off' spellcheck='false'><button class='btn' data-tok='" + i + "'>OK</button></div>" +
+          (r.pick ? "<div class='kies' data-kies='" + i + "'>" + this._kies(r, "") + "</div>" : "") + "</div>";
+        return "<div class='f tx'>" + this._naam(r, i) + "<div class='val'><button class='txt" + (v ? "" : " empty") + "' data-te='" + i + "'>" + esc(v || t("leeg · tik om in te vullen")) + "</button>" + nu + "</div></div>";
+      }
+      if (dom === "input_datetime" || dom === "date") return "<div class='f'>" + this._naam(r, i) + "<input type='date' class='date' data-di='" + i + "' value='" + (/^\d{4}-\d{2}-\d{2}$/.test(s.state) ? s.state : "") + "'></div>";
+      if (dom === "input_button" || dom === "button") return "<div class='f'>" + this._naam(r, i) + "<button class='btn' data-p='" + i + "'>" + esc(r.label || t("Uitvoeren")) + "</button></div>";
+      return "<div class='f'>" + this._naam(r, i) + "<span class='val'>" + esc(s.state) + esc(unit) + "</span></div>";
+    }
+    // candidate sensors for a text row with "pick": power sensors (W or kW), best matches first, filtered by what is typed
+    _kies(r, typed) {
+      const H = this._hass.states, q = String(typed || "").toLowerCase().replace(/^sensor\.?/, "").trim(), woorden = (r.suggest || []).map((w) => String(w).toLowerCase());
+      const lijst = Object.keys(H).filter((id) => id.startsWith("sensor.") && !id.startsWith("sensor.batterijplan")).map((id) => {
+        const a = H[id].attributes || {}, u = a.unit_of_measurement, naam = String(a.friendly_name || id);
+        if (!(a.device_class === "power" || u === "W" || u === "kW")) return null;
+        const tekst = (id + " " + naam).toLowerCase();
+        if (q && !q.split(/\s+/).every((w) => tekst.includes(w))) return null;
+        const score = woorden.reduce((n, w) => n + (tekst.includes(w) ? 1 : 0), 0) + (isFinite(parseFloat(H[id].state)) ? 0.5 : 0) + (id === (H[r.entity] || {}).state ? 10 : 0);
+        return { id, naam, score, v: H[id].state + (u ? " " + u : "") };
+      }).filter(Boolean).sort((a, b) => b.score - a.score || a.naam.localeCompare(b.naam)).slice(0, 8);
+      if (!lijst.length) return "<div class='hulp'>" + esc(t("Geen vermogenssensor gevonden. Typ de naam zelf.")) + "</div>";
+      return "<div class='hulp'>" + esc(t(r.pick_hint || "Kies je sensor; rechts staat wat hij nu meldt.")) + "</div>" +
+        lijst.map((x, j) => "<button class='opt" + (j === 0 && x.score >= 1 ? " top" : "") + "' data-kid='" + esc(x.id) + "'><b>" + esc(x.naam) + "</b><small>" + esc(x.id) + "</small><span>" + esc(x.v) + "</span></button>").join("");
+    }
+    _render() {
+      if (!this._hass || !this._config) return;
+      if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+      const c = this._config, rows = this._rows(), tb = c.tabs ? c.tabs[this._tab] || {} : null;
+      this.shadowRoot.innerHTML = "<style>" + VCSS + "</style><ha-card style='--c:" + esc(c.color || "var(--primary-color)") + "'>" +
+        (c.title ? "<div class='title'>" + (c.icon ? "<ha-icon icon='" + esc(c.icon) + "'></ha-icon>" : "") + "<span>" + esc(c.title) + "</span>" +
+          (c.info ? "<ha-icon class='i' data-info='k' icon='mdi:information-outline' title='" + esc(t("Hoe lees je dit?")) + "'></ha-icon>" : "") + "</div>" : "") +
+        (c.tabs ? "<div class='tabs'>" + c.tabs.map((x, j) => "<button class='tab" + (j === this._tab ? " on" : "") + "' data-tab='" + j + "'>" + esc(x.naam || "") + "</button>").join("") + "</div>" +
+          (tb.sub ? "<div class='tabsub'>" + esc(tb.sub) + "</div>" : "") : "") +
+        "<div class='rows'>" + rows.map((r, i) => this._row(r, i)).join("") + "</div></ha-card>";
+      this._wire(rows);
+    }
+    _uitleg(text) {
+      const scherm = document.createElement("div"); scherm.className = "ui-scherm";
+      scherm.innerHTML = "<div class='ui-paneel'><div class='ui-kop'><span class='terug'>‹ " + esc(t("Terug")) + "</span><b>" + esc(t("Hoe lees je dit?")) + "</b></div>" + infoHtml(text) + "</div>";
+      const dicht = (e) => { if (e && e.type === "keydown") { if (e.key !== "Escape") return; e.stopPropagation(); } scherm.remove(); document.removeEventListener("keydown", dicht, true); };
+      scherm.addEventListener("click", (e) => { if (e.target === scherm || e.target.classList.contains("terug")) dicht(); });
+      document.addEventListener("keydown", dicht, true);
+      this.shadowRoot.appendChild(scherm);
+    }
+    _wire(rows) {
+      const R = this.shadowRoot, H = this._hass, call = (d, s, x) => H.callService(d, s, x);
+      const dom = (r) => r.entity.split(".")[0];
+      R.querySelectorAll("[data-info]").forEach((b) => b.addEventListener("click", () => this._uitleg(b.dataset.info === "k" ? this._config.info : rows[+b.dataset.info].info)));
+      R.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => { this._tab = +b.dataset.tab; this._edit = undefined; this._render(); }));
+      R.querySelectorAll("input[type=range][data-i]").forEach((inp) => {
+        const r = rows[+inp.dataset.i], a = H.states[r.entity].attributes, unit = a.unit_of_measurement ? " " + a.unit_of_measurement : "";
+        inp.addEventListener("pointerdown", () => { this._busy = r.entity; });
+        inp.addEventListener("input", () => { this._busy = r.entity; inp.style.setProperty("--v", (inp.value - a.min) / (a.max - a.min) * 100 + "%"); inp.nextElementSibling.textContent = this._num(inp.value, a.step || 1) + unit; });
+        inp.addEventListener("change", () => { this._busy = null; call(dom(r), "set_value", { entity_id: r.entity, value: +inp.value }); });
+      });
+      R.querySelectorAll(".stp[data-i]").forEach((box) => box.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+        const r = rows[+box.dataset.i], s = H.states[r.entity], dir = +b.dataset.dir;
+        if (box.dataset.sel) { const o = s.attributes.options, j = (o.indexOf(s.state) + dir + o.length) % o.length; call(dom(r), "select_option", { entity_id: r.entity, option: o[j] }); return; }
+        const a = s.attributes, st = +(r.step || a.step || 1), v = Math.min(+a.max, Math.max(+a.min, Math.round((+s.state + dir * st) / st) * st));
+        call(dom(r), "set_value", { entity_id: r.entity, value: +v.toFixed(6) });
+      })));
+      R.querySelectorAll("[data-ne]").forEach((b) => b.addEventListener("click", () => { this._edit = +b.dataset.ne; this._render(); const x = R.querySelector("[data-ni]"); if (x) { x.focus(); x.select(); } }));
+      const bewaarGetal = () => { const x = R.querySelector("[data-ni]"); if (!x) return; const r = rows[+x.dataset.ni], v = parseFloat(x.value.replace(",", ".")); this._edit = undefined;
+        if (Number.isFinite(v)) call(dom(r), "set_value", { entity_id: r.entity, value: v }); this._sig = ""; this._render(); };
+      R.querySelectorAll("[data-ni]").forEach((x) => { x.addEventListener("keydown", (e) => { if (e.key === "Enter") bewaarGetal(); if (e.key === "Escape") { e.stopPropagation(); this._edit = undefined; this._render(); } }); x.addEventListener("blur", bewaarGetal); });
+      R.querySelectorAll(".tg[data-i]").forEach((b) => b.addEventListener("click", () => { const r = rows[+b.dataset.i]; call(dom(r) === "input_boolean" ? "input_boolean" : "switch", b.classList.contains("on") ? "turn_off" : "turn_on", { entity_id: r.entity }); }));
+      R.querySelectorAll(".chip[data-i]").forEach((b) => b.addEventListener("click", () => { const r = rows[+b.dataset.i]; call(dom(r), "select_option", { entity_id: r.entity, option: b.dataset.o }); }));
+      R.querySelectorAll("[data-te]").forEach((b) => b.addEventListener("click", () => { this._edit = +b.dataset.te; this._render(); const x = R.querySelector("[data-ti]"); if (x) { x.focus(); x.select(); } }));
+      const bewaarTekst = () => { const x = R.querySelector("[data-ti]"); if (!x) return; const r = rows[+x.dataset.ti]; this._edit = undefined;
+        const val = x.value.trim(); call(dom(r), "set_value", { entity_id: r.entity, value: val === "sensor." ? "" : val }); this._sig = ""; this._render(); };
+      R.querySelectorAll("[data-tok]").forEach((b) => b.addEventListener("click", bewaarTekst));
+      R.querySelectorAll("[data-ti]").forEach((x) => x.addEventListener("keydown", (e) => { if (e.key === "Enter") bewaarTekst(); if (e.key === "Escape") { e.stopPropagation(); this._edit = undefined; this._render(); } }));
+      const kiesWire = (box) => box.querySelectorAll("[data-kid]").forEach((b) => b.addEventListener("mousedown", (e) => e.preventDefault()) || b.addEventListener("click", () => {
+        const r = rows[+box.dataset.kies]; this._edit = undefined; call(dom(r), "set_value", { entity_id: r.entity, value: b.dataset.kid }); this._sig = ""; this._render(); }));
+      R.querySelectorAll("[data-kies]").forEach((box) => {
+        kiesWire(box);
+        const x = R.querySelector("[data-ti='" + box.dataset.kies + "']");
+        if (x) x.addEventListener("input", () => { box.innerHTML = this._kies(rows[+box.dataset.kies], x.value); kiesWire(box); });
+      });
+      R.querySelectorAll("[data-di]").forEach((x) => x.addEventListener("change", () => { const r = rows[+x.dataset.di]; if (x.value) call(dom(r) === "date" ? "date" : "input_datetime", dom(r) === "date" ? "set_value" : "set_datetime", { entity_id: r.entity, date: x.value }); }));
+      R.querySelectorAll("[data-p]").forEach((b) => b.addEventListener("click", () => { const r = rows[+b.dataset.p]; call(dom(r), "press", { entity_id: r.entity }); }));
+      // button row: buttons with "confirm: true" ask "Zeker?" first (second tap within 5 s)
+      R.querySelectorAll("[data-b]").forEach((b) => b.addEventListener("click", () => {
+        const [i, j] = b.dataset.b.split(".").map(Number), k = rows[i].buttons[j];
+        if (k.confirm && this._zeker !== b.dataset.b) { this._zeker = b.dataset.b; this._render(); clearTimeout(this._zt); this._zt = setTimeout(() => { this._zeker = null; this._render(); }, 5000); return; }
+        this._zeker = null; clearTimeout(this._zt);
+        const d = k.entity.split(".")[0]; call(d, "press", { entity_id: k.entity }); this._render();
+      }));
+    }
+  }
+
+  // ---------- custom:batterijplan-status — status with logo; every line has an (i) with "Hoe lees je dit?" ----------
+  const ST_INFO = {
+    modus: "**Live**: Batterijplan zet elk kwartier de twee Dynamic-standen van HBC.\n\n**Schaduw**: Batterijplan rekent mee en laat zien wat het zou doen, maar verandert niets aan HBC.\n\nAan- en uitzetten doe je met de schakelaar Live bovenaan.",
+    leren: "Batterijplan leert per uur van de dag hoeveel je huis gebruikt. Na 7 dagen is het klaar met leren. Daarna leert het glijdend door, zodat het met de seizoenen meegaat.\n\nDe **voorspelling** zegt hoe goed het geleerde verbruik het echte verbruik raakt, per blok van 3 uur:\n- wisselvallig: minder dan 55 %\n- redelijk: 55 % of meer\n- goed: 65 % of meer\n- zeer goed: 75 % of meer\n- uitstekend: 85 % of meer\n\nZolang er nog geen blok van 3 uur gemeten is, staat er: nog aan het meten.\n\nIs de voorspelling **wisselvallig**, dan rekent het plan zelf met **extra marge**: de gemiddelde afwijking per blok van 3 uur, maximaal 1 kWh, bovenop je eigen veiligheidsmarge. De batterij raakt dan minder vaak te vroeg leeg. Wordt de voorspelling beter, dan valt die extra marge vanzelf weg.",
+    hbc: "Batterijplan werkt alleen als HBC op **Dynamic** staat. Staat HBC op iets anders, dan wacht het plan en verandert Batterijplan niets. Het leren gaat gewoon door.",
+    kwartier: "Wat Batterijplan voor het volgende kwartier besluit:\n- **Ontladen**: de batterij levert aan het huis in een duur kwartier.\n- **Vasthouden**: de lading wordt bewaard voor een nog duurder moment.\n- **Overschot ontladen**: er zit meer in de batterij dan nodig is tot het volgende goedkope moment.\n- **Laden (HBC)** of **Zon laden (HBC)**: HBC doet het gewoon.",
+  };
+  const VOORSPELLING_KLEUR = { uitstekend: "#1b5e20", "zeer goed": "#2e7d32", goed: "#43a047", redelijk: "#9ccc65" };
+  class BpStatus extends HTMLElement {
+    setConfig(c) { this._config = Object.assign({ logo: "/local/batterijplan/logo.webp?v=2" }, c || {}); this._sig = ""; if (this._hass) this._render(); }
+    set hass(h) {
+      this._hass = h; zetTaal(h);
+      const ids = ["input_boolean.batterijplan_live", "sensor.batterijplan_verbruiksprofiel", "sensor.batterijplan_voorspelling", "input_select.house_battery_strategy", "sensor.batterijplan"];
+      const pa = (h.states["sensor.batterijplan"] || {}).attributes || {};
+      const sig = ids.map((id) => (h.states[id] || {}).state).join("|") + pa.kwartier + "|" + pa.marge_extra + LANG;
+      if (sig !== this._sig) { this._sig = sig; this._render(); }
+    }
+    getCardSize() { return 5; }
+    getGridOptions() { return { columns: "full", rows: "auto" }; }
+    _render() {
+      if (!this._hass) return;
+      if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+      const S = this._hass.states, st = (id) => (S[id] || {}).state, at = (id) => (S[id] || {}).attributes || {};
+      const live = st("input_boolean.batterijplan_live") === "on", p = "sensor.batterijplan_verbruiksprofiel", prima = st(p) === "prima";
+      const nn = arr(at(p).n), dag = Math.min(Math.floor(nn.reduce((a, b) => a + (Number(b) || 0), 0) / 96) + 1, 7);
+      const gezien = arr(at(p).uur).filter((x) => typeof x === "number").length;
+      const vo = st("sensor.batterijplan_voorspelling") || "", vk = VOORSPELLING_KLEUR[vo];
+      const vtxt = vk ? "<b style='color:" + vk + "'>" + esc(t(vo)) + "</b>" : esc(t(vo));
+      const dyn = st("input_select.house_battery_strategy") === "Dynamic";
+      const ic = (n) => "<img src='/local/batterijplan/" + n + ".png?v=1' alt=''>";
+      const versie = at("sensor.batterijplan").versie;
+      const leren = prima ? "<b>" + esc(t("klaar met leren")) + "</b> · " + esc(t("voorspelling")) + " " + vtxt
+        : "<b>" + esc(t("aan het leren")) + "</b> · " + esc(t("dag")) + " " + dag + " " + esc(t("van")) + " 7 · " + esc(t("voorspelling")) + " " + vtxt +
+          (gezien >= 24 ? "" : " · " + gezien + " " + esc(t("van 24 uren al gezien")));
+      const mx = Number(at("sensor.batterijplan").marge_extra) || 0;
+      const lerenTxt = leren + (mx > 0 ? " · <span style='color:#ff9800'>" + esc(t("extra marge")) + " " + nl(mx, 1) + " kWh</span>" : "");
+      const rij = (icoon, naam, waarde, info) => "<div class='r'>" + icoon + "<span class='n'>" + naam + "</span><span class='w'>" + waarde + "</span>" +
+        "<ha-icon class='i' data-info='" + info + "' icon='mdi:information-outline' title='" + esc(t("Hoe lees je dit?")) + "'></ha-icon></div>";
+      this.shadowRoot.innerHTML = "<style>" + VCSS +
+        "ha-card{padding:16px 18px 10px}.kop{display:flex;align-items:center;gap:12px}.kop img{height:56px}.kop .tt{font-size:20px;font-weight:700}.kop small{font-size:14px;font-weight:600;color:var(--secondary-text-color);margin-left:6px}" +
+        ".vraag{font-weight:600;margin:10px 0 6px;font-size:14px}" +
+        ".r{display:grid;grid-template-columns:24px minmax(90px,.8fr) minmax(0,1.6fr) 20px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14px}" +
+        ".r img{height:22px}.r .n{color:var(--secondary-text-color)}.r .i{--mdc-icon-size:18px}</style>" +
+        "<ha-card><div class='kop'><img src='" + esc(this._config.logo) + "' alt=''><span class='tt'>Batterijplan" + (versie ? "<small>v" + esc(versie) + "</small>" : "") + "</span></div>" +
+        "<div class='vraag'>" + esc(t("Haalt de batterij meer uit de duurste kwartieren dan HBC alleen?")) + "</div>" +
+        rij(ic(live ? "vinkje-cirkel" : "spook"), esc(t("Modus")), live ? "<b>" + esc(t("live")) + "</b> — " + esc(t("stuurt HBC")) : "<b>" + esc(t("schaduw")) + "</b> — " + esc(t("rekent mee, stuurt niet")), "modus") +
+        rij(ic(prima ? "vinkje-cirkel" : "zandloper"), esc(t("Verbruik leren")), lerenTxt, "leren") +
+        rij(ic(dyn ? "vinkje-cirkel" : "zandloper"), esc(t("HBC-strategie")), esc(st("input_select.house_battery_strategy") || "—") + (dyn ? "" : " — " + esc(t("plan wacht tot Dynamic"))), "hbc") +
+        rij(ic("kalender-klok"), esc(t("Komend kwartier")) + (at("sensor.batterijplan").kwartier ? " (" + esc(at("sensor.batterijplan").kwartier) + ")" : ""), "<b>" + esc(t(st("sensor.batterijplan") || "—")) + "</b>", "kwartier") +
+        "</ha-card>";
+      this.shadowRoot.querySelectorAll("[data-info]").forEach((b) => b.addEventListener("click", () => BpVelden.prototype._uitleg.call(this, ST_INFO[b.dataset.info])));
+    }
+  }
+
   customElements.define("batterijplan-plan", BpPlan);
+  customElements.define("batterijplan-velden", BpVelden);
+  customElements.define("batterijplan-status", BpStatus);
+  customElements.define("batterijplan-knoppen", BpKnoppen);
   customElements.define("batterijplan-advies", BpAdvies);
   customElements.define("batterijplan-opbrengst", BpOpbrengst);
   customElements.define("batterijplan-grafiek", BpGrafiek);
   window.customCards = window.customCards || [];
   window.customCards.push({ type: "batterijplan-plan", name: "Batterijplan — plan" }, { type: "batterijplan-grafiek", name: "Batterijplan — grafiek" },
-    { type: "batterijplan-advies", name: "Batterijplan — advies" }, { type: "batterijplan-opbrengst", name: "Batterijplan — opbrengst" });
+    { type: "batterijplan-advies", name: "Batterijplan — advies" }, { type: "batterijplan-opbrengst", name: "Batterijplan — opbrengst" },
+    { type: "batterijplan-knoppen", name: "Batterijplan — knoppen met vensters" }, { type: "batterijplan-velden", name: "Batterijplan — instelvelden" },
+    { type: "batterijplan-status", name: "Batterijplan — status" });
 })();

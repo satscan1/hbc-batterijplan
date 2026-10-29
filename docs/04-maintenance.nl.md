@@ -15,9 +15,10 @@
 | **Advies voor HBC wordt oranje** | Pas *Solar reserved for house* in HBC aan naar het getal in het advies. Dat gebeurt vooral bij de wisseling van de seizoenen. |
 | **Nieuw energiecontract** | Pas *Energiebelasting + inkoop* en de *ingangsdatum* aan. |
 | **Batterij erbij of eraf, of minder capaciteit door slijtage** | Pas de *bruikbare capaciteit* aan. |
-| **Grote verandering in verbruik** (warmtepomp, nieuw apparaat) | Niets doen: het profiel past zich binnen ± 14 dagen vanzelf aan. |
+| **Grote verandering in verbruik** (warmtepomp, nieuw apparaat) | Niets doen: het profiel past zich binnen ± 1 tot 2 weken vanzelf aan. |
 | **HBC-update** | Controleer dat HBC nog op Dynamic staat en de gewone periode op Charge PV. |
-| **Andere sensoren** (nieuwe P1-meter, omvormer) | Zet de schakelaar *Instellingen* aan en pas de sensornamen aan. Maak daarna een nieuwe back-up. |
+| **Andere sensoren** (nieuwe P1-meter, omvormer) | Open het knopje *Sensoren* en pas de sensornamen aan. Maak daarna een nieuwe back-up (knopje *Instellingen*). |
+| **Ander energiecontract met all-in prijzen in HBC** | Zet *Prijzen van HBC* op *all-in* (knopje *Instellingen*). |
 
 ## Een nieuwe versie installeren
 
@@ -29,10 +30,18 @@
 
 Je instellingen, het geleerde verbruik en de teller blijven bewaard. Mist er toch iets, druk dan op **Back-up terugzetten**.
 
-**Van 0.1.x naar 1.0.0-dev1:** voeg de kaarten toe als bron (stap 5 van de installatie) en vervang het dashboard. Gebruik je een recorder met include-lijst, zet dan ook `sensor.batterijplan_lading` en `sensor.batterijplan_advies_huisverbruik` op de lijst en herstart.
+**Van 1.0.0-dev1 naar 1.0.0-rc1:**
+- Vervang het pakket en de map `www/batterijplan/`, verhoog het nummer achter de kaarten-bron en plak het nieuwe dashboard. Het dashboard is helemaal nieuw (knoppenrij met vensters), dus vervang het in zijn geheel.
+- Recorder met include-lijst: zet ook `sensor.batterijplan_prijs` erop.
+- Herstart Home Assistant: er zijn nieuwe helpers (*Prijzen van HBC* en twee velden waarin Batterijplan jouw HBC-standen onthoudt).
+- Maak daarna een nieuwe back-up. Die bewaart nu ook de ingangsdatum en *Prijzen van HBC* (10 instellingen in plaats van 8).
+- Geeft HBC all-in prijzen? Zet *Prijzen van HBC* op *all-in*.
+- Het geleerde verbruik blijft bewaard. De voorspelling begint opnieuw te meten, nu per blok van 3 uur.
+
+**Van 0.1.x naar 1.0.0:** voeg de kaarten toe als bron (stap 5 van de installatie) en vervang het dashboard. Gebruik je een recorder met include-lijst, zet dan ook `sensor.batterijplan_lading`, `sensor.batterijplan_advies_huisverbruik` en `sensor.batterijplan_prijs` op de lijst en herstart.
 
 ## Helemaal verwijderen
 
-1. Zet **Live** uit, zodat HBC terug op zijn normale standen gaat.
+1. Zet **Live** uit, zodat HBC terug op jouw eigen standen gaat.
 2. Verwijder `packages/batterijplan.yaml`, de map `www/batterijplan/`, de bron `/local/batterijplan/batterijplan-cards.js` en het dashboard.
 3. Herstart Home Assistant.

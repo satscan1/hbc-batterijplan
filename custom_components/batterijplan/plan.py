@@ -176,6 +176,20 @@ def _hbc_alone(P: dict[str, Any]) -> tuple[list[list[Any]], float, float, float]
     return hl, hk, hk0, hs
 
 
+def hbc_alone_step(x: dict[str, Any], s: float, top: float, laadq: float) -> tuple[float, float]:
+    """One quarter of HBC alone from level ``s`` (kWh above the reserve): (grid cost, new level).
+    Same rules as ``_hbc_alone``; used by the value counter for a separate HBC-alone battery (05-11-2026)."""
+    zon = max(-x["need"], 0)
+    if x["m"] == "low":
+        s2 = min(top, s + laadq + zon)
+    elif x["m"] == "high" and x["need"] > 0:
+        s2 = max(s - x["need"], 0)
+    else:
+        s2 = min(top, s + zon)
+    net = x["need"] + s2 - s
+    return (net * x["b"] if net > 0 else net * x["e"]), s2
+
+
 def _assemble(inp: PlanInput, P: dict[str, Any], engine: str, hl, hk, hk0, hs, bl, bk, bk0, bs, wear: float) -> dict[str, Any]:
     Q, n, pmin_b = P["Q"], P["n"], P["pmin_b"]
     rest = (bs - hs) * pmin_b
@@ -200,6 +214,12 @@ def _assemble(inp: PlanInput, P: dict[str, Any], engine: str, hl, hk, hk0, hs, b
         "s_hbc0": hl[0][1] if hl else None,
         "s_plan0": bl[0][1] if bl else None,
         "pmin_b": round(pmin_b, 5),
+        # first quarter and battery data, for the separate HBC-alone battery of the value counter
+        "q0": {k: Q[0][k] for k in ("need", "b", "e", "m")} if n else None,
+        "e0": round(P["E"], 4),
+        "top": round(P["top"], 4),
+        "laadq": round(P["laadq"], 4),
+        "marge": round(P["marge"], 4),
         "engine": engine,
         "slijtage_plan": round(wear, 2),  # wear cost the plan accepted (not in kosten_plan)
     }

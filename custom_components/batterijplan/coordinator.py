@@ -50,7 +50,8 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # counter
         self.cnt: dict[str, Any] = {"total": 0.0, "live": 0.0, "schaduw": 0.0, "sinds": "", "base": 0.0,
                                     "base_start": "", "n_hold": 0, "n_feed": 0, "n_discharge": 0, "pending": None,
-                                    "schaduw_t": 0.0, "schaduw_nieuw": False}
+                                    "schaduw_t": 0.0, "schaduw_nieuw": False,
+                                    "s_cf": None, "cf_dag": ""}
         self.remembered: dict[str, str] = {}
         self._unsub: list[Any] = []
         self._recalc_pending = False
@@ -321,9 +322,22 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             pend = None
         if r and r.get("punten") and not pend:
             pt = r["punten"][0]
+            # HBC alone keeps its own battery level from quarter to quarter (reset each day), so holding now
+            # and charging later is not counted as a loss in the first quarter only (05-11-2026)
+            dag = dt_util.as_local(dt_util.utc_from_timestamp(r["start"])).date().isoformat()
+            if r.get("q0") is not None and r.get("e0") is not None:
+                if c.get("cf_dag") != dag or c.get("s_cf") is None:
+                    c["s_cf"], c["cf_dag"] = float(r["e0"]), dag
+                k_cf, s_cf2 = plan.hbc_alone_step(r["q0"], float(c["s_cf"]), float(r["top"]), float(r["laadq"]))
+                d_plan = (float(r["s_plan0"]) - float(r["marge"])) - float(r["e0"])
+                value = (k_cf - r["k_plan0"]) + (d_plan - (s_cf2 - float(c["s_cf"]))) * r["pmin_b"]
+            else:
+                s_cf2 = None
+                value = counter.quarter_value(r["k_hbc0"], r["k_plan0"], r["s_hbc0"], r["s_plan0"], r["pmin_b"])
             c["pending"] = {
                 "start": r["start"],
-                "value": counter.quarter_value(r["k_hbc0"], r["k_plan0"], r["s_hbc0"], r["s_plan0"], r["pmin_b"]),
+                "value": value,
+                "s_cf_next": s_cf2,
                 "live": bool(self.live and self.hbc_dynamic),
                 "action": pt[5],
             }
@@ -333,6 +347,8 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _settle(self, pend: dict[str, Any]) -> None:
         c = self.cnt
+        if pend.get("s_cf_next") is not None:
+            c["s_cf"] = float(pend["s_cf_next"])
         v = float(pend["value"])
         if pend["live"]:
             c["live"] = round(c["live"] + v, 4)

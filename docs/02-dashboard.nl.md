@@ -9,7 +9,14 @@
 - Elke eigen kaart heeft een **(i)** naast de titel, en op de statuskaart en in de instellingen heeft ook elke regel er een. Klik erop voor het venster *Hoe lees je dit?* Ga met de muis over een cijfer met een stippellijn voor een korte toelichting.
 - De kleuren zijn overal gelijk. De legenda van de grafiek legt ze uit.
 
-<p align="center"><img src="images/dashboard.png" width="95%" alt="Batterijplan dashboard"></p>
+<p align="center"><img src="images/overview.nl.png" width="95%" alt="Batterijplan-dashboard"></p>
+
+1. **Live**: aan = Batterijplan stuurt HBC. Uit = schaduwmodus: het rekent mee, maar stuurt niets.
+2. **Knoppen**: Opbrengst, Rapport, Advies HBC, Instellingen en Sensoren. Elke knop opent een venster.
+3. **Statuskaart**: modus, verbruik leren, HBC-strategie, komend kwartier en advies huisverbruik. De (i) achter elke regel legt hem uit.
+4. **Briefing en plan**: wat er nu in de batterij zit, wat het plan het komende kwartier doet en het verschil met HBC alleen.
+5. **Regels**: de vier regels, elk met een eigen aan/uit-schakelaar.
+6. **Waar Batterijplan bijstuurt**: de blokken waarin het plan iets anders doet dan HBC.
 
 De pagina heeft vier delen:
 1. de knoppenrij;

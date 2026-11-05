@@ -9,7 +9,14 @@
 - Every custom card has an **(i)** next to its title, and on the status card and in the settings every line has one too. Click it for the *How to read this?* window. Hover over a number with a dotted underline for a short note.
 - The colours are the same everywhere. The legend of the chart explains them.
 
-<p align="center"><img src="images/dashboard.png" width="95%" alt="Batterijplan dashboard"></p>
+<p align="center"><img src="images/overview.en.png" width="95%" alt="Batterijplan dashboard"></p>
+
+1. **Live**: on = Batterijplan steers HBC. Off = shadow mode: it calculates along, but steers nothing.
+2. **Buttons**: Earnings, Report, Advice HBC, Settings and Sensors. Each button opens a window.
+3. **Status card**: mode, learning usage, HBC strategy, next quarter and advice house use. The (i) behind each line explains it.
+4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference with HBC alone.
+5. **Rules**: the four rules, each with its own on/off switch.
+6. **Where Batterijplan steers**: the blocks in which the plan does something different from HBC.
 
 The page has four parts:
 1. the row of buttons;

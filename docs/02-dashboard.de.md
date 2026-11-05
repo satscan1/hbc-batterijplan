@@ -9,7 +9,14 @@
 - Jede eigene Karte hat ein **(i)** neben dem Titel, und auf der Statuskarte und in den Einstellungen hat auch jede Zeile eins. Klicke darauf für das Fenster *Wie liest man das?* Fahre mit der Maus über eine Zahl mit gepunkteter Linie für einen kurzen Hinweis.
 - Die Farben sind überall gleich. Die Legende der Grafik erklärt sie.
 
-<p align="center"><img src="images/dashboard.png" width="95%" alt="Batterijplan Dashboard"></p>
+<p align="center"><img src="images/overview.de.png" width="95%" alt="Batterijplan-Dashboard"></p>
+
+1. **Live**: an = Batterijplan steuert HBC. Aus = Schattenmodus: es rechnet mit, steuert aber nichts.
+2. **Knöpfe**: Ertrag, Bericht, Empfehlung HBC, Einstellungen und Sensoren. Jeder Knopf öffnet ein Fenster.
+3. **Statuskarte**: Modus, Verbrauch lernen, HBC-Strategie, nächste Viertelstunde und Empfehlung Hausverbrauch. Das (i) hinter jeder Zeile erklärt sie.
+4. **Briefing und Plan**: was jetzt in der Batterie ist, was der Plan in der nächsten Viertelstunde tut, und der Unterschied zu HBC allein.
+5. **Regeln**: die vier Regeln, jede mit eigenem Ein/Aus-Schalter.
+6. **Wo Batterijplan nachsteuert**: die Blöcke, in denen der Plan etwas anderes tut als HBC.
 
 Die Seite hat vier Teile:
 1. die Knopfleiste;

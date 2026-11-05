@@ -1,0 +1,43 @@
+name: Something does not work
+description: Report a problem with Batterijplan
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting. **Do not paste private data** (addresses, names, passwords, tokens).
+        Entity names of your own devices are fine when they help.
+  - type: input
+    id: version
+    attributes:
+      label: Batterijplan version
+      description: Shown on the device page of Batterijplan, for example 1.0.0-rc3.
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+    validations:
+      required: true
+  - type: input
+    id: hbc_version
+    attributes:
+      label: Home Battery Control (HBC) version
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Report (optional)
+      description: The Report button on the dashboard gives a page you can copy; remove anything private.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log lines (optional)
+      description: Settings → System → Logs, lines that mention "batterijplan".
+      render: text

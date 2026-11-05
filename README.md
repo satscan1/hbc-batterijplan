@@ -14,6 +14,13 @@ Batterijplan makes your home battery save its charge for the **most expensive** 
 
 <p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/overview.en.png" width="95%" alt="Batterijplan dashboard"></p>
 
+1. **Live**: on = Batterijplan steers HBC. Off = shadow mode: it calculates along, but steers nothing.
+2. **Buttons**: Earnings, Report, Advice HBC, Settings and Sensors. Each button opens a window.
+3. **Status card**: mode, learning usage, HBC strategy, next quarter and advice house use. The (i) behind each line explains it.
+4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference with HBC alone.
+5. **Rules**: the four rules, each with its own on/off switch.
+6. **Where Batterijplan steers**: the blocks in which the plan does something different from HBC.
+
 ## What Batterijplan does
 
 - **Saves charge for the most expensive quarters.** HBC (strategy Dynamic) discharges in every expensive quarter in turn, even when an even more expensive moment comes an hour later. Batterijplan looks ahead to the next cheap moment and gives the charge to the most expensive quarters first. In the other expensive quarters the battery holds on to its charge.

@@ -14,6 +14,13 @@ Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** 
 
 <p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/overview.nl.png" width="95%" alt="Batterijplan dashboard"></p>
 
+1. **Live**: aan = Batterijplan stuurt HBC. Uit = schaduwmodus: het rekent mee, maar stuurt niets.
+2. **Knoppen**: Opbrengst, Rapport, Advies HBC, Instellingen en Sensoren. Elke knop opent een venster.
+3. **Statuskaart**: modus, verbruik leren, HBC-strategie, komend kwartier en advies huisverbruik. De (i) achter elke regel legt hem uit.
+4. **Briefing en plan**: wat er nu in de batterij zit, wat het plan het komende kwartier doet en het verschil met HBC alleen.
+5. **Regels**: de vier regels, elk met een eigen aan/uit-schakelaar.
+6. **Waar Batterijplan bijstuurt**: de blokken waarin het plan iets anders doet dan HBC.
+
 ## Wat Batterijplan doet
 
 - **Bewaart lading voor de duurste kwartieren.** HBC (strategie Dynamic) ontlaadt in elk duur kwartier op volgorde, ook als er een uur later een nog duurder moment komt. Batterijplan rekent vooruit tot het volgende goedkope moment en geeft de lading eerst aan de duurste kwartieren. In de andere dure kwartieren houdt de batterij zijn lading vast.

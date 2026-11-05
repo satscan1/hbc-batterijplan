@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0-rc4 — entity names fix (release candidate)
+
+**Fixed**
+- **All entities showed the name *Batterijplan*.** Each entity now has its own translated name (Dutch, English, German). The entity ids are unchanged, so history, automations and cards keep working. Closes #4.
+
 ## 1.0.0-rc3 — now a Home Assistant integration, new rules, cards built in (release candidate)
 
 **Also in rc3 (after the first live days)**

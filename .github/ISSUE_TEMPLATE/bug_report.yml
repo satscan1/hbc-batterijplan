@@ -11,7 +11,7 @@ body:
     id: version
     attributes:
       label: Batterijplan version
-      description: Shown on the device page of Batterijplan, for example 1.0.0-rc3.
+      description: Shown on the device page of Batterijplan, for example 1.0.0-rc4.
     validations:
       required: true
   - type: input

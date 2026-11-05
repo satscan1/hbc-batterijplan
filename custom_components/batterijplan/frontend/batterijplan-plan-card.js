@@ -89,7 +89,7 @@ class BatterijplanPlanCard extends HTMLElement {
       pts.forEach(q => { const k = q[5] !== q[3] ? q[5] : null; const l = runs[runs.length - 1]; if (l && l.k === k) { l.e = q; l.p.push(q[1]); } else runs.push({ k, b: q, e: q, p: [q[1]] }); });
       const bij = runs.filter(r => r.k).slice(0, 16);
       lijst = bij.length ? bij.map(r => { const mn = Math.min(...r.p), mx = Math.max(...r.p);
-        return `<div class="r"><i style="background:${ACT[r.k]}"></i><b>${dag(r.b[0])} ${tijd(r.b[0])}–${tijd(r.e[0] + 900)}</b> <span>${NAAMB[r.k]} (${mn === mx ? mn : mn + '–' + mx} ct)</span></div>`; }).join('')
+        return `<div class="r"><i style="background:${ACT[r.k]}"></i><b>${dag(r.b[0])} ${tijd(r.b[0])}–${tijd(r.e[0] + 900)}</b> <span>${NAAMB[r.k]} (${mn === mx ? dec(mn) : dec(mn) + '–' + dec(mx)} ct)</span></div>`; }).join('')
         : '<div class="r"><span>' + T('Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.') + '</span></div>';
     }
     const RG = [['laden', T('Extra laden van het net')], ['ontladen', T('Ontladen buiten HBC-uren')], ['vasthouden', T('Vasthouden voor later')], ['terugleveren', T('Terugleveren')]];

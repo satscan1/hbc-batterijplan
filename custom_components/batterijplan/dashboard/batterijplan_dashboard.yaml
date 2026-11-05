@@ -60,6 +60,8 @@ views:
                 As long as this is not filled in, the plan does nothing.
             - entity: select.batterijplan_hbc_prijzen
               name: Prices from HBC
+              labels:
+                kaal: raw (kaal)
               info: |-
                 If the prices in HBC are the bare market price (without tax and mark-up), choose **kaal**.
 

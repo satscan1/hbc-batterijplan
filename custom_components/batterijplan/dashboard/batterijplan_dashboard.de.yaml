@@ -60,6 +60,8 @@ views:
                 Solange dies nicht ausgefüllt ist, tut der Plan nichts.
             - entity: select.batterijplan_hbc_prijzen
               name: Preise von HBC
+              labels:
+                kaal: rein (kaal)
               info: |-
                 Sind die Preise in HBC der reine Börsenpreis (ohne Steuern und Aufschlag), wähle **kaal**.
 

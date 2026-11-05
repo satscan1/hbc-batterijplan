@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/www/batterijplan/logo.png" width="160" alt="HBC-Batterijplan"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/custom_components/batterijplan/brand/icon.png" width="160" alt="HBC-Batterijplan"></p>
 
 <p align="center"><a href="https://github.com/satscan1/hbc-batterijplan/releases"><img src="https://img.shields.io/github/v/release/satscan1/hbc-batterijplan?include_prereleases" alt="Release"></a> <a href="https://github.com/satscan1/hbc-batterijplan"><img src="https://img.shields.io/github/stars/satscan1/hbc-batterijplan?style=flat&logo=github" alt="Stars"></a> <a href="https://ko-fi.com/satscan"><img src="https://img.shields.io/badge/Ko--fi-satscan-FF5E5B?logo=kofi&logoColor=white" alt="Support me on Ko-fi"></a></p>
 
@@ -6,13 +6,13 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md)*
 
-*Version 1.0.0-rc1 · Release Candidate*
+*Version 1.0.0-rc3 · Release Candidate*
 
 Batterijplan sorgt dafür, dass dein Hausspeicher seine Ladung für die **teuersten** Momente des Tages aufhebt. Es arbeitet mit [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) zusammen und übernimmt HBC nicht: HBC steuert weiter den Speicher, Batterijplan gibt nur pro Viertelstunde einen Hinweis.
 
 > Batterijplan ist eine eigenständige, inoffizielle Ergänzung zu HBC. Es wird nicht von den Machern von HBC entwickelt oder gepflegt. Fragen zu Batterijplan stellst du hier, nicht bei HBC.
 
-<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/dashboard.png" width="95%" alt="Batterijplan Dashboard"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/overview.de.png" width="95%" alt="Batterijplan Dashboard"></p>
 
 ## Was Batterijplan tut
 
@@ -23,15 +23,15 @@ Batterijplan sorgt dafür, dass dein Hausspeicher seine Ladung für die **teuers
 - **Zeigt, was es bringt.** Eine ehrliche Schätzung zusätzlich zu HBC allein: Beim Überschuss entladen zählt nur, was wirklich aus dem Speicher kam.
 - **Startet sicher.** Zuerst im Schattenmodus (rechnet mit, steuert nichts). Erst wenn du *Live* einschaltest, steuert es HBC nach.
 
-## Neu in 1.0.0-rc1
+## Neu in 1.0.0-rc3
 
-- **Ruhigeres Dashboard:** alles auf einem Bildschirm. Oben eine Knopfleiste mit *Live* ganz vorne; Einstellungen, Sensoren, Empfehlung und Ertrag öffnen sich als Fenster. Ein orangefarbener Punkt zeigt, wo etwas zu tun ist.
-- **Ganz im Hausstil:** eigene Eingabefelder (Schieberegler, Auswahlknöpfe, − Wert +), Sensoren aus einer Liste passender Kandidaten wählen, Einstellungen in den Reitern Basis und Experte, und ein (i) mit Erklärung bei jeder Zeile.
-- **Vergleich mit HBC allein** in der Grafik: eine rote gepunktete Linie und der Unterschied in Euro pro Tag.
-- **Schneller lernen:** fertig nach 7 Tagen. Die Prognose wird pro Block von 3 Stunden bewertet, und du siehst nur ein Urteil (ordentlich, gut, sehr gut, ausgezeichnet). Bei schwankendem Verbrauch rechnet der Plan selbst mit zusätzlicher Reserve.
-- **Börsenpreise oder All-in-Preise:** neue Einstellung *Preise von HBC*.
-- **Deine eigenen HBC-Stellungen** werden gemerkt und wiederhergestellt. Nutzt du *Sell*, lässt Batterijplan diesen Zeitraum in Ruhe.
-- **Behoben:** Der Plan blieb nach einem Neustart manchmal hängen, ein Fehler beim Zeigen mit der Maus in den Karten, und der *Hausverbrauch* fiel nachts weg bei Wechselrichtern, die nichts melden.
+- **Eine echte Home-Assistant-Integration:** mit HACS installieren und in einem Formular unter *Geräte & Dienste* einrichten. Kein YAML-Paket, keine Dateien kopieren, keine Dashboard-Ressource.
+- **Eingebautes Dashboard** in der Seitenleiste (`/batterijplan`), auf Niederländisch, Englisch und Deutsch.
+- **Vier Regeln mit eigenem Schalter:** aus dem Netz laden, außerhalb der HBC-Zeiten entladen, halten, einspeisen. Die Schwelle ist die von HBC selbst.
+- **Laden aus dem Netz in Blöcken von mindestens 30 Minuten**, damit HBC auch wirklich lädt.
+- **Empfehlung für HBC eingebaut**, mit eigener Karte; der Status zeigt die Empfehlung nach 7 Tagen Messen.
+- **Schattenwert nur bei ausgeschaltetem Live**, höchstens 30 Tage aufbewahrt.
+- **Zahlen folgen deinem Home-Assistant-Zahlenformat** (Komma oder Punkt). Tippe auf das Logo für das Jahreszeitenbild.
 
 Alles auf einen Blick: [CHANGELOG.md](CHANGELOG.md).
 
@@ -39,7 +39,7 @@ Alles auf einen Blick: [CHANGELOG.md](CHANGELOG.md).
 
 | | |
 |---|---|
-| [01 · Installation](docs/01-installation.de.md) | Was du brauchst, Dateien ablegen, Dashboard, Einstellungen |
+| [01 · Installation](docs/01-installation.de.md) | Was du brauchst, mit HACS installieren, einrichten |
 | [02 · Das Dashboard](docs/02-dashboard.de.md) | Was jede Karte zeigt |
 | [03 · So funktioniert es](docs/03-how-it-works.de.md) | Der Plan, Überschuss, Lernen, die Empfehlung und der Zähler in einfacher Sprache |
 | [04 · Pflege und Aktualisieren](docs/04-maintenance.de.md) | Was du ab und zu tust, neue Version, Entfernen |
@@ -51,7 +51,7 @@ Dies ist ein **Release Candidate** (rc): die letzte Testversion vor 1.0.0. Er l�
 
 ## Lizenz
 
-- **Code** (Paket, Karten und Dashboard): GPL-3.0-or-later.
-- **Icons und Logo** (`www/batterijplan/`): eigener Hausstil von SatScan, siehe [LICENSE-ICONEN.md](www/batterijplan/LICENSE-ICONEN.md).
+- **Code** (Integration, Karten und Dashboard): GPL-3.0-or-later.
+- **Icons und Logo** (`custom_components/batterijplan/frontend/` und `brand/`): eigener Hausstil von SatScan, siehe [LICENSE-ICONS.md](LICENSE-ICONS.md).
 
 Batterijplan ist eine eigenständige Ergänzung zu [Home Battery Control](https://github.com/gitcodebob/marstek-venus-rs485-node-red) und wird nicht von den Machern von HBC gepflegt.

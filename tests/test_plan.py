@@ -172,3 +172,19 @@ if __name__ == "__main__":
         if k.startswith("test_"):
             v()
             print("ok", k)
+
+
+def test_hbc_alone_step_matches_simulation():
+    """The counter's separate HBC-alone battery uses the same rules as the HBC-alone simulation (05-11-2026)."""
+    import random
+
+    rnd = random.Random(5)
+    for _ in range(100):
+        inp = _rand_input(rnd)
+        P = plan._prepare(inp)
+        if not P["Q"]:
+            continue
+        hl, hk, hk0, hs = plan._hbc_alone(P)
+        c, s2 = plan.hbc_alone_step(P["Q"][0], P["E"], P["top"], P["laadq"])
+        assert abs(c - hk0) < 1e-9
+        assert abs(round(s2 + P["marge"], 2) - hl[0][1]) < 0.011

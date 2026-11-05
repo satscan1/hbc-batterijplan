@@ -3,7 +3,7 @@ from __future__ import annotations
 
 DOMAIN = "batterijplan"
 NAME = "Batterijplan"
-VERSION = "1.0.0-rc3"
+VERSION = "1.0.0-rc4"
 
 # settings (config entry options) and their defaults
 CONF_CAPACITY = "capaciteit"

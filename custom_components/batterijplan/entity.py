@@ -22,19 +22,18 @@ def device_info(entry_id: str) -> DeviceInfo:
 class BatterijplanEntity(CoordinatorEntity[BatterijplanCoordinator]):
     """Entity whose id is ``<domain>.<key>`` (same object ids as the YAML package had).
 
-    ``has_entity_name`` is off on purpose: the id must not get the device name as a prefix,
-    so existing cards, history and the dashboard keep working. The visible name comes
-    from the translations (``translation_key``)."""
+    ``has_entity_name`` is on so the visible name comes from the translations
+    (``translation_key``) and is shown next to the device name. Because that would also
+    change the generated id (device name as prefix), the id is set explicitly to
+    ``<platform domain>.<key>``: existing cards, history and the dashboard keep working."""
 
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
+    _platform_domain: str  # set by each platform class (switch, sensor, number, select, text, date)
 
     def __init__(self, coordinator: BatterijplanCoordinator, key: str) -> None:
         super().__init__(coordinator)
         self._key = key
+        self.entity_id = f"{self._platform_domain}.{key}"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{key}"
         self._attr_translation_key = key
         self._attr_device_info = device_info(coordinator.config_entry.entry_id)
-
-    @property
-    def suggested_object_id(self) -> str | None:
-        return self._key

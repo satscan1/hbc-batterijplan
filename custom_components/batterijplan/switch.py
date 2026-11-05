@@ -20,6 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
 
 
 class LiveSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
+    _platform_domain = "switch"
     _attr_icon = "mdi:battery-sync"
 
     def __init__(self, coordinator) -> None:
@@ -43,6 +44,8 @@ class LiveSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
 
 
 class RuleSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
+    _platform_domain = "switch"
+
     def __init__(self, coordinator, rule: str, key: str) -> None:
         super().__init__(coordinator, key)
         self._rule = rule

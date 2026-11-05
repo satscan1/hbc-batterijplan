@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
 
 
 class SettingNumber(BatterijplanEntity, NumberEntity):
+    _platform_domain = "number"
     _attr_mode = NumberMode.BOX
     _attr_entity_category = EntityCategory.CONFIG
 

@@ -75,99 +75,96 @@
   },
   "entity": {
     "sensor": {
-      "batterijplan": {
-        "name": "Batterijplan"
-      },
       "batterijplan_lading": {
-        "name": "Batterijplan charge"
+        "name": "Charge"
       },
       "batterijplan_prijs": {
-        "name": "Batterijplan price"
+        "name": "Price"
       },
       "batterijplan_huisverbruik": {
-        "name": "Batterijplan house consumption"
+        "name": "House consumption"
       },
       "batterijplan_huisverbruik_15m": {
-        "name": "Batterijplan house consumption 15m"
+        "name": "House consumption 15m"
       },
       "batterijplan_verbruiksprofiel": {
-        "name": "Batterijplan consumption profile"
+        "name": "Consumption profile"
       },
       "batterijplan_voorspelling": {
-        "name": "Batterijplan forecast"
+        "name": "Forecast"
       },
       "batterijplan_voorspelling_kleur": {
-        "name": "Batterijplan forecast colour"
+        "name": "Forecast colour"
       },
       "batterijplan_meerwaarde": {
-        "name": "Batterijplan added value"
+        "name": "Added value"
       },
       "batterijplan_meerwaarde_periode": {
-        "name": "Batterijplan added value this period"
+        "name": "Added value this period"
       },
       "batterijplan_advies_zon_na_goedkoop_laden": {
-        "name": "Batterijplan advice solar after cheap charging"
+        "name": "Advice solar after cheap charging"
       }
     },
     "switch": {
       "batterijplan_live": {
-        "name": "Batterijplan live (steers HBC)"
+        "name": "Live (steers HBC)"
       },
       "batterijplan_regel_laden": {
-        "name": "Batterijplan rule: extra charging from the grid"
+        "name": "Rule: extra charging from the grid"
       },
       "batterijplan_regel_ontladen": {
-        "name": "Batterijplan rule: discharging outside HBC hours"
+        "name": "Rule: discharging outside HBC hours"
       },
       "batterijplan_regel_vasthouden": {
-        "name": "Batterijplan rule: hold for later"
+        "name": "Rule: hold for later"
       },
       "batterijplan_regel_terugleveren": {
-        "name": "Batterijplan rule: feed in"
+        "name": "Rule: feed in"
       }
     },
     "number": {
       "batterijplan_capaciteit": {
-        "name": "Batterijplan usable capacity"
+        "name": "Usable capacity"
       },
       "batterijplan_marge": {
-        "name": "Batterijplan safety margin"
+        "name": "Safety margin"
       },
       "batterijplan_opslag": {
-        "name": "Batterijplan supplier mark-up per kWh excl. VAT"
+        "name": "Supplier mark-up per kWh excl. VAT"
       },
       "batterijplan_btw": {
-        "name": "Batterijplan VAT"
+        "name": "VAT"
       },
       "batterijplan_teruglever_toeslag": {
-        "name": "Batterijplan feed-in add-on"
+        "name": "Feed-in add-on"
       },
       "batterijplan_teruglever_bonus": {
-        "name": "Batterijplan daytime feed-in bonus"
+        "name": "Daytime feed-in bonus"
       }
     },
     "select": {
       "batterijplan_hbc_prijzen": {
-        "name": "Batterijplan prices from HBC"
+        "name": "Prices from HBC"
       }
     },
     "date": {
       "batterijplan_contract_start": {
-        "name": "Batterijplan contract start date"
+        "name": "Contract start date"
       }
     },
     "text": {
       "batterijplan_sensor_net": {
-        "name": "Batterijplan grid power sensor"
+        "name": "Grid power sensor"
       },
       "batterijplan_sensor_zon": {
-        "name": "Batterijplan solar power sensor"
+        "name": "Solar power sensor"
       },
       "batterijplan_sensor_batterij": {
-        "name": "Batterijplan battery power sensor"
+        "name": "Battery power sensor"
       },
       "batterijplan_sensor_ev": {
-        "name": "Batterijplan EV charger sensor (optional)"
+        "name": "EV charger sensor (optional)"
       }
     }
   }

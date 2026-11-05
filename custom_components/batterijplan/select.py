@@ -16,6 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
 
 
 class PricesSelect(BatterijplanEntity, SelectEntity):
+    _platform_domain = "select"
     _attr_options = [PRICES_RAW, PRICES_ALL_IN]
     _attr_icon = "mdi:currency-eur"
     _attr_entity_category = EntityCategory.CONFIG

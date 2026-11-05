@@ -34,7 +34,7 @@ def _counter_attrs(d: dict[str, Any]) -> dict[str, Any]:
 
 
 SENSORS: tuple[BpSensorDescription, ...] = (
-    BpSensorDescription(key="batterijplan", translation_key="batterijplan", icon="mdi:battery-clock",
+    BpSensorDescription(key="batterijplan", icon="mdi:battery-clock",
                         native_unit_of_measurement="EUR", value=lambda d: d["saving"], attrs=lambda d: d["plan_attrs"]),
     BpSensorDescription(key="batterijplan_lading", translation_key="batterijplan_lading", icon="mdi:battery-clock-outline",
                         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR, device_class=SensorDeviceClass.ENERGY_STORAGE,
@@ -72,11 +72,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
 
 
 class BatterijplanSensor(BatterijplanEntity, SensorEntity):
+    _platform_domain = "sensor"
     entity_description: BpSensorDescription
 
     def __init__(self, coordinator, description: BpSensorDescription) -> None:
         super().__init__(coordinator, description.key)
         self.entity_description = description
+        if description.key == "batterijplan":
+            # Main entity of the device: shows just the device name (no translated name)
+            self._attr_translation_key = None
+            self._attr_name = None
 
     @property
     def native_value(self) -> Any:

@@ -19,6 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
 
 
 class ContractStart(BatterijplanEntity, DateEntity):
+    _platform_domain = "date"
     _attr_icon = "mdi:calendar-start"
     _attr_entity_category = EntityCategory.CONFIG
 

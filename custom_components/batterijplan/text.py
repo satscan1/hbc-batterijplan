@@ -23,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
 
 
 class SensorText(BatterijplanEntity, TextEntity):
+    _platform_domain = "text"
     _attr_native_max = 255
     _attr_native_min = 0
     _attr_entity_category = EntityCategory.CONFIG

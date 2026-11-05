@@ -1,0 +1,174 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Batterieplan einrichten",
+        "description": "Batterieplan ist in diesem Home Assistant bereits als Paket vorhanden. Einstellungen, gelernten Verbrauch und Zähler übernehmen oder neu beginnen?",
+        "menu_options": {
+          "takeover": "Aus dem Batterieplan-Paket übernehmen",
+          "setup": "Neu beginnen"
+        }
+      },
+      "setup": {
+        "title": "Batterieplan einrichten",
+        "description": "Wähle die Leistungssensoren deiner Anlage und gib deine Batterie- und Vertragsdaten ein.",
+        "data": {
+          "sensor_net": "Sensor Netzleistung (+ = Bezug)",
+          "sensor_batterij": "Sensor Batterieleistung (+ = Entladen)",
+          "sensor_zon": "Sensor Solarleistung (optional)",
+          "sensor_ev": "Sensor Ladestation (optional)",
+          "capaciteit": "Nutzbare Kapazität der Batterien",
+          "marge": "Sicherheitsmarge",
+          "hbc_prijzen": "Preise von HBC",
+          "opslag": "Aufschlag pro kWh ohne MwSt.",
+          "contract_start": "Vertragsbeginn"
+        }
+      }
+    },
+    "error": {
+      "same_sensor": "Netz und Batterie müssen zwei verschiedene Sensoren sein."
+    },
+    "abort": {
+      "already_configured": "Batterieplan ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Batterieplan einrichten",
+        "description": "Einstellungen ändern. Wenn du eine Quelle änderst, lädt die Integration neu.",
+        "data": {
+          "sensor_net": "Sensor Netzleistung (+ = Bezug)",
+          "sensor_batterij": "Sensor Batterieleistung (+ = Entladen)",
+          "sensor_zon": "Sensor Solarleistung (optional)",
+          "sensor_ev": "Sensor Ladestation (optional)",
+          "capaciteit": "Nutzbare Kapazität der Batterien",
+          "marge": "Sicherheitsmarge",
+          "hbc_prijzen": "Preise von HBC",
+          "opslag": "Aufschlag pro kWh ohne MwSt.",
+          "contract_start": "Vertragsbeginn",
+          "btw": "MwSt.",
+          "teruglever_toeslag": "Einspeise-Aufschlag (EUR/kWh)",
+          "teruglever_bonus": "Tages-Einspeisebonus",
+          "bonus_van": "Tagsüber ab (Uhr)",
+          "bonus_tot": "Tagsüber bis (Uhr)"
+        }
+      }
+    },
+    "error": {
+      "same_sensor": "Netz und Batterie müssen zwei verschiedene Sensoren sein."
+    }
+  },
+  "selector": {
+    "hbc_prijzen": {
+      "options": {
+        "kaal": "Reiner Börsenpreis",
+        "all-in": "All-in-Preis"
+      }
+    }
+  },
+  "issues": {
+    "dashboard_url_taken": {
+      "title": "Dashboard-Adresse von Batterieplan ist belegt",
+      "description": "Die Adresse {url} wird bereits von einem selbst erstellten Dashboard genutzt, daher hat Batterieplan sein eigenes Dashboard nicht hinzugefügt. Benenne deines um oder entferne es."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "batterijplan": {
+        "name": "Batterieplan"
+      },
+      "batterijplan_lading": {
+        "name": "Batterieplan Ladung"
+      },
+      "batterijplan_prijs": {
+        "name": "Batterieplan Preis"
+      },
+      "batterijplan_huisverbruik": {
+        "name": "Batterieplan Hausverbrauch"
+      },
+      "batterijplan_huisverbruik_15m": {
+        "name": "Batterieplan Hausverbrauch 15m"
+      },
+      "batterijplan_verbruiksprofiel": {
+        "name": "Batterieplan Verbrauchsprofil"
+      },
+      "batterijplan_voorspelling": {
+        "name": "Batterieplan Prognose"
+      },
+      "batterijplan_voorspelling_kleur": {
+        "name": "Batterieplan Prognose Farbe"
+      },
+      "batterijplan_meerwaarde": {
+        "name": "Batterieplan Mehrwert"
+      },
+      "batterijplan_meerwaarde_periode": {
+        "name": "Batterieplan Mehrwert Periode"
+      },
+      "batterijplan_advies_zon_na_goedkoop_laden": {
+        "name": "Batterijplan Empfehlung Sonne nach günstigem Laden"
+      }
+    },
+    "switch": {
+      "batterijplan_live": {
+        "name": "Batterieplan live (steuert HBC)"
+      },
+      "batterijplan_regel_laden": {
+        "name": "Batterieplan Regel: zusätzlich aus dem Netz laden"
+      },
+      "batterijplan_regel_ontladen": {
+        "name": "Batterieplan Regel: Entladen außerhalb der HBC-Zeiten"
+      },
+      "batterijplan_regel_vasthouden": {
+        "name": "Batterieplan Regel: für später halten"
+      },
+      "batterijplan_regel_terugleveren": {
+        "name": "Batterieplan Regel: einspeisen"
+      }
+    },
+    "number": {
+      "batterijplan_capaciteit": {
+        "name": "Batterieplan nutzbare Kapazität"
+      },
+      "batterijplan_marge": {
+        "name": "Batterieplan Sicherheitsmarge"
+      },
+      "batterijplan_opslag": {
+        "name": "Batterieplan Aufschlag pro kWh ohne MwSt."
+      },
+      "batterijplan_btw": {
+        "name": "Batterieplan MwSt."
+      },
+      "batterijplan_teruglever_toeslag": {
+        "name": "Batterieplan Einspeise-Aufschlag"
+      },
+      "batterijplan_teruglever_bonus": {
+        "name": "Batterieplan Tages-Einspeisebonus"
+      }
+    },
+    "select": {
+      "batterijplan_hbc_prijzen": {
+        "name": "Batterieplan Preise von HBC"
+      }
+    },
+    "date": {
+      "batterijplan_contract_start": {
+        "name": "Batterieplan Vertragsbeginn"
+      }
+    },
+    "text": {
+      "batterijplan_sensor_net": {
+        "name": "Batterieplan Sensor Netzleistung"
+      },
+      "batterijplan_sensor_zon": {
+        "name": "Batterieplan Sensor Solarleistung"
+      },
+      "batterijplan_sensor_batterij": {
+        "name": "Batterieplan Sensor Batterieleistung"
+      },
+      "batterijplan_sensor_ev": {
+        "name": "Batterieplan Sensor Ladestation (optional)"
+      }
+    }
+  }
+}

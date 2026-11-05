@@ -3,55 +3,86 @@
 *English: [01-installation.md](01-installation.md) · Deutsch: [01-installation.de.md](01-installation.de.md)*
 
 **In het kort**
-- Batterijplan is een Home Assistant-pakket (één YAML-bestand), eigen kaarten en een dashboard. Node-RED heb je er niet voor nodig.
-- Installeren gaat met de hand, in zes stappen. Reken op een kwartier.
-- Na de installatie staat Batterijplan in **schaduwmodus**: het rekent mee, maar stuurt nog niets.
+- Batterijplan is een Home Assistant-integratie. Je installeert hem met HACS en stelt hem in met een formulier. Geen YAML-bestand, geen kaarten registreren, geen dashboard plakken.
+- De kaarten en het dashboard zitten in de integratie. Het dashboard staat in de zijbalk op `/batterijplan`.
+- Je hebt er geen Node-RED voor nodig. Reken op ongeveer tien minuten.
+- Na de installatie staat Batterijplan in **schaduwmodus**: hij rekent mee, maar stuurt nog niets.
 
 ## Wat heb je nodig
 
 | Nodig | Waarom |
 |---|---|
-| Home Assistant met packages | Batterijplan is één bestand in `/config/packages/`. |
-| HBC versie 4.14 of nieuwer, in **Full control** en strategie **Dynamic** | Batterijplan leest de labels die HBC per kwartier maakt (goedkoop, duur, gewoon) en de lading per batterij. |
-| Een dynamisch energiecontract met kwartier- of uurprijzen | Zonder prijsverschillen valt er niets te verdelen. HBC mag de prijzen kaal of all-in geven; dat stel je in bij *Prijzen van HBC*. |
-| Solcast-zonvoorspelling (integratie *Solcast PV Forecast*) | Voor de verwachte zon per half uur. De Nederlandse en Engelse namen van de sensoren werken allebei. Geen zonnepanelen? Dan rekent Batterijplan met 0 zon. |
-| Sensoren voor netvermogen, zonnevermogen en batterijvermogen, in watt (W) | Om het huisverbruik te meten en te leren. Het gaat steeds om het vermogen van dít moment, niet om een dagtotaal in kWh. |
+| Home Assistant 2026.10.1 of nieuwer, met [HACS](https://hacs.xyz) | Je installeert Batterijplan via HACS. |
+| HBC versie 4.14 of nieuwer, op **Full control** en strategie **Dynamic** | Batterijplan leest de labels die HBC per kwartier maakt (goedkoop, duur, gewoon), de lading van elke batterij en het *drempelverschil*. |
+| Een dynamisch energiecontract met kwartier- of uurprijzen | Zonder prijsverschillen valt er niets te verdelen. HBC mag de prijzen kaal of all-in geven; dat stel je in het formulier in bij *Prijzen van HBC*. |
+| Solcast zonneverwachting (integratie *Solcast PV Forecast*) | Voor de verwachte zon per half uur. Nederlandse en Engelse sensornamen werken allebei. Geen zonnepanelen? Dan rekent Batterijplan met 0 zon. |
+| Sensoren voor netvermogen en batterijvermogen (en eventueel zonnevermogen), in watt (W) | Om het huisverbruik te meten en te leren. Het is altijd het vermogen van *dit* moment, geen dagtotaal in kWh. |
 
-Optioneel: een sensor voor het laadvermogen van je laadpaal. Die wordt van het huisverbruik afgetrokken, zodat het opladen van de auto het verbruiksprofiel niet vervuilt.
+Optioneel: een sensor voor het laadvermogen van je laadpaal. Die gaat van het huisverbruik af, zodat het laden van de auto je verbruiksprofiel niet verpest.
 
 ## Stap 1 — HBC goed zetten
 
-Zet HBC op **Full control** en strategie **Dynamic**. Kies op het tabblad Timed/Dynamic:
+Zet HBC op **Full control** en strategie **Dynamic**. Het drempelverschil in HBC (*Dynamic threshold delta*, in ct) is wat Batterijplan gebruikt om te bepalen wat "duidelijk duurder" is. Kies het zo dat het je batterijverlies dekt: Batterijplan heeft zelf geen rendement-instelling meer.
 
-| Periode | Stand |
-|---|---|
-| Goedkoop (low) | Charge |
-| Gewoon (regular / baseline) | **Charge PV** |
-| Duur (high) | Self-consumption |
+Welke HBC-standen je nu hebt voor goedkoop, gewoon en duur maakt voor de installatie niet uit. Batterijplan onthoudt ze en zet ze terug als je *Live* uitzet. Zie [03 · Hoe het werkt](03-how-it-works.nl.md#wat-batterijplan-in-hbc-stuurt).
 
-> **Belangrijk:** de gewone periode moet op **Charge PV** staan. Batterijplan gaat ervan uit dat de batterij buiten de dure kwartieren alleen ontlaadt als Batterijplan dat vraagt (overschot ontladen).
+## Stap 2 — Installeren met HACS
 
-Gebruik je andere standen, bijvoorbeeld *Sell* in de dure periode om terug te leveren voor geld? Dan blijft Batterijplan van die periode af. Het onthoudt jouw standen en zet ze terug als je *Live* uitzet. Zie [03 · Hoe het werkt](03-how-it-works.nl.md#jouw-eigen-hbc-standen).
+1. Open in HACS het menu (⋮) rechtsboven en kies **Aangepaste repositories**.
+2. Repository: `https://github.com/satscan1/hbc-batterijplan`, categorie **Integratie**. Voeg toe.
+3. Zoek in HACS naar **HBC Batterijplan** en kies **Downloaden**.
+4. Herstart Home Assistant.
 
-## Stap 2 — Bestanden plaatsen
+## Stap 3 — Integratie toevoegen
 
-Download de zip van deze versie: op de GitHub-pagina rechts bij **Releases**, dan **Source code (zip)**. Pak hem uit.
+1. *Instellingen → Apparaten & diensten → Integratie toevoegen → Batterijplan*.
+2. Staat Batterijplan nog als pakket in je Home Assistant? Dan krijg je eerst een keuze. Zie [Overstappen van het pakket](#overstappen-van-het-pakket-100-rc1rc2). Begin je opnieuw? Kies **Opnieuw beginnen**, of je komt meteen bij het formulier.
+3. Vul het formulier in (hieronder) en druk op **Verzenden**.
 
-| Uit de zip | Naar Home Assistant |
-|---|---|
-| `packages/batterijplan.yaml` | `/config/packages/batterijplan.yaml` |
-| `www/batterijplan/` (kaarten, iconen, logo) | `/config/www/batterijplan/` |
+Het formulier:
 
-Gebruik je nog geen packages? Voeg dan dit toe aan `configuration.yaml`:
+| Veld | Wat invullen | Voorbeeld |
+|---|---|---|
+| Sensor netvermogen (+ = afname) | jouw sensor in W, afname = +, teruglevering = − | `sensor.p1_vermogen` |
+| Sensor batterijvermogen (+ = ontladen) | totaal van al je batterijen in W, ontladen = + | `sensor.house_total_battery_power` |
+| Sensor zonnevermogen (optioneel) | wat al je zonnepanelen samen **nu** opwekken, in W (niet de dagopbrengst) | `sensor.zon_totaal` |
+| Sensor laadpaal (optioneel) | laadvermogen van je laadpaal in W | mag leeg blijven |
+| Bruikbare capaciteit van de batterijen | wat je batterijen samen *echt* kunnen leveren, boven de ondergrens in HBC | 2 × 5,12 kWh met 12 % ondergrens ≈ 9,0 kWh |
+| Veiligheidsmarge | lading waar het plan nooit op rekent | 0,3 kWh |
+| Prijzen van HBC | *Kale beursprijs* als HBC de kale marktprijs geeft (standaard); *All-in prijs* als HBC de prijs met belasting, opslag en btw geeft. Bij all-in telt Batterijplan zelf niets op. | kaal |
+| Opslag per kWh excl. btw | wat je leverancier per kWh boven de beursprijs rekent, zonder btw. Sommige leveranciers (bijvoorbeeld Zonneplan) noemen dit een *opslag* of *inkoopvergoeding*: kijk in je contract. Niet gebruikt bij all-in prijzen. | zie je contract |
+| Ingangsdatum energiecontract (optioneel) | de dag waarop je contractjaar begint (het jaartal maakt niet uit). De teller *meerwaarde dit contractjaar* volgt deze datum. | 9 december |
 
-```yaml
-homeassistant:
-  packages: !include_dir_named packages
-```
+Meerdere omvormers en geen sensor met het totaal? Maak een helper: *Instellingen → Apparaten & diensten → Helpers → Helper maken → De status van meerdere sensoren combineren*, type **Som**.
 
-## Stap 3 — Recorder (alleen als je een include-lijst gebruikt)
+> Zolang de bruikbare capaciteit niet is ingevuld, is er geen plan en doet Batterijplan niets.
 
-Werkt je recorder met een vaste lijst (`include`), zet dan deze entiteiten erop. Anders blijven de grafiek en de teller leeg:
+Je krijgt een foutmelding als de netsensor en de batterijsensor dezelfde sensor zijn.
+
+### Expert-instellingen
+
+De rest wijzig je later: druk bij de integratie op **Configureren**. Naast de velden hierboven zie je dan ook:
+
+| Veld | Standaard | Betekenis |
+|---|---|---|
+| Btw | 21 % | Btw over wat je inkoopt. |
+| Toeslag terugleveren (EUR/kWh) | 0,02 | Wat je bovenop de beursprijs krijgt als je teruglevert. Bij Zonneplan is dit bijvoorbeeld de *terugleververgoeding*. Kijk in je contract. |
+| Dagbonus terugleveren | 10 % | Extra percentage op een positieve terugleverprijs overdag. 0 = geen. |
+| Overdag vanaf / tot (uur) | 8 / 17 | De uren voor die bonus. Elk kwartier met zon telt ook als overdag. |
+
+De sensoren, capaciteit, marge, prijzen, opslag en de ingangsdatum wijzig je ook in het dashboard onder **Instellingen**.
+
+## Stap 4 — Dashboard openen
+
+In de zijbalk staat een nieuw dashboard **Batterijplan** (adres `/batterijplan`). De kaarten zijn ingebouwd: je hoeft geen bron toe te voegen en geen bestand neer te zetten. Is het adres al bezet door een dashboard van jezelf? Zie [05 · Problemen oplossen](05-troubleshooting.nl.md#dashboard-en-kaarten).
+
+Zie je het zijbalkitem niet meteen? Ververs de browser (op een telefoon: app sluiten en opnieuw openen).
+
+**Controle:** onder de knop **Sensoren** zie je *Huisverbruik nu*. Dat moet ongeveer kloppen met wat je huis echt verbruikt, en is nooit negatief.
+
+## Recorder (alleen als je een include-lijst gebruikt)
+
+Werkt je recorder met een vaste lijst (`include`)? Zet dan deze entiteiten erop. Anders blijven de grafiek en de teller leeg:
 
 ```yaml
 recorder:
@@ -61,70 +92,38 @@ recorder:
       - sensor.batterijplan_meerwaarde
       - sensor.batterijplan_prijs
       - sensor.batterijplan_lading
-      - sensor.batterijplan_advies_huisverbruik
       - input_select.house_battery_strategy_dynamic_expensive
-      - input_boolean.batterijplan_live
+      - switch.batterijplan_live
 ```
 
-Gebruik je geen include-lijst (de standaard), dan hoef je niets te doen.
-
-## Stap 4 — Herstarten
-
-Ga naar *Ontwikkelhulpmiddelen → YAML*, kies **Configuratie controleren** en herstart Home Assistant. De eerste keer is een herstart nodig: de map `www` en de recorder worden alleen bij het opstarten gelezen.
-
-## Stap 5 — Kaarten en dashboard
-
-**De kaarten aanmelden (één keer):**
-1. *Instellingen → Dashboards*, rechtsboven ⋮ → **Bronnen** (Resources). Zie je dat niet, zet dan eerst in je profiel de *Geavanceerde modus* aan.
-2. **Bron toevoegen**: adres `/local/batterijplan/batterijplan-cards.js?v=2`, type **JavaScript-module**.
-3. Ververs de browser (op de telefoon: app sluiten en opnieuw openen).
-
-**Het dashboard toevoegen:**
-1. *Instellingen → Dashboards → Dashboard toevoegen → Nieuw dashboard vanaf nul*, naam bijvoorbeeld "Batterijplan", met een eigen icoon in de zijbalk.
-2. Open het dashboard, kies rechtsboven ✏️ (bewerken), dan ⋮ → **Raw-configuratie-editor**.
-3. Plak de inhoud van `dashboards/batterijplan-dashboard.yaml` (Nederlands), `batterijplan-dashboard.en.yaml` (Engels) of `batterijplan-dashboard.de.yaml` (Duits) en sla op.
-
-De kaarten volgen de taal van je profiel in Home Assistant. Het dashboard-bestand bepaalt de taal van de rest (status, knopjes, instellingen).
-
-## Stap 6 — Instellingen invullen
-
-Klik op het dashboard op het knopje **Instellingen**. Er opent een venster met twee tabbladen: **Basis** (capaciteit, prijzen van HBC, ingangsdatum, back-up) en **Expert** (marge, rendement, energiebelasting + inkoop). De sensoren staan achter het knopje **Sensoren**. Elk veld heeft een **(i)** met uitleg.
-
-De velden werken zo:
-- een **schuifbalk** voor capaciteit, marge en rendement;
-- **keuzeknopjes** voor *kaal* of *all-in*;
-- een **− waarde +**-knop voor energiebelasting + inkoop; tik op het getal om het precies te typen;
-- een **keuzelijst** voor de sensoren: tik op een sensorveld en je krijgt de vermogenssensoren uit jouw Home Assistant, de meest waarschijnlijke bovenaan, met rechts wat ze nu melden. Tik op de juiste. Typen filtert de lijst; je mag de naam ook helemaal zelf typen en op Enter of OK drukken. Onder elke gekozen sensor zie je wat die nu meldt.
-
-| Instelling | Wat vul je in | Voorbeeld |
-|---|---|---|
-| Ingangsdatum energiecontract | de dag waarop je contractjaar begint (het jaartal maakt niet uit) | 9 december |
-| Bruikbare capaciteit batterijen | wat je batterijen samen écht kunnen leveren, boven de ondergrens in HBC | 2 × 5,12 kWh met 12 % ondergrens ≈ 9,0 kWh |
-| Veiligheidsmarge | lading die het plan nooit inrekent | 0,3 kWh |
-| Rendement laden + ontladen | hoeveel % van de geladen stroom er weer uitkomt | 75 % |
-| Energiebelasting + inkoop (excl. btw) | wat je per kWh bóvenop de kale beursprijs betaalt: energiebelasting plus de inkoopvergoeding van je leverancier | 0,09161 + 0,0165 = 0,1081 |
-| Prijzen van HBC | *kaal* als HBC de kale beursprijs geeft (standaard); *all-in* als HBC de prijs met belasting, opslag en btw geeft. Bij all-in telt Batterijplan zelf niets meer op. | kaal |
-| Sensor netvermogen | jouw sensor in W, afname = +, teruglevering = − | `sensor.p1_vermogen` |
-| Sensor zonnevermogen | wat al je zonnepanelen samen **nu** opwekken, in W (niet de dagopbrengst) | `sensor.zon_totaal` |
-| Sensor batterijvermogen | totaal van al je batterijen in W, ontladen = + | bij HBC meestal `sensor.house_total_battery_power` |
-| Sensor laadpaal (optioneel) | laadvermogen van je auto-lader in W | mag leeg blijven |
-
-Heb je meerdere omvormers en geen sensor met het totaal? Maak een helper: *Instellingen → Apparaten en diensten → Helpers → Helper aanmaken → Combineer de status van meerdere sensoren*, type **Som**.
-
-> Zolang de bruikbare capaciteit niet is ingevuld, zegt het plan "Niet ingesteld" en doet het niets.
-
-**Controle:** in het venster Sensoren staat onderaan *Huisverbruik nu*. Dat moet ongeveer kloppen met wat je huis echt gebruikt, en is nooit negatief.
-
-**Back-up maken.** Alles ingevuld? Druk op tabblad Basis op **Back-up maken**. Na een herinstallatie of een vergissing zet **Back-up terugzetten** alles terug. Die knop vraagt eerst "Zeker? Tik nog een keer". De back-up bewaart alle 10 instellingen en blijft bewaard bij een herstart en bij een nieuwe versie.
-
-Sluit daarna het venster. Ontbreekt er nog iets, dan houdt het knopje een oranje stip.
+Gebruik je geen include-lijst (standaard), dan hoef je niets te doen.
 
 ## De eerste 7 dagen: kijken en leren
 
-Batterijplan begint in **schaduwmodus**: het rekent en laat zien wat het zou doen, maar verandert niets aan HBC. Op de statuskaart zie je bij *Verbruik leren* hoe ver het is ("dag 3 van 7").
+Batterijplan begint in **schaduwmodus**: hij rekent en toont wat hij zou doen, maar verandert niets in HBC. Op de statuskaart laat *Verbruik leren* zien hoe ver hij is ("dag 3 van 7").
 
-Kijk af en toe naar *Plan vandaag en morgen* en *Prijs en batterij*:
-- Zegt het plan "vasthouden voor later"? Kwam er later op de dag inderdaad een duurder moment?
-- Zegt het "ontladen in dure kwartieren"? Was de batterij aan het eind van de dure periode bijna leeg, en niet al veel eerder?
+Kijk af en toe naar de grafiek en de briefing:
+- Zegt het plan "vasthouden"? Kwam er later op de dag inderdaad een duurder moment?
+- Ontlaadt het buiten de HBC-uren? Was dat echt een veel duurder kwartier dan het kwartier ervoor?
 
 Klopt dat? Zet dan **Live** aan. Hoe dat werkt staat in [03 · Hoe het werkt](03-how-it-works.nl.md#live-zetten).
+
+## Overstappen van het pakket (1.0.0-rc1/rc2)
+
+Gebruikte je Batterijplan als pakket (`packages/batterijplan.yaml`), met de kaarten in `www/batterijplan` en een dashboard dat je zelf hebt geplakt? Doe dan dit, in deze volgorde:
+
+1. **Maak een reservekopie** van Home Assistant (*Instellingen → Systeem → Back-ups*). De oude knop *Back-up maken* is hiervoor niet nodig.
+2. **Installeer de integratie** met HACS (stap 2 en 3 hierboven) en herstart.
+3. Voeg de integratie toe. Omdat het pakket er nog staat, krijg je nu een keuze. Kies **Overnemen uit het Batterijplan-pakket**. Batterijplan neemt je instellingen over (sensoren, capaciteit, marge, prijzen, opslag, ingangsdatum), het **geleerde verbruiksprofiel** en de **teller**. Je ziet het formulier nog één keer, ingevuld. Controleer het en verzend.
+4. **Haal het pakket weg.** Verwijder `packages/batterijplan.yaml` (en, als je dat hebt, `packages/batterijplan_proef.yaml`).
+5. **Haal de oude kaarten weg.** Verwijder de map `www/batterijplan/`. Verwijder de bron `/local/batterijplan/batterijplan-cards.js` onder *Instellingen → Dashboards → ⋮ → Bronnen*.
+6. **Haal het oude dashboard weg** (*Instellingen → Dashboards*).
+7. **Herstart Home Assistant.** Zolang het pakket er nog stond, kregen de nieuwe entiteiten een id met `_2` erachter (bijvoorbeeld `sensor.batterijplan_2`). Bij de herstart zet Batterijplan ze terug naar de gewone namen, zodat je geschiedenis en je eigen kaarten blijven werken.
+8. Open het nieuwe dashboard **Batterijplan** in de zijbalk.
+
+Goed om te weten:
+- De nieuwe regels vervangen de oude. Overschot ontladen, het *Advies voor HBC* en de rendement-instelling zijn weg; zie [03 · Hoe het werkt](03-how-it-works.nl.md#de-regels).
+- De oude back-up- en terugzetknoppen zijn weg. De integratie bewaart alles zelf; zie [04 · Onderhoud](04-maintenance.nl.md#back-up).
+- Recorder met include-lijst: de hoofdnamen in de lijst hierboven zijn niet veranderd. Haal `sensor.batterijplan_advies_huisverbruik` en `input_boolean.batterijplan_live` eraf; zet `switch.batterijplan_live` erop.
+- Het totaal van de teller wordt overgenomen. De teller *meerwaarde dit contractjaar* begint opnieuw bij het overnemen.
+- *Live* wordt nooit overgenomen: hij staat na de installatie altijd **uit**, dus de integratie wijzigt niets in HBC. Zet Live van het pakket zelf uit en zet daarna *Live* van de integratie aan als je zover bent.

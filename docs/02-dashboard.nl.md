@@ -3,29 +3,31 @@
 *English: [02-dashboard.md](02-dashboard.md) · Deutsch: [02-dashboard.de.md](02-dashboard.de.md)*
 
 **In het kort**
-- De startpagina beantwoordt één vraag: *wat doet Batterijplan nu, en haalt het meer uit de batterij dan HBC alleen?* Alles past op één scherm.
-- Bovenaan een rij knopjes. Instellingen, sensoren, advies en opbrengst zitten achter een knopje en openen als venster.
+- Het dashboard zit in de integratie. Het staat in de zijbalk als **Batterijplan**, op `/batterijplan`. De kaarten zijn ingebouwd: geen bron, geen bestand, niets om te plakken.
+- De startpagina beantwoordt één vraag: *wat doet Batterijplan nu, en haalt hij meer uit de batterij dan HBC alleen?* Alles past op één scherm.
+- Bovenaan staat een rij knoppen. Opbrengst, instellingen, het rapport en de sensoren zitten achter een knop en openen als venster.
 - Elke eigen kaart heeft een **(i)** naast de titel, en op de statuskaart en in de instellingen heeft ook elke regel er een. Klik erop voor het venster *Hoe lees je dit?* Ga met de muis over een cijfer met een stippellijn voor een korte toelichting.
-- Kleuren zijn overal hetzelfde: **groen** = ontladen in een duur kwartier, **oranje** = vasthouden voor later, **paars** = overschot ontladen.
+- De kleuren zijn overal gelijk. De legenda van de grafiek legt ze uit.
 
 <p align="center"><img src="images/dashboard.png" width="95%" alt="Batterijplan dashboard"></p>
 
-De pagina heeft drie rijen:
+De pagina heeft vier delen:
 1. de knoppenrij;
-2. de statuskaart, met rechts daarnaast het plan;
-3. de grafiek over de volle breedte.
+2. de statuskaart;
+3. de briefing, in twee kolommen, met de regels rechts;
+4. de grafiek over de volle breedte: HBC alleen en Batterijplan.
 
 ## De knoppenrij
 
-| Knopje | Wat het doet |
+| Knop | Wat hij doet |
 |---|---|
-| **Live** (eigen schakelaar, vooraan) | Groen en aan = Batterijplan stuurt HBC bij. Uit = schaduwmodus: het rekent mee, maar stuurt niets. |
+| **Live** (eigen schakelaar, vooraan) | Groen en aan = Batterijplan stuurt HBC. Uit = schaduwmodus: hij rekent mee, maar stuurt niets. |
 | **Opbrengst** | Opent *Wat levert het op*. |
-| **Advies HBC** | Opent *Advies voor HBC*. |
-| **Instellingen** | Opent de instellingen, met de tabbladen Basis en Expert. |
+| **Instellingen** | Opent de instellingen, met de tabbladen **Basis**, **Regels** en **Expert**. |
+| **Rapport** | Opent het rapport van het plan. |
 | **Sensoren** | Opent de sensornamen, de controle *huisverbruik nu* en de uitleg. |
 
-Een **oranje stip** op een knopje betekent: hier is iets te doen. Bijvoorbeeld een advies om iets aan te passen, een instelling die niet is ingevuld of een sensor die niets meldt. Geen stip betekent dat alles goed staat.
+Een **oranje stip** op een knop betekent: hier is iets te doen. Bijvoorbeeld een instelling die niet is ingevuld of een sensor die niets meldt. Geen stip betekent dat alles goed staat.
 
 Een venster sluit je met **‹ Terug** of ✕ bovenin, met een klik ernaast of met Esc. Het venster *Hoe lees je dit?* sluit je op dezelfde manier; je komt dan terug waar je was.
 
@@ -36,11 +38,11 @@ Bovenaan het logo, de naam en de versie, met de vraag die Batterijplan beantwoor
 | Regel | Betekenis |
 |---|---|
 | Modus | **live** — stuurt HBC, of **schaduw** — rekent mee, stuurt niets. |
-| Verbruik leren | Tijdens het leren bijvoorbeeld "aan het leren · dag 3 van 7 · voorspelling redelijk". Na 7 dagen: "klaar met leren · voorspelling goed". |
-| HBC-strategie | Moet **Dynamic** zijn. Staat er iets anders, dan wacht het plan. |
-| Komend kwartier | Wat Batterijplan voor het volgende kwartier besluit. |
+| Verbruik leren | Tijdens het leren bijvoorbeeld "leren · dag 3 van 7 · voorspelling redelijk". Na 7 dagen: "klaar met leren · voorspelling goed". |
+| HBC-strategie | Moet **Dynamic** zijn. Staat er iets anders? Dan stuurt Batterijplan niets. |
+| Komend kwartier | Wat het plan doet in het komende kwartier, naast wat HBC alleen zou doen. |
 
-**De voorspelling** zegt hoe goed het geleerde verbruik het echte verbruik raakt, per blok van 3 uur. Je ziet alleen een oordeel, geen percentage:
+**De voorspelling** zegt hoe goed het geleerde verbruik klopt met het echte verbruik, per blok van 3 uur. Je ziet alleen een oordeel, geen percentage:
 
 | Oordeel | Kleur |
 |---|---|
@@ -51,26 +53,26 @@ Bovenaan het logo, de naam en de versie, met de vraag die Batterijplan beantwoor
 | zeer goed | donkergroen |
 | uitstekend | het donkerste groen |
 
-## Plan vandaag en morgen
+## De briefing
 
-- Bovenaan vier cijfers: **In de batterij nu**, hoe lang er **ontladen in dure kwartieren** wordt, hoe lang er **vastgehouden voor later** wordt, en hoeveel **overschot** er ontladen wordt.
-- Per dag een balk van 00:00 tot 24:00. Alleen de momenten waarop Batterijplan iets anders doet dan HBC hebben een kleur. Lege stukken betekenen: HBC doet het gewoon. De blauwe streep is nu.
-- Daaronder de blokken in woorden, bijvoorbeeld "di 08:30–10:30 overschot ontladen · ± 0,65 kWh, ± € 0,10". Is er niets te doen: "Niets bij te sturen tot di 13:00: HBC doet het gewoon."
-- De balk voor morgen verschijnt zodra HBC de prijzen van morgen heeft (meestal rond 13:00).
+- Bovenaan drie getallen: **Kale prijs nu**, **Verwachte besparing t.o.v. HBC alleen** en **In de batterij nu**.
+- Daaronder **Waar Batterijplan bijstuurt**: de blokken in woorden waarin het plan iets anders doet dan HBC, bijvoorbeeld "di 08:30–10:30 vasthouden voor later". Niets te doen: HBC doet zijn gewone werk.
+- Rechts de **Regels**: de vier regels, elk met een eigen aan/uit-schakelaar. Zie [03 · Hoe het werkt](03-how-it-works.nl.md#de-regels).
+- Het plan kijkt maximaal 36 uur vooruit. Morgen verschijnt zodra HBC de prijzen van morgen heeft (meestal rond 13:00).
 
-## Prijs en batterij
+## De grafiek
 
-**De datumkiezer** staat rechts in de kopregel van de grafiek. Kies *Nu*, een andere dag, een week of een maand, en blader met ‹ ›.
+De grafiek staat over de volle breedte en toont HBC alleen en Batterijplan naast elkaar.
 
-- **Per dag:**
-  - de grijze lijn is de stroomprijs per kwartier, zoals HBC hem geeft;
-  - de gekleurde vlakken zijn de kwartieren waarin Batterijplan bijstuurt;
-  - de blauwe lijn is de lading in kWh (as rechts): **doorgetrokken = gemeten**, **gestreept = verwacht volgens het plan**. Na het einde van het plan dooft hij uit;
-  - de **rode stippellijn** is de lading als HBC het alleen had gedaan;
-  - links van *Nu* is voorbij en iets gedempt.
-- **Het verschil met HBC alleen** staat als een chip in de kop: *Extra t.o.v. HBC alleen*. Meer dan 0 staat er als **+ € 0,35** in groen, precies 0 als **€ 0,00** in grijs, minder dan 0 als **– € 0,02** in oranje. Dezelfde regel geldt voor *Opgeleverd in deze periode* en voor de bedragen in *Wat levert het op*.
-- **Per week of maand:** een groene staaf per dag met wat Batterijplan geschat opleverde. Bovenaan het totaal, het gemiddelde per dag en de beste dag.
-- Ga met de muis over de grafiek voor de prijs, wat de batterij deed en de lading in dat kwartier.
+- De grijze lijn is de kale stroomprijs per kwartier, zoals HBC hem geeft.
+- De gekleurde vlakken zijn de kwartieren waarin Batterijplan iets doet.
+- De **lading** in kWh: wat de batterij zou doen met HBC alleen, en wat hij doet met het plan. De verwachte zon is de beste schatting van Solcast.
+- De lijn *Nu* scheidt verleden en toekomst. Links ervan is wat gedimd.
+- De **datumkiezer** staat rechts in de kopregel. Kies *Nu* of een andere dag en blader met ‹ ›.
+- De kop toont de cijfers: de feiten, de besparing en de kWh.
+- Ga met de muis over de grafiek voor de prijs, wat de batterij doet en de lading in dat kwartier.
+
+**Het verschil met HBC alleen** staat in euro. Meer dan 0 is **+ € 0,35** in groen, precies 0 is **€ 0,00** in grijs, minder dan 0 is **– € 0,02** in oranje. Dezelfde regel geldt voor de bedragen in *Wat levert het op*.
 
 ## Vensters achter de knopjes
 
@@ -78,32 +80,34 @@ Bovenaan het logo, de naam en de versie, met de vraag die Batterijplan beantwoor
 
 | Regel | Betekenis |
 |---|---|
-| Totaal sinds … | De geschatte opbrengst bovenop HBC alleen. |
+| Totaal sinds … | De geschatte meerwaarde bovenop HBC alleen. |
+| Dit contractjaar | Hetzelfde, vanaf de ingangsdatum van je contractjaar. |
 | waarvan schaduw | Wat het had opgeleverd terwijl *Live* uit stond. Dat geld heb je niet echt verdiend. |
 | waarvan live | Wat het opleverde terwijl Batterijplan echt stuurde. |
-| Kwartieren ontladen / vastgehouden / overschot | Hoe vaak Batterijplan elk van de drie dingen deed. |
-| Lading verschoven naar duurdere momenten | Hoeveel kWh er door vasthouden later en duurder is gebruikt. |
+| Kwartieren vastgehouden / teruggeleverd / ontladen | Hoe vaak Batterijplan elk van de drie dingen deed. |
 
-**Advies voor HBC**
-
-Eén regel over de HBC-instelling *Solar reserved for house* (hoeveel zonne-energie je huis zelf direct opmaakt):
-- **Nog aan het meten** (grijs): het verbruik wordt nog geleerd of er is nog geen week gemeten.
-- **Staat goed** (groen): je instelling ligt minder dan 1 kWh van wat er de laatste 7 dagen gemiddeld nodig was.
-- **Aanpassen naar 5,5 kWh** (oranje): met eronder wat er nu is ingesteld en wat gemiddeld nodig was. Het knopje *Advies HBC* krijgt dan een oranje stip.
-
-Is extra laden van het net vannacht zinvol, dan staat dat er ook bij. Batterijplan past HBC zelf nooit aan; jij beslist. Zie [03 · Hoe het werkt](03-how-it-works.nl.md#advies-voor-hbc).
+Het is een schatting: zie [03 · Hoe het werkt](03-how-it-works.nl.md#de-teller-meerwaarde).
 
 **Instellingen**
 
-Twee tabbladen, met eigen invoervelden (schuifbalk, keuzeknopjes, − waarde +) en bij elk veld een (i):
+Drie tabbladen, met eigen invoervelden en een (i) naast elk veld:
 
-| Tabblad | Wat erop staat |
+| Tabblad | Wat staat erop |
 |---|---|
-| **Basis** — instellen en vergeten | Bruikbare capaciteit, *Prijzen van HBC* (kaal of all-in), ingangsdatum contract, en de back-up: **Back-up maken**, **Back-up terugzetten** en **Standaardwaarden**. Eronder staat wanneer de laatste back-up is gemaakt. Terugzetten en standaardwaarden vragen eerst "Zeker? Tik nog een keer". |
-| **Expert** — alleen aanpassen als je weet waarom | Veiligheidsmarge, rendement en energiebelasting + inkoop. |
+| **Basis** — instellen en vergeten | Bruikbare capaciteit, veiligheidsmarge, *Prijzen van HBC* (*kaal* of *all-in*), opslag en ingangsdatum. |
+| **Regels** | De vier regels met hun aan/uit-schakelaar. |
+| **Expert** — alleen wijzigen als je weet waarom | Btw, toeslag terugleveren, dagbonus terugleveren en de uren voor die bonus. |
 
-Uitleg per veld staat ook in [01 · Installatie](01-installation.nl.md#stap-6--instellingen-invullen).
+De uitleg per veld staat ook in [01 · Installatie](01-installation.nl.md#stap-3--integratie-toevoegen). Alle instellingen worden door de integratie bewaard: zie [04 · Onderhoud](04-maintenance.nl.md#back-up).
+
+**Rapport**
+
+Het geschreven rapport van het plan.
 
 **Sensoren**
 
-De namen van je sensoren voor net, zon, batterij en (optioneel) laadpaal. Tik op een veld voor een lijst met de vermogenssensoren uit jouw Home Assistant (de meest waarschijnlijke bovenaan) en kies; typen filtert de lijst. Onder elke naam staat wat die sensor nu meldt. Onderaan de controle *huisverbruik nu*.
+De namen van je sensoren voor net, zon, batterij en (optioneel) laadpaal. Onder elke naam zie je wat die sensor nu meldt. Onderaan de controle *huisverbruik nu*.
+
+## Je eigen dashboard
+
+De entiteiten hebben vaste namen (`sensor.batterijplan`, `switch.batterijplan_live`, enzovoort) en de kaarten worden overal in Home Assistant geladen. Je kunt de kaarten dus ook in je eigen dashboards gebruiken. De kaarten komen in twee bestanden, `batterijplan-cards.js` en `batterijplan-plan-card.js`. De kaarten hebben een optionele instelling `taal` (`nl`, `en` of `de`) die de taal van die kaart bepaalt; zonder die instelling volgt de kaart de taal van je Home Assistant-profiel.

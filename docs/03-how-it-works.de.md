@@ -3,117 +3,132 @@
 *English: [03-how-it-works.md](03-how-it-works.md) · Nederlands: [03-how-it-works.nl.md](03-how-it-works.nl.md)*
 
 **Kurz gesagt**
-- HBC sagt pro Viertelstunde: günstig, teuer oder normal. Batterijplan schaut bis zum nächsten günstigen Moment voraus und entscheidet, welche teuren Viertelstunden die Ladung bekommen.
-- Batterijplan wählt nur zwischen Stellungen, die HBC selbst anbietet. Alle Schutzfunktionen bleiben bei HBC und dem Speicher.
-- Alles, was Batterijplan tut, landet im Logbuch von Home Assistant unter dem Namen "Batterijplan".
+- HBC sagt pro Viertelstunde: günstig, teuer oder normal. Batterijplan schaut voraus (höchstens 36 Stunden) und rechnet aus, wo es besser sein kann als HBC allein.
+- Batterijplan wählt nur zwischen Modi, die HBC selbst anbietet. Alle Schutzfunktionen bleiben bei HBC und der Batterie.
+- Alles, was Batterijplan tut, steht im Logbuch von Home Assistant unter dem Namen "Batterijplan".
 
 ## Das Problem, das Batterijplan löst
 
 HBC (Strategie **Dynamic**) gibt jeder Viertelstunde ein Label:
-- **günstig**: laden aus dem Netz;
-- **teuer**: entladen für das Haus;
-- **normal**: nur mit Sonne laden (Stellung *Charge PV*).
+- **günstig**: aus dem Netz laden;
+- **teuer**: für das Haus entladen;
+- **normal**: nur aus der Sonne laden.
 
-Das funktioniert gut, aber HBC prüft nicht, ob der Speicher genug Ladung für *alle* teuren Viertelstunden bis zur nächsten Lademöglichkeit hat. Die Macher von HBC nennen das selbst als Einschränkung. Folge: Der Speicher wird bei einem teuren Moment von 27 ct leer, während eine Stunde später ein Moment von 50 ct kommt.
+Das funktioniert gut, aber HBC schaut nicht weiter als das Label der Viertelstunde, in der es sich gerade befindet. Die Folge: Die Batterie ist in einem teuren Moment von 27 ct leer, obwohl eine Stunde später ein Moment von 50 ct kommt. Oder sie ist nicht geladen für eine Abendspitze, die HBC nicht als teuer markiert.
 
 ## Der Plan
 
-Jede Viertelstunde, ± 45 Sekunden vor Beginn, rechnet Batterijplan bis zum nächsten günstigen Moment voraus. Dabei schaut es auf:
-- wie viel Ladung jetzt in den Speichern ist (der Ladestand oberhalb der Untergrenze von HBC, mal die nutzbare Kapazität);
-- wie viel dein Haus zu dieser Tageszeit üblicherweise verbraucht (das lernt es selbst);
-- wie viel Sonne erwartet wird (Solcast, die vorsichtige Schätzung);
-- welche teuren Viertelstunden noch kommen und was sie kosten.
+Batterijplan rechnet zweimal, über alle Viertelstunden, deren Preis es kennt:
+1. **HBC allein**: günstig → aus dem Netz laden, teuer → entladen, sonst nur die Sonne.
+2. **Batterijplan**: dasselbe, plus die vier Regeln unten.
 
-Danach:
+Der Unterschied zwischen beiden, in Euro, ist die **erwartete Ersparnis** im Dashboard.
 
-| Situation | Was Batterijplan tut | Stellung in HBC |
-|---|---|---|
-| Teure Viertelstunde, die die Ladung bekommt | **entladen** für das Haus | teure Stellung *Self-consumption* |
-| Teure Viertelstunde, die keine Ladung bekommt (später kommt eine teurere Viertelstunde) | **für später halten** | teure Stellung *Standby / peak shave* |
-| Normale Viertelstunde, im Speicher ist mehr als bis zum günstigen Moment nötig | **Überschuss entladen** in den teuersten normalen Viertelstunden | normale Stellung *Self-consumption* |
-| Normale Viertelstunde ohne Überschuss | nichts, HBC macht das Übliche | normale Stellung *Charge PV* |
-| Günstige Viertelstunde | nichts, HBC lädt | *Charge* |
+Es berücksichtigt:
+- wie viel Ladung jetzt in den Batterien ist (der Ladestand über der Untergrenze von HBC, mal die nutzbare Kapazität, minus deine Sicherheitsmarge);
+- wie viel dein Haus zu dieser Tageszeit meist verbraucht (das lernt es selbst);
+- wie viel Sonne erwartet wird (Solcast, die vorsichtige Schätzung für die Berechnung; die Grafik zeigt die mittlere Schätzung, wie HBC);
+- die Preise pro Viertelstunde, wie HBC sie liefert, und deine Kosten (siehe [die Kosten](#die-kosten)).
 
-Kommt zwischen zwei Spitzen Sonne oder ein günstiger Moment? Dann rechnet Batterijplan das als Nachladen mit, und die erste Spitze darf ganz normal entladen.
+Es rechnet jede Viertelstunde, kurz bevor sie beginnt (um :14:30, :29:30, :44:30 und :59:30), und auch wenn sich die Preise ändern oder HBC die Strategie wechselt.
 
-## Überschuss entladen
+### Die Schwelle
 
-Manchmal ist mehr im Speicher, als das Haus bis zum nächsten günstigen Moment braucht. Ohne Batterijplan bleibt diese Ladung stehen, und HBC lädt nachher mit einem schon fast vollen Speicher nach. Batterijplan nutzt diesen Überschuss lieber jetzt, in den teuersten normalen Viertelstunden, wenn das mehr bringt, als das Zurückladen kostet (inklusive Verlust im Speicher). Es hält immer die Sicherheitsreserve fest.
+Batterijplan nutzt eine Schwelle: die HBC-Einstellung **Dynamic threshold delta** (in ct). Das ist der Preisunterschied, ab dem HBC selbst sagt "das lohnt sich". Sie muss auch die Verluste in der Batterie decken, deshalb hat Batterijplan keine eigene Wirkungsgrad-Einstellung und keine feste Grenze.
 
-## Lernen
+Eine Viertelstunde gilt als **teuer**, wenn HBC sie als teuer markiert, **oder** wenn ihr Preis mindestens die Schwelle über der günstigsten Viertelstunde davor liegt.
 
-Batterijplan misst den Hausverbrauch pro Viertelstunde (Netz + Sonne + Speicher, minus Wallbox) und baut pro Stunde des Tages ein Profil auf:
+## Die Regeln
 
-| Status | Nach | Bedeutung |
-|---|---|---|
-| lernt | 0–3 Tagen | Nach dem ersten Tag macht es schon mit, ist aber noch unruhig. |
-| grob | 4–6 Tagen | Brauchbar, aber ein seltsamer Tag wiegt noch schwer. |
-| gut | 7+ Tagen | Gut eingespielt. Danach lernt es gleitend weiter über etwa 4 Wochen: Alte Tage blenden langsam aus, damit es mit den Jahreszeiten mitgeht. |
+Jede Regel hat einen eigenen Schalter (im Dashboard unter *Einstellungen*, Reiter **Regeln**, und im Briefing). Alle vier sind standardmäßig an. Schaltest du eine Regel aus, tut der Plan in diesen Momenten das, was HBC allein tut.
 
-Warum 7 Tage? Ein Versuch mit 89 Tagen echter Messdaten hat gezeigt, dass ein kurzes Gedächtnis den Verbrauch etwas besser vorhersagt als ein langes.
+| Regel | Was sie tut, in einfachen Worten |
+|---|---|
+| **Aus dem Netz laden** | In einer Viertelstunde, die nicht teuer ist, lädt Batterijplan zusätzlich aus dem Netz, wenn die Batterie sonst für spätere teure Viertelstunden zu leer wäre, die mindestens die Schwelle teurer sind als jetzt. Es hört auf, sobald eine günstigere Viertelstunde kommt. |
+| **Entladen außerhalb der HBC-Zeiten** | Eine Viertelstunde, die HBC nicht teuer nennt, die aber mindestens die Schwelle über der günstigsten Viertelstunde davor liegt, gilt auch als teuer. Die Batterie entlädt dann dort. |
+| **Halten** | In einer teuren Viertelstunde entlädt die Batterie nicht, wenn die Ladung für spätere Viertelstunden gebraucht wird, die mindestens die Schwelle teurer sind, bevor eine Viertelstunde kommt, die mindestens die Schwelle günstiger ist. Die Ladung bleibt für später erhalten. |
+| **Einspeisen** | Ist sicher ein Überschuss in der Batterie (nachdem zurückgehalten wurde, was du selbst später brauchst), speist Batterijplan ihn in einer Viertelstunde ins Netz ein, in der der Einspeisepreis mindestens die Schwelle über dem günstigsten Bezugspreis liegt. |
 
-Die **Prognose** legt die Erwartung neben den echten Verbrauch, pro Block von 3 Stunden (00–03, 03–06 und so weiter). Eine Viertelstunde ist zu sprunghaft, um sie vorherzusagen; ein Block von 3 Stunden ist das, was für den Plan wirklich zählt. Du siehst ein Urteil: *schwankend* (unter 55 %), *ordentlich* (55 % oder mehr), *gut* (65 % oder mehr) *sehr gut* (75 % oder mehr) oder *ausgezeichnet* (85 % oder mehr). Der Prozentwert selbst steht im Sensor `sensor.batterijplan_voorspelling` (Attribut *betrouwbaarheid*), gleitend über die letzten 7 Tage.
+Liegt Sonne oder ein günstiger Moment zwischen zwei Spitzen? Dann zählt Batterijplan das als Nachladen, und die erste Spitze darf einfach entladen.
 
-**Schwankender Verbrauch.** Ist die Prognose *schwankend*, rechnet der Plan selbst mit **zusätzlicher Reserve** zu deiner eigenen Sicherheitsreserve: die durchschnittliche Abweichung pro Block von 3 Stunden, höchstens 1 kWh. Der Plan entlädt dann in etwas weniger teuren Viertelstunden und hält etwas mehr zurück, damit der Speicher seltener zu früh leer ist. Auf der Statuskarte steht dann zum Beispiel "zusätzliche Reserve 0,5 kWh". Wird die Prognose wieder ordentlich oder besser, fällt die zusätzliche Reserve von selbst weg.
+Die fünf Buchstaben im Plan: **L** aus dem Netz laden, **O** entladen, **H** halten, **Z** nur die Sonne, **V** einspeisen.
 
-Das Lernen läuft immer weiter, auch im Schattenmodus und auch, wenn HBC nicht auf Dynamic steht.
+> Die alten Regeln (Überschuss entladen, Nachladen bei Bedarf, die feste Grenze von 0,10 €) und die Einstellung *Wirkungsgrad* gibt es in dieser Version nicht mehr. Die Schwelle von HBC ersetzt sie.
 
-## Live schalten
+## Die Kosten
 
-Schalte auf dem Dashboard **Live** ein. Ab dann passt Batterijplan jede Viertelstunde die zwei Dynamic-Stellungen von HBC an, wie in der Tabelle oben. Jede Änderung landet im Logbuch.
+Batterijplan rechnet ohne Saldierung, also haben Bezug und Einspeisung jeweils ihren eigenen Preis:
+- **Bezug**: (Börsenpreis + Aufschlag) × (1 + MwSt.). Bei *all-in*-Preisen: der Preis, wie HBC ihn liefert.
+- **Einspeisung**: Börsenpreis + Aufschlag. Tagsüber (wenn Sonne da ist, oder zwischen den Stunden, die du einstellst) bekommt ein positiver Preis den Bonusprozentsatz obendrauf.
+- Ladung, die am Ende des Plans noch in der Batterie ist, zählt zum niedrigsten Bezugspreis im Plan.
 
-**Live wieder aus?** Dann setzt Batterijplan beide Stellungen sofort auf deine eigenen Stellungen zurück. HBC ist dann wieder ganz so wie vorher.
+Der Aufschlag, die MwSt., der Einspeise-Aufschlag und der Bonus sind Einstellungen, keine festen Zahlen. Ein Anbieter wie Zonneplan hat zum Beispiel einen *Opslag* im Bezugspreis und eine *Terugleververgoeding* für die Einspeisung; trage ein, was dein eigener Vertrag sagt. Siehe [01 · Installation](01-installation.de.md#experten-einstellungen).
 
-## Deine eigenen HBC-Stellungen
+## Was Batterijplan in HBC steuert
 
-Batterijplan merkt sich deine Stellungen für den teuren und den normalen Zeitraum:
+Batterijplan ändert nichts in HBC, solange **Live** aus ist. Mit **Live** an, und nur wenn HBC auf **Dynamic** steht, setzt es nach jeder Berechnung einen der drei Dynamic-Modi von HBC: den, der zur Preisklasse der kommenden Viertelstunde gehört, so wie HBC sie selbst labelt. HBC liest sie pro Viertelstunde.
+
+| Preisklasse (laut HBC) | Plan: halten | Plan: einspeisen | Plan: aus dem Netz laden | Sonst |
+|---|---|---|---|---|
+| **Teuer** (*dynamic expensive*) | Standby / peak shave | Sell | — | Self-consumption |
+| **Günstig** (*dynamic cheapest*) | Standby / peak shave | — | Charge | Charge PV |
+| **Normal** (*dynamic default*) | Standby / peak shave | Self-consumption | — | Charge PV (entladen: Self-consumption) |
+
+HBC kennt in der normalen Klasse kein *Charge*, also kann Batterijplan in einer normalen Viertelstunde in diesem Modus nicht selbst aus dem Netz laden. Es ändert einen Modus nur, wenn er anders ist. Jede Änderung steht im Logbuch.
+
+### Deine eigenen HBC-Modi
+
+Batterijplan merkt sich deine drei Modi (teuer, normal, günstig):
 - in dem Moment, in dem du *Live* einschaltest;
 - und jedes Mal, wenn du sie änderst, während *Live* aus ist.
 
-Diese Stellungen stellt es wieder her, wenn *Live* ausgeht oder HBC Dynamic verlässt. Noch nichts gemerkt? Dann setzt es *Self-consumption* und *Charge PV* zurück.
+Es stellt sie zurück, wenn *Live* ausgeht oder wenn HBC Dynamic verlässt. Noch nichts gemerkt? Dann stellt es *Self-consumption*, *Charge PV* und *Charge* zurück.
 
-Batterijplan steuert nur dort nach, wo das passt:
-- den **teuren Zeitraum** nur, wenn deine Stellung dort *Self-consumption* ist;
-- den **normalen Zeitraum** nur, wenn deine Stellung dort *Charge PV* ist.
-
-Nutzt du im teuren Zeitraum zum Beispiel **Sell** (Einspeisen für Geld), lässt Batterijplan diesen Zeitraum in Ruhe. HBC macht dann seine eigene Arbeit.
-
-## Wenn HBC nicht auf Dynamic steht
+### Wenn HBC nicht auf Dynamic steht
 
 Wählst du (oder eine Automatisierung, zum Beispiel bei einem negativen Preis) eine andere Strategie in HBC, dann:
-- pausiert Batterijplan: Die Plankarte zeigt "Batterijplan pausiert: HBC steht auf …";
-- zählt der Zähler nichts dazu;
-- setzt Batterijplan, wenn *Live* an war, die zwei Dynamic-Stellungen auf deine eigenen Stellungen zurück;
-- geht das Lernen ganz normal weiter.
+- steuert Batterijplan nichts und der Zähler zählt nichts;
+- stellt Batterijplan, wenn *Live* an war, die drei Modi auf deine eigenen zurück;
+- läuft das Lernen einfach weiter.
 
-Sobald HBC wieder auf Dynamic steht, rechnet der Plan sofort neu und steuert gleich wieder nach.
+Sobald HBC wieder auf Dynamic steht, rechnet der Plan sofort neu und steuert wieder nach.
 
-## Empfehlung für HBC
+## Live einschalten
 
-In HBC trägst du ein, wie viel Solarstrom dein Haus an einem Tag selbst direkt verbraucht (*Solar reserved for house*). HBC rechnet: erwartete Sonne minus diese Zahl ist das, was für den Speicher übrig bleibt; den Rest lädt HBC im günstigen Block aus dem Netz.
-- Ist die Zahl **zu hoch**, lädt HBC mehr aus dem Netz als nötig.
-- Ist sie **zu niedrig**, ist der Speicher abends zu leer für die teuren Stunden.
+Schalte im Dashboard **Live** ein (der Schalter `switch.batterijplan_live`). Ab diesem Moment passt Batterijplan jede Viertelstunde die Dynamic-Modi von HBC an, wie in der Tabelle oben.
 
-Die richtige Zahl ist von Tag zu Tag und je nach Jahreszeit anders. Batterijplan rechnet jeden Tag aus, wie viel Sonne dein Haus nutzen kann: pro halbe Stunde das Kleinere von deinem gelernten Verbrauch und der erwarteten Sonne (Solcast, mittlere Schätzung). Es vergleicht den Durchschnitt der letzten 7 Tage mit deiner Einstellung. Erst ab 1 kWh Unterschied bekommst du eine Empfehlung, gerundet auf eine halbe kWh. **Batterijplan ändert die Einstellung in HBC nie selbst.**
+**Live wieder aus?** Dann stellt Batterijplan die Modi sofort auf deine eigenen zurück. HBC steht dann ganz so wie vorher.
 
-## Der Zähler: was bringt es
+**Live und Schatten.** Mit *Live* aus rechnet Batterijplan weiter, lernt und zählt, was es gebracht hätte, aber getrennt als *Schatten*. Der Sensor `sensor.batterijplan` zeigt `modus`: *live* oder *schaduw* (Schatten).
 
-Jede Viertelstunde rechnet Batterijplan die vorige Viertelstunde ab:
-- **Halten:** Die Ladung zählt zum Durchschnittspreis der teuren Viertelstunden, für die der Plan sie später einsetzt.
-- **Entladen in einer teuren Viertelstunde:** der Unterschied zu dem, was HBC allein getan hätte.
-- **Überschuss entladen:** nur die Ladung, die wirklich aus dem Speicher kam (nicht mehr als geplant). Was du dadurch nicht kaufen musst, minus das, was es kostet, diese Ladung im günstigen Moment wieder zu laden.
+## Lernen
 
-Alle Beträge sind inklusive MwSt. **Schatten** zählt getrennt von **live**. Es bleibt eine Schätzung; deine Stromrechnung ist der echte Beweis.
+Batterijplan misst den Hausverbrauch pro Viertelstunde (Netz + Sonne + Batterie, minus die Ladestation) und baut ein Profil für jede Stunde des Tages auf. Es lernt über **7 Tage**:
 
-**Börsenpreise oder All-in-Preise.** Liefert HBC reine Börsenpreise, rechnet Batterijplan selbst die Energiesteuer, den Einkaufsaufschlag und die MwSt. dazu. Liefert HBC All-in-Preise, wähle bei *Preise von HBC* die Option *all-in*: Batterijplan rechnet dann mit dem Preis, so wie er ist.
+| Status | Nach | Bedeutung |
+|---|---|---|
+| am Lernen | 0–3 Tage | Nach dem ersten Tag macht es schon mit, ist aber noch unruhig. |
+| grob | 4–6 Tage | Brauchbar, aber ein seltsamer Tag wiegt noch schwer. |
+| gut | 7+ Tage | Gut abgestimmt. Danach lernt es laufend weiter: Alte Tage verblassen langsam, es geht also mit den Jahreszeiten mit. |
 
-## Vergleich mit HBC allein
+Warum 7 Tage? Ein Test mit 89 Tagen echter Messdaten zeigte, dass ein kurzes Gedächtnis den Verbrauch etwas besser vorhersagt als ein langes.
 
-In der Grafik *Preis und Batterie* rechnet Batterijplan auch aus, wie die Ladung verlaufen wäre, wenn HBC es allein getan hätte: entladen in jeder teuren Viertelstunde, der Reihe nach. Das ist die rote gepunktete Linie. Der Chip *Mehr als HBC allein* ist der geschätzte Unterschied in Euro für diesen Tag.
+Die **Prognose** vergleicht den erwarteten Verbrauch mit dem echten Verbrauch, pro Block von 3 Stunden (00–03, 03–06 und so weiter). Eine einzelne Viertelstunde ist zu sprunghaft zum Vorhersagen; ein Block von 3 Stunden ist das, was für den Plan wirklich zählt. Du siehst ein Urteil: *wechselhaft* (unter 55 %), *ordentlich* (ab 55 %), *gut* (ab 65 %), *sehr gut* (ab 75 %) oder *ausgezeichnet* (ab 85 %). Der Prozentwert selbst steht im Sensor `sensor.batterijplan_voorspelling` (Attribut *betrouwbaarheid*), gleitend über die letzten 7 Tage.
+
+Das Lernen läuft immer weiter, auch im Schattenmodus und auch wenn HBC nicht auf Dynamic steht.
+
+## Der Zähler: Mehrwert
+
+Der Sensor `sensor.batterijplan_meerwaarde` zählt, was Batterijplan zusätzlich zu HBC allein bringt. Jede Viertelstunde wird im Nachhinein abgerechnet:
+
+(die Kosten von HBC allein in dieser Viertelstunde − die Kosten des Plans in dieser Viertelstunde) + (Ladung Plan − Ladung HBC allein am Ende dieser Viertelstunde) × der niedrigste Bezugspreis im Plan.
+
+Er zählt nur, wenn **Live** an ist und HBC auf **Dynamic** steht. Sonst geht die Viertelstunde in die Summe *Schatten*. Der zweite Sensor, `sensor.batterijplan_meerwaarde_periode`, zählt pro **Vertragsjahr**: Er beginnt neu an Tag und Monat deines Vertragsbeginns.
+
+**Es ist eine Schätzung** ("geschat"). Sie beruht auf den Preisen und dem Verbrauch, die Batterijplan zu diesem Zeitpunkt erwartete. Deine Energierechnung ist der echte Beweis.
 
 ## Was es (noch) nicht tut
 
-- **Selbst nachts zusätzlich laden:** Das wird nur ausgerechnet und gezeigt.
-- **Ein günstiger Nachmittag, den HBC nicht als günstig markiert** (wegen der Grenze an Stunden pro Tag oder des minimalen Preisunterschieds in HBC), zählt nicht als Nachladen.
-- **Unterschied zwischen Werktag und Wochenende** im Verbrauch.
-- **Einspeisen ins Netz für Geld** (Sell): Batterijplan ist auf Eigenverbrauch ausgerichtet. Nutzt du Sell in HBC, lässt Batterijplan diesen Zeitraum in Ruhe (siehe [Deine eigenen HBC-Stellungen](#deine-eigenen-hbc-stellungen)). Was Sell bringt, zeigt Batterijplan (noch) nicht.
+- **Ein günstiger Nachmittag, den HBC nicht als günstig markiert** (wegen der Grenze für Stunden pro Tag oder des Mindestpreisunterschieds in HBC), zählt nicht als Nachladen.
+- **Unterschied zwischen Werktagen und Wochenende** beim Verbrauch.
+- **Die Batterie in einer normalen Viertelstunde im HBC-Modus *Charge PV* aus dem Netz laden:** Dafür bietet HBC keinen Modus (siehe [die Tabelle](#was-batterijplan-in-hbc-steuert)).

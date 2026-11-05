@@ -1,0 +1,174 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Batterijplan instellen",
+        "description": "Batterijplan staat al als pakket in deze Home Assistant. Neem je de instellingen, het geleerde verbruik en de teller over, of begin je opnieuw?",
+        "menu_options": {
+          "takeover": "Overnemen uit het Batterijplan-pakket",
+          "setup": "Opnieuw beginnen"
+        }
+      },
+      "setup": {
+        "title": "Batterijplan instellen",
+        "description": "Kies de vermogenssensoren van je installatie en vul je batterij- en contractgegevens in.",
+        "data": {
+          "sensor_net": "Sensor netvermogen (+ = afname)",
+          "sensor_batterij": "Sensor batterijvermogen (+ = ontladen)",
+          "sensor_zon": "Sensor zonnevermogen (optioneel)",
+          "sensor_ev": "Sensor laadpaal (optioneel)",
+          "capaciteit": "Bruikbare capaciteit van de batterijen",
+          "marge": "Veiligheidsmarge",
+          "hbc_prijzen": "Prijzen van HBC",
+          "opslag": "Opslag per kWh excl. btw",
+          "contract_start": "Ingangsdatum energiecontract"
+        }
+      }
+    },
+    "error": {
+      "same_sensor": "Net en batterij moeten twee verschillende sensoren zijn."
+    },
+    "abort": {
+      "already_configured": "Batterijplan is al ingesteld."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Batterijplan instellen",
+        "description": "Pas de instellingen aan. Verander je een bron, dan laadt de integratie opnieuw.",
+        "data": {
+          "sensor_net": "Sensor netvermogen (+ = afname)",
+          "sensor_batterij": "Sensor batterijvermogen (+ = ontladen)",
+          "sensor_zon": "Sensor zonnevermogen (optioneel)",
+          "sensor_ev": "Sensor laadpaal (optioneel)",
+          "capaciteit": "Bruikbare capaciteit van de batterijen",
+          "marge": "Veiligheidsmarge",
+          "hbc_prijzen": "Prijzen van HBC",
+          "opslag": "Opslag per kWh excl. btw",
+          "contract_start": "Ingangsdatum energiecontract",
+          "btw": "Btw",
+          "teruglever_toeslag": "Toeslag terugleveren (EUR/kWh)",
+          "teruglever_bonus": "Dagbonus terugleveren",
+          "bonus_van": "Overdag vanaf (uur)",
+          "bonus_tot": "Overdag tot (uur)"
+        }
+      }
+    },
+    "error": {
+      "same_sensor": "Net en batterij moeten twee verschillende sensoren zijn."
+    }
+  },
+  "selector": {
+    "hbc_prijzen": {
+      "options": {
+        "kaal": "Kale beursprijs",
+        "all-in": "All-in prijs"
+      }
+    }
+  },
+  "issues": {
+    "dashboard_url_taken": {
+      "title": "Dashboardadres van Batterijplan is bezet",
+      "description": "Het adres {url} is al in gebruik door een dashboard dat je zelf hebt gemaakt, dus Batterijplan heeft zijn eigen dashboard niet toegevoegd. Hernoem of verwijder het jouwe om het te krijgen."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "batterijplan": {
+        "name": "Batterijplan"
+      },
+      "batterijplan_lading": {
+        "name": "Batterijplan lading"
+      },
+      "batterijplan_prijs": {
+        "name": "Batterijplan prijs"
+      },
+      "batterijplan_huisverbruik": {
+        "name": "Batterijplan huisverbruik"
+      },
+      "batterijplan_huisverbruik_15m": {
+        "name": "Batterijplan huisverbruik 15m"
+      },
+      "batterijplan_verbruiksprofiel": {
+        "name": "Batterijplan verbruiksprofiel"
+      },
+      "batterijplan_voorspelling": {
+        "name": "Batterijplan voorspelling"
+      },
+      "batterijplan_voorspelling_kleur": {
+        "name": "Batterijplan voorspelling kleur"
+      },
+      "batterijplan_meerwaarde": {
+        "name": "Batterijplan meerwaarde"
+      },
+      "batterijplan_meerwaarde_periode": {
+        "name": "Batterijplan meerwaarde periode"
+      },
+      "batterijplan_advies_zon_na_goedkoop_laden": {
+        "name": "Batterijplan advies zon na goedkoop laden"
+      }
+    },
+    "switch": {
+      "batterijplan_live": {
+        "name": "Batterijplan live (stuurt HBC)"
+      },
+      "batterijplan_regel_laden": {
+        "name": "Batterijplan regel: extra laden van het net"
+      },
+      "batterijplan_regel_ontladen": {
+        "name": "Batterijplan regel: ontladen buiten HBC-uren"
+      },
+      "batterijplan_regel_vasthouden": {
+        "name": "Batterijplan regel: vasthouden voor later"
+      },
+      "batterijplan_regel_terugleveren": {
+        "name": "Batterijplan regel: terugleveren"
+      }
+    },
+    "number": {
+      "batterijplan_capaciteit": {
+        "name": "Batterijplan bruikbare capaciteit"
+      },
+      "batterijplan_marge": {
+        "name": "Batterijplan veiligheidsmarge"
+      },
+      "batterijplan_opslag": {
+        "name": "Batterijplan opslag per kWh excl. btw"
+      },
+      "batterijplan_btw": {
+        "name": "Batterijplan btw"
+      },
+      "batterijplan_teruglever_toeslag": {
+        "name": "Batterijplan terugleververgoeding toeslag"
+      },
+      "batterijplan_teruglever_bonus": {
+        "name": "Batterijplan dagbonus teruglevering"
+      }
+    },
+    "select": {
+      "batterijplan_hbc_prijzen": {
+        "name": "Batterijplan prijzen van HBC"
+      }
+    },
+    "date": {
+      "batterijplan_contract_start": {
+        "name": "Batterijplan ingangsdatum energiecontract"
+      }
+    },
+    "text": {
+      "batterijplan_sensor_net": {
+        "name": "Batterijplan sensor netvermogen"
+      },
+      "batterijplan_sensor_zon": {
+        "name": "Batterijplan sensor zonnevermogen"
+      },
+      "batterijplan_sensor_batterij": {
+        "name": "Batterijplan sensor batterijvermogen"
+      },
+      "batterijplan_sensor_ev": {
+        "name": "Batterijplan sensor laadpaal (optioneel)"
+      }
+    }
+  }
+}

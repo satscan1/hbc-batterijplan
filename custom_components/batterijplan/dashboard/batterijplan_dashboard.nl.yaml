@@ -1,0 +1,227 @@
+# Ingebouwd dashboard van Batterijplan (Nederlands). Kaarten: custom:batterijplan-*; geleverd door de integratie.
+# De kaarttaal volgt het profiel (optioneel per kaart: taal: nl|en|de).
+title: Batterijplan
+views:
+- title: Batterijplan
+  path: batterijplan
+  icon: mdi:battery-clock
+  type: sections
+  max_columns: 3
+  sections:
+  - type: grid
+    column_span: 3
+    cards:
+    - type: custom:batterijplan-knoppen
+      live: switch.batterijplan_live
+      knoppen:
+      - naam: Opbrengst
+        kaarten:
+        - type: custom:batterijplan-opbrengst
+          title: Wat levert het op
+          icon: batterijplan:euro
+          perioden: true
+      - naam: Rapport
+        kaarten:
+        - type: custom:batterijplan-rapport
+          title: Rapport
+          icon: batterijplan:info
+        breed: 820
+      - naam: Advies HBC
+        melding: advies
+        kaarten:
+        - type: custom:batterijplan-advies
+          title: Advies voor HBC
+          icon: batterijplan:schuifregelaars
+      - naam: Instellingen
+        melding: instellingen
+        kaarten:
+        - type: custom:batterijplan-velden
+          title: Instellingen
+          icon: batterijplan:schuifregelaars
+          info: |-
+            Hier stel je Batterijplan in op jouw batterijen en je energiecontract.
+
+            **Basis** vul je één keer in. **Expert** hoef je meestal niet aan te passen.
+
+            Ontbreekt er iets essentieels, dan krijgt het knopje Instellingen een oranje stip.
+
+            Alle waarden worden door de integratie bewaard en blijven staan bij een herstart en bij een nieuwe versie.
+          tabs:
+          - naam: Basis
+            sub: Instellen en vergeten
+            rows:
+            - entity: number.batterijplan_capaciteit
+              name: Bruikbare capaciteit batterijen
+              info: |-
+                Wat je batterijen samen écht kunnen leveren, boven de ondergrens die in HBC staat.
+
+                Voorbeeld: 2 batterijen van 5 kWh met 10 % ondergrens ≈ 9,0 kWh.
+
+                Zolang dit niet is ingevuld, doet het plan niets.
+            - entity: select.batterijplan_hbc_prijzen
+              name: Prijzen van HBC
+              info: |-
+                Staan de prijzen in HBC als kale beursprijs (zonder belasting en opslag), kies **kaal**.
+
+                Geeft HBC all-in prijzen (met energiebelasting, opslag en btw), kies **all-in**. Dan telt Batterijplan zelf niets meer op en is Energiebelasting + inkoop niet nodig.
+            - entity: date.batterijplan_contract_start
+              name: Ingangsdatum energiecontract
+              info: |-
+                De dag waarop je contractjaar begint. Het jaartal maakt niet uit.
+
+                De opbrengst "dit contractjaar" telt vanaf deze datum en begint elk contractjaar opnieuw.
+          - naam: Regels
+            sub: Wat Batterijplan mag bijsturen
+            rows:
+            - entity: switch.batterijplan_regel_laden
+              name: Extra laden van het net
+              info: |-
+                **Aan:** Batterijplan laadt van het net bij als er later een tekort komt voor dure kwartieren, en laadt in een goedkoop kwartier niet van het net als dat niet nodig is.
+
+                **Uit:** zoals HBC: alleen laden in de goedkope uren van HBC, en dan altijd.
+            - entity: switch.batterijplan_regel_ontladen
+              name: Ontladen buiten HBC-uren
+              info: |-
+                **Aan:** ook ontladen in kwartieren die minstens de drempel van HBC duurder zijn, ook als HBC ze niet duur noemt.
+
+                **Uit:** zoals HBC: alleen ontladen in de dure uren van HBC.
+            - entity: switch.batterijplan_regel_vasthouden
+              name: Vasthouden voor later
+              info: |-
+                **Aan:** lading bewaren voor een kwartier dat minstens de drempel van HBC duurder is.
+
+                **Uit:** zoals HBC: in een duur kwartier direct ontladen.
+            - entity: switch.batterijplan_regel_terugleveren
+              name: Terugleveren
+              info: |-
+                **Aan:** terugleveren wat zeker over is, alleen als de vergoeding minstens de drempel van HBC hoger is dan de goedkoopste inkoop verderop.
+
+                **Uit:** nooit terugleveren.
+          - naam: Expert
+            sub: Alleen aanpassen als je weet waarom
+            rows:
+            - entity: number.batterijplan_marge
+              name: Veiligheidsmarge
+              info: |-
+                Lading die het plan nooit inrekent, zodat het niet te krap plant.
+
+                Begin met een kleine marge, bijvoorbeeld 0,3 kWh. Raakt de batterij vaak te vroeg leeg, verhoog dan de marge.
+            - entity: number.batterijplan_opslag
+              name: Energiebelasting + inkoop (excl. btw)
+              kind: stepper
+              step: 0.001
+              info: |-
+                Wat je per kWh bóvenop de kale beursprijs betaalt, zonder btw: de energiebelasting plus de inkoopvergoeding van je leverancier (staat op je contract).
+
+                Tik op het getal om het precies te typen. Bij Prijzen van HBC = all-in is dit niet nodig.
+            - entity: number.batterijplan_btw
+              name: Btw
+              info: |-
+                Het btw-percentage dat Batterijplan over de inkoopprijs rekent.
+
+                In Nederland is dat 21 %. Staat Prijzen van HBC op all-in, dan is dit niet nodig.
+            - entity: number.batterijplan_teruglever_toeslag
+              name: Teruglever-toeslag (excl. btw)
+              kind: stepper
+              step: 0.001
+              info: |-
+                Wat je per kWh bovenop de beursprijs ontvangt voor teruggeleverde stroom, zonder btw. Bij een negatief getal ontvang je minder.
+
+                Voorbeeld: 0,02 betekent beurs + € 0,02 per kWh. Je vindt dit bij de voorwaarden van je contract.
+            - entity: number.batterijplan_teruglever_bonus
+              name: Teruglever-bonus overdag
+              info: |-
+                Extra percentage dat je overdag (met zon, of tussen 08:00 en 17:00) bovenop de terugleververgoeding krijgt, als die positief is.
+
+                Voorbeeld: 10 % betekent dat de vergoeding overdag 10 % hoger is. Heeft je contract geen bonus, zet dit dan op 0.
+      - naam: Sensoren
+        melding: sensoren
+        kaarten:
+        - type: custom:batterijplan-velden
+          title: Sensoren
+          icon: batterijplan:thuisbatterij
+          info: |-
+            Tik op een veld: je krijgt een lijst met de vermogenssensoren uit jouw Home Assistant, de meest waarschijnlijke bovenaan, met rechts wat ze nu melden. Tik op de juiste. Typen filtert de lijst; je mag de naam ook helemaal zelf typen.
+
+            Het gaat steeds om het vermogen van **dit moment in watt (W)**, geen dagtotaal in kWh.
+
+            Onder elke gekozen naam zie je wat die sensor nu meldt.
+
+            **Huisverbruik nu** moet ongeveer kloppen met wat je huis echt gebruikt.
+          rows:
+          - entity: text.batterijplan_sensor_net
+            name: Netvermogen (W)
+            info: Afname van het net is +, teruglevering is −.
+            pick: true
+            suggest:
+            - p1
+            - grid
+            - net
+            - meter
+            - dsmr
+            - consumption
+            - afname
+            pick_hint: Afname is +, teruglevering is −. Kies de sensor die nu het netvermogen van je hele huis meldt.
+          - entity: text.batterijplan_sensor_zon
+            name: Zonnevermogen nu (W)
+            info: |-
+              Wat al je zonnepanelen samen nu opwekken.
+
+              Meerdere omvormers? Maak een helper Combineer de status van meerdere sensoren, met type Som.
+            pick: true
+            suggest:
+            - pv
+            - solar
+            - zon
+            - inverter
+            - omvormer
+            - opbrengst
+            - production
+            pick_hint: Kies de sensor met wat al je zonnepanelen samen nu opwekken.
+          - entity: text.batterijplan_sensor_batterij
+            name: Batterijvermogen (W)
+            info: |-
+              Totaal van al je batterijen, ontladen is +.
+
+              Bij HBC meestal sensor.house_total_battery_power.
+            pick: true
+            suggest:
+            - house_total_battery
+            - battery
+            - batterij
+            - accu
+            pick_hint: 'Kies het totaal van al je batterijen (ontladen is +). Bij HBC meestal: house total battery power.'
+          - entity: text.batterijplan_sensor_ev
+            name: Laadpaal (W, optioneel)
+            info: Laadvermogen van je auto-lader. Wordt van het huisverbruik afgetrokken. Mag leeg blijven.
+            pick: true
+            suggest:
+            - wallbox
+            - charger
+            - laad
+            - ev
+            - charge
+            pick_hint: Kies het laadvermogen van je auto-lader.
+          - type: section
+            name: Controle
+          - entity: sensor.batterijplan_huisverbruik
+            name: Huisverbruik nu
+            info: Netvermogen + zonnevermogen + batterijvermogen − laadpaal. Moet ongeveer kloppen met wat je huis echt gebruikt, en is nooit negatief.
+  - type: grid
+    cards:
+    - type: custom:batterijplan-status
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:batterijplan-plan-card
+      weergave: briefing
+      grid_options:
+        columns: full
+  - type: grid
+    column_span: 4
+    cards:
+    - type: custom:batterijplan-plan-card
+      weergave: samen
+      grid_options:
+        columns: full
+  badges: []

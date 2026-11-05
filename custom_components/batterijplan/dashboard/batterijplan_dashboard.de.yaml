@@ -1,0 +1,227 @@
+# Eingebautes Dashboard von Batterijplan (Deutsch). Karten: custom:batterijplan-*; von der Integration geliefert.
+# Die Kartensprache folgt dem Profil (optional pro Karte: taal: nl|en|de).
+title: Batterijplan
+views:
+- title: Batterijplan
+  path: batterijplan
+  icon: mdi:battery-clock
+  type: sections
+  max_columns: 3
+  sections:
+  - type: grid
+    column_span: 3
+    cards:
+    - type: custom:batterijplan-knoppen
+      live: switch.batterijplan_live
+      knoppen:
+      - naam: Ertrag
+        kaarten:
+        - type: custom:batterijplan-opbrengst
+          title: Was bringt es
+          icon: batterijplan:euro
+          perioden: true
+      - naam: Bericht
+        kaarten:
+        - type: custom:batterijplan-rapport
+          title: Bericht
+          icon: batterijplan:info
+        breed: 820
+      - naam: Empfehlung HBC
+        melding: advies
+        kaarten:
+        - type: custom:batterijplan-advies
+          title: Empfehlung für HBC
+          icon: batterijplan:schuifregelaars
+      - naam: Einstellungen
+        melding: instellingen
+        kaarten:
+        - type: custom:batterijplan-velden
+          title: Einstellungen
+          icon: batterijplan:schuifregelaars
+          info: |-
+            Hier stellst du Batterijplan auf deine Batterien und deinen Energievertrag ein.
+
+            **Basis** füllst du einmal aus. **Experte** musst du meistens nicht anpassen.
+
+            Fehlt etwas Wesentliches, bekommt die Schaltfläche Einstellungen einen orangen Punkt.
+
+            Alle Werte werden von der Integration gespeichert und bleiben bei einem Neustart und bei einer neuen Version erhalten.
+          tabs:
+          - naam: Basis
+            sub: Einmal einstellen und vergessen
+            rows:
+            - entity: number.batterijplan_capaciteit
+              name: Nutzbare Batteriekapazität
+              info: |-
+                Was deine Batterien zusammen wirklich liefern können, oberhalb der unteren Grenze, die in HBC steht.
+
+                Beispiel: 2 Batterien mit je 5 kWh und 10 % unterer Grenze ≈ 9,0 kWh.
+
+                Solange dies nicht ausgefüllt ist, tut der Plan nichts.
+            - entity: select.batterijplan_hbc_prijzen
+              name: Preise von HBC
+              info: |-
+                Sind die Preise in HBC der reine Börsenpreis (ohne Steuern und Aufschlag), wähle **kaal**.
+
+                Liefert HBC all-in-Preise (mit Energiesteuer, Aufschlag und MwSt), wähle **all-in**. Dann rechnet Batterijplan nichts mehr dazu und Energiesteuer + Einkauf ist nicht nötig.
+            - entity: date.batterijplan_contract_start
+              name: Vertragsbeginn Energievertrag
+              info: |-
+                Der Tag, an dem dein Vertragsjahr beginnt. Das Jahr spielt keine Rolle.
+
+                Der Ertrag "dieses Vertragsjahr" zählt ab diesem Datum und beginnt jedes Vertragsjahr neu.
+          - naam: Regeln
+            sub: Was Batterijplan nachsteuern darf
+            rows:
+            - entity: switch.batterijplan_regel_laden
+              name: Zusätzliches Laden aus dem Netz
+              info: |-
+                **An:** Batterijplan lädt zusätzlich aus dem Netz, wenn später ein Mangel für teure Viertelstunden droht, und lädt in einer günstigen Viertelstunde nicht aus dem Netz, wenn das nicht nötig ist.
+
+                **Aus:** wie HBC: nur in den günstigen Stunden von HBC laden, und dann immer.
+            - entity: switch.batterijplan_regel_ontladen
+              name: Entladen außerhalb der HBC-Zeiten
+              info: |-
+                **An:** auch in Viertelstunden entladen, die mindestens die HBC-Schwelle teurer sind, auch wenn HBC sie nicht teuer nennt.
+
+                **Aus:** wie HBC: nur in den teuren Stunden von HBC entladen.
+            - entity: switch.batterijplan_regel_vasthouden
+              name: Halten für später
+              info: |-
+                **An:** Ladung für eine Viertelstunde aufbewahren, die mindestens die HBC-Schwelle teurer ist.
+
+                **Aus:** wie HBC: in einer teuren Viertelstunde sofort entladen.
+            - entity: switch.batterijplan_regel_terugleveren
+              name: Einspeisen
+              info: |-
+                **An:** einspeisen, was sicher übrig ist, nur wenn die Vergütung mindestens die HBC-Schwelle höher ist als der günstigste spätere Einkauf.
+
+                **Aus:** nie einspeisen.
+          - naam: Experte
+            sub: Nur ändern, wenn du weißt warum
+            rows:
+            - entity: number.batterijplan_marge
+              name: Sicherheitsreserve
+              info: |-
+                Ladung, mit der der Plan nie rechnet, damit er nicht zu knapp plant.
+
+                Beginne mit einer kleinen Reserve, zum Beispiel 0,3 kWh. Wird die Batterie oft zu früh leer, erhöhe die Reserve.
+            - entity: number.batterijplan_opslag
+              name: Energiesteuer + Einkauf (ohne MwSt)
+              kind: stepper
+              step: 0.001
+              info: |-
+                Was du pro kWh zusätzlich zum reinen Börsenpreis zahlst, ohne MwSt: die Energiesteuer plus die Einkaufsgebühr deines Lieferanten (steht in deinem Vertrag).
+
+                Tippe auf die Zahl, um sie genau einzugeben. Bei Preise von HBC = all-in ist dies nicht nötig.
+            - entity: number.batterijplan_btw
+              name: MwSt
+              info: |-
+                Der Mehrwertsteuersatz, den Batterijplan auf den Einkaufspreis rechnet.
+
+                In den Niederlanden sind das 21 %. Steht Preise von HBC auf all-in, ist das nicht nötig.
+            - entity: number.batterijplan_teruglever_toeslag
+              name: Einspeise-Zuschlag (ohne MwSt)
+              kind: stepper
+              step: 0.001
+              info: |-
+                Was du pro kWh zusätzlich zum Börsenpreis für eingespeisten Strom erhältst, ohne MwSt. Bei einer negativen Zahl erhältst du weniger.
+
+                Beispiel: 0,02 bedeutet Börse + 0,02 € pro kWh. Das findest du in den Bedingungen deines Vertrags.
+            - entity: number.batterijplan_teruglever_bonus
+              name: Einspeise-Bonus tagsüber
+              info: |-
+                Zusätzlicher Prozentsatz, den du tagsüber (bei Sonne oder zwischen 08:00 und 17:00 Uhr) auf die Einspeisevergütung erhältst, wenn diese positiv ist.
+
+                Beispiel: 10 % bedeutet, dass die Vergütung tagsüber 10 % höher ist. Hat dein Vertrag keinen Bonus, setze dies auf 0.
+      - naam: Sensoren
+        melding: sensoren
+        kaarten:
+        - type: custom:batterijplan-velden
+          title: Sensoren
+          icon: batterijplan:thuisbatterij
+          info: |-
+            Tippe auf ein Feld: du bekommst eine Liste der Leistungssensoren in deinem Home Assistant, die wahrscheinlichsten oben, rechts mit dem, was sie jetzt melden. Tippe auf den richtigen. Tippen filtert die Liste; du kannst den Namen auch selbst eingeben.
+
+            Es geht immer um die Leistung des **aktuellen Moments in Watt (W)**, nicht um eine Tagessumme in kWh.
+
+            Unter jedem gewählten Namen siehst du, was dieser Sensor jetzt meldet.
+
+            **Hausverbrauch jetzt** sollte ungefähr stimmen mit dem, was dein Haus wirklich verbraucht.
+          rows:
+          - entity: text.batterijplan_sensor_net
+            name: Netzleistung (W)
+            info: Bezug aus dem Netz ist +, Einspeisung ist −.
+            pick: true
+            suggest:
+            - p1
+            - grid
+            - net
+            - meter
+            - dsmr
+            - consumption
+            - afname
+            pick_hint: Bezug ist +, Einspeisung ist −. Wähle den Sensor, der jetzt die Netzleistung deines ganzen Hauses meldet.
+          - entity: text.batterijplan_sensor_zon
+            name: Solarleistung jetzt (W)
+            info: |-
+              Was alle deine Solarmodule zusammen jetzt erzeugen.
+
+              Mehrere Wechselrichter? Erstelle einen Helfer Status mehrerer Sensoren kombinieren, mit Typ Summe.
+            pick: true
+            suggest:
+            - pv
+            - solar
+            - zon
+            - inverter
+            - omvormer
+            - opbrengst
+            - production
+            pick_hint: Wähle den Sensor, der meldet, was alle deine Solarmodule zusammen jetzt erzeugen.
+          - entity: text.batterijplan_sensor_batterij
+            name: Batterieleistung (W)
+            info: |-
+              Summe aller deiner Batterien, Entladen ist +.
+
+              Bei HBC meistens sensor.house_total_battery_power.
+            pick: true
+            suggest:
+            - house_total_battery
+            - battery
+            - batterij
+            - accu
+            pick_hint: 'Wähle die Summe aller deiner Batterien (Entladen ist +). Bei HBC meistens: house total battery power.'
+          - entity: text.batterijplan_sensor_ev
+            name: Wallbox (W, optional)
+            info: Ladeleistung deiner Wallbox. Wird vom Hausverbrauch abgezogen. Darf leer bleiben.
+            pick: true
+            suggest:
+            - wallbox
+            - charger
+            - laad
+            - ev
+            - charge
+            pick_hint: Wähle die Ladeleistung deiner Wallbox.
+          - type: section
+            name: Kontrolle
+          - entity: sensor.batterijplan_huisverbruik
+            name: Hausverbrauch jetzt
+            info: Netzleistung + Solarleistung + Batterieleistung − Wallbox. Sollte ungefähr stimmen mit dem, was dein Haus wirklich verbraucht, und ist nie negativ.
+  - type: grid
+    cards:
+    - type: custom:batterijplan-status
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:batterijplan-plan-card
+      weergave: briefing
+      grid_options:
+        columns: full
+  - type: grid
+    column_span: 4
+    cards:
+    - type: custom:batterijplan-plan-card
+      weergave: samen
+      grid_options:
+        columns: full
+  badges: []

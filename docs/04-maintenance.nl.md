@@ -3,45 +3,47 @@
 *English: [04-maintenance.md](04-maintenance.md) · Deutsch: [04-maintenance.de.md](04-maintenance.de.md)*
 
 **In het kort**
-- Eens per maand even kijken is genoeg.
-- Maak altijd een back-up voordat je iets verandert of bijwerkt.
-- Tijdelijk uitzetten = *Live* uit. Het plan blijft dan rekenen en leren.
+- Eén keer per maand even kijken is genoeg.
+- Updates komen via HACS. Je instellingen, het geleerde verbruik en de teller blijven bewaard.
+- Even uitzetten = *Live* uit. Het plan blijft dan rekenen en leren.
 
 ## Wat je af en toe doet
 
-| Wanneer | Wat doen |
+| Wanneer | Wat te doen |
 |---|---|
-| **Eens per maand** | Kijk of "vasthouden" en "ontladen" nog logisch zijn. Blijft de batterij vaak ruim vol na de dure periode? Verlaag de veiligheidsmarge. Raakt hij vaak te vroeg leeg? Verhoog de marge, of controleer de capaciteit. |
-| **Advies voor HBC wordt oranje** | Pas *Solar reserved for house* in HBC aan naar het getal in het advies. Dat gebeurt vooral bij de wisseling van de seizoenen. |
-| **Nieuw energiecontract** | Pas *Energiebelasting + inkoop* en de *ingangsdatum* aan. |
-| **Batterij erbij of eraf, of minder capaciteit door slijtage** | Pas de *bruikbare capaciteit* aan. |
-| **Grote verandering in verbruik** (warmtepomp, nieuw apparaat) | Niets doen: het profiel past zich binnen ± 1 tot 2 weken vanzelf aan. |
-| **HBC-update** | Controleer dat HBC nog op Dynamic staat en de gewone periode op Charge PV. |
-| **Andere sensoren** (nieuwe P1-meter, omvormer) | Open het knopje *Sensoren* en pas de sensornamen aan. Maak daarna een nieuwe back-up (knopje *Instellingen*). |
-| **Ander energiecontract met all-in prijzen in HBC** | Zet *Prijzen van HBC* op *all-in* (knopje *Instellingen*). |
+| **Eén keer per maand** | Kijk of "vasthouden" en "ontladen" nog logisch zijn. Zit de batterij na de dure periode vaak nog goed vol? Verlaag de veiligheidsmarge. Loopt hij vaak te vroeg leeg? Verhoog de marge, of controleer de capaciteit. |
+| **Nieuw energiecontract** | Wijzig de *opslag*, de *toeslag terugleveren* en de *ingangsdatum*. |
+| **Batterij erbij of eraf, of minder capaciteit door slijtage** | Wijzig de *bruikbare capaciteit*. |
+| **Grote verandering in verbruik** (warmtepomp, nieuw apparaat) | Niets doen: het profiel past zich zelf aan binnen ongeveer 1 tot 2 weken. |
+| **HBC-update** | Controleer of HBC nog op Dynamic staat en kijk naar het *drempelverschil*: dat bepaalt wat duidelijk duurder is. |
+| **Andere sensoren** (nieuwe P1-meter, omvormer) | Open de knop *Sensoren* en wijzig de sensornamen (of druk bij de integratie op *Configureren*). |
+| **Ander energiecontract met all-in prijzen in HBC** | Zet *Prijzen van HBC* op *all-in* (knop *Instellingen*). |
+
+## Back-up
+
+De integratie bewaart alles zelf, in de configuratie-invoer van Home Assistant: je instellingen (ook de Expert-instellingen), het geleerde verbruiksprofiel en de teller. Hij zit daarom in elke gewone Home Assistant-back-up (*Instellingen → Systeem → Back-ups*).
+
+- De oude knoppen *Back-up maken*, *Back-up terugzetten* en *Standaardwaarden* zijn weg. Je hebt ze niet meer nodig: bij een update of herstart gaat er niets verloren.
+- Batterijplan opnieuw installeren op dezelfde Home Assistant? Verwijder de integratie alleen als je opnieuw wilt beginnen; dan is alles ervan weg.
+- Naar een nieuwe Home Assistant verhuizen? Zet daar een Home Assistant-back-up terug. Zonder back-up stel je de integratie opnieuw in, en het verbruiksprofiel begint opnieuw met leren (7 dagen).
 
 ## Een nieuwe versie installeren
 
-1. Druk op **Back-up maken**.
-2. Vervang `packages/batterijplan.yaml` en de map `www/batterijplan/` door die uit de nieuwe zip.
-3. Verhoog bij *Instellingen → Dashboards → ⋮ → Bronnen* het nummer achter de kaarten, bijvoorbeeld `?v=1` → `?v=2`. Zo laadt je browser de nieuwe kaarten.
-4. Plak het nieuwe dashboard in de Raw-configuratie-editor (zie [01 · Installatie](01-installation.nl.md#stap-5--kaarten-en-dashboard)).
-5. *Configuratie controleren* en herstarten.
+1. Maak een Home Assistant-back-up (zie hierboven).
+2. Open in HACS **HBC Batterijplan** en kies **Bijwerken** (of *Downloaden* van de nieuwe versie).
+3. Herstart Home Assistant.
+4. Ververs de browser (op een telefoon: app sluiten en opnieuw openen), zodat je de nieuwe kaarten krijgt.
 
-Je instellingen, het geleerde verbruik en de teller blijven bewaard. Mist er toch iets, druk dan op **Back-up terugzetten**.
+Je instellingen, het geleerde verbruik en de teller blijven bewaard. Het dashboard en de kaarten zitten in de integratie, dus er valt niets te vervangen of te plakken.
 
-**Van 1.0.0-dev1 naar 1.0.0-rc1:**
-- Vervang het pakket en de map `www/batterijplan/`, verhoog het nummer achter de kaarten-bron en plak het nieuwe dashboard. Het dashboard is helemaal nieuw (knoppenrij met vensters), dus vervang het in zijn geheel.
-- Recorder met include-lijst: zet ook `sensor.batterijplan_prijs` erop.
-- Herstart Home Assistant: er zijn nieuwe helpers (*Prijzen van HBC* en twee velden waarin Batterijplan jouw HBC-standen onthoudt).
-- Maak daarna een nieuwe back-up. Die bewaart nu ook de ingangsdatum en *Prijzen van HBC* (10 instellingen in plaats van 8).
-- Geeft HBC all-in prijzen? Zet *Prijzen van HBC* op *all-in*.
-- Het geleerde verbruik blijft bewaard. De voorspelling begint opnieuw te meten, nu per blok van 3 uur.
+**Release candidates.** Een versie met `rc` in de naam is een release candidate: bijna klaar, maar nog in test. In HACS zie je hem alleen als je voor deze repository *Bètaversies tonen* aanzet.
 
-**Van 0.1.x naar 1.0.0:** voeg de kaarten toe als bron (stap 5 van de installatie) en vervang het dashboard. Gebruik je een recorder met include-lijst, zet dan ook `sensor.batterijplan_lading`, `sensor.batterijplan_advies_huisverbruik` en `sensor.batterijplan_prijs` op de lijst en herstart.
+**Van het pakket (1.0.0-rc1/rc2) naar de integratie:** zie [01 · Installatie](01-installation.nl.md#overstappen-van-het-pakket-100-rc1rc2).
 
 ## Helemaal verwijderen
 
-1. Zet **Live** uit, zodat HBC terug op jouw eigen standen gaat.
-2. Verwijder `packages/batterijplan.yaml`, de map `www/batterijplan/`, de bron `/local/batterijplan/batterijplan-cards.js` en het dashboard.
-3. Herstart Home Assistant.
+1. Zet **Live** uit, zodat HBC teruggaat naar je eigen standen.
+2. *Instellingen → Apparaten & diensten → Batterijplan → ⋮ → Verwijderen*.
+3. Verwijder **HBC Batterijplan** in HACS en herstart Home Assistant.
+
+Het dashboard verdwijnt samen met de integratie.

@@ -1,0 +1,174 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Batterijplan",
+        "description": "Batterijplan is already in this Home Assistant as a package. Take over its settings, learned consumption and counter, or start fresh?",
+        "menu_options": {
+          "takeover": "Take over from the Batterijplan package",
+          "setup": "Start fresh"
+        }
+      },
+      "setup": {
+        "title": "Set up Batterijplan",
+        "description": "Choose the power sensors of your installation and enter your battery and contract details.",
+        "data": {
+          "sensor_net": "Grid power sensor (+ = import)",
+          "sensor_batterij": "Battery power sensor (+ = discharging)",
+          "sensor_zon": "Solar power sensor (optional)",
+          "sensor_ev": "EV charger power sensor (optional)",
+          "capaciteit": "Usable capacity of the batteries",
+          "marge": "Safety margin",
+          "hbc_prijzen": "Prices from HBC",
+          "opslag": "Supplier mark-up per kWh excl. VAT",
+          "contract_start": "Contract start date"
+        }
+      }
+    },
+    "error": {
+      "same_sensor": "Grid and battery power must be two different sensors."
+    },
+    "abort": {
+      "already_configured": "Batterijplan is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Set up Batterijplan",
+        "description": "Change settings. Sources that you change reload the integration.",
+        "data": {
+          "sensor_net": "Grid power sensor (+ = import)",
+          "sensor_batterij": "Battery power sensor (+ = discharging)",
+          "sensor_zon": "Solar power sensor (optional)",
+          "sensor_ev": "EV charger power sensor (optional)",
+          "capaciteit": "Usable capacity of the batteries",
+          "marge": "Safety margin",
+          "hbc_prijzen": "Prices from HBC",
+          "opslag": "Supplier mark-up per kWh excl. VAT",
+          "contract_start": "Contract start date",
+          "btw": "VAT",
+          "teruglever_toeslag": "Feed-in add-on (EUR/kWh)",
+          "teruglever_bonus": "Daytime feed-in bonus",
+          "bonus_van": "Daytime from (hour)",
+          "bonus_tot": "Daytime until (hour)"
+        }
+      }
+    },
+    "error": {
+      "same_sensor": "Grid and battery power must be two different sensors."
+    }
+  },
+  "selector": {
+    "hbc_prijzen": {
+      "options": {
+        "kaal": "Raw exchange price",
+        "all-in": "All-in price"
+      }
+    }
+  },
+  "issues": {
+    "dashboard_url_taken": {
+      "title": "Batterijplan dashboard address is taken",
+      "description": "The address {url} is already in use by a dashboard you made yourself, so Batterijplan did not add its own dashboard. Rename or remove yours to get it."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "batterijplan": {
+        "name": "Batterijplan"
+      },
+      "batterijplan_lading": {
+        "name": "Batterijplan charge"
+      },
+      "batterijplan_prijs": {
+        "name": "Batterijplan price"
+      },
+      "batterijplan_huisverbruik": {
+        "name": "Batterijplan house consumption"
+      },
+      "batterijplan_huisverbruik_15m": {
+        "name": "Batterijplan house consumption 15m"
+      },
+      "batterijplan_verbruiksprofiel": {
+        "name": "Batterijplan consumption profile"
+      },
+      "batterijplan_voorspelling": {
+        "name": "Batterijplan forecast"
+      },
+      "batterijplan_voorspelling_kleur": {
+        "name": "Batterijplan forecast colour"
+      },
+      "batterijplan_meerwaarde": {
+        "name": "Batterijplan added value"
+      },
+      "batterijplan_meerwaarde_periode": {
+        "name": "Batterijplan added value this period"
+      },
+      "batterijplan_advies_zon_na_goedkoop_laden": {
+        "name": "Batterijplan advice solar after cheap charging"
+      }
+    },
+    "switch": {
+      "batterijplan_live": {
+        "name": "Batterijplan live (steers HBC)"
+      },
+      "batterijplan_regel_laden": {
+        "name": "Batterijplan rule: extra charging from the grid"
+      },
+      "batterijplan_regel_ontladen": {
+        "name": "Batterijplan rule: discharging outside HBC hours"
+      },
+      "batterijplan_regel_vasthouden": {
+        "name": "Batterijplan rule: hold for later"
+      },
+      "batterijplan_regel_terugleveren": {
+        "name": "Batterijplan rule: feed in"
+      }
+    },
+    "number": {
+      "batterijplan_capaciteit": {
+        "name": "Batterijplan usable capacity"
+      },
+      "batterijplan_marge": {
+        "name": "Batterijplan safety margin"
+      },
+      "batterijplan_opslag": {
+        "name": "Batterijplan supplier mark-up per kWh excl. VAT"
+      },
+      "batterijplan_btw": {
+        "name": "Batterijplan VAT"
+      },
+      "batterijplan_teruglever_toeslag": {
+        "name": "Batterijplan feed-in add-on"
+      },
+      "batterijplan_teruglever_bonus": {
+        "name": "Batterijplan daytime feed-in bonus"
+      }
+    },
+    "select": {
+      "batterijplan_hbc_prijzen": {
+        "name": "Batterijplan prices from HBC"
+      }
+    },
+    "date": {
+      "batterijplan_contract_start": {
+        "name": "Batterijplan contract start date"
+      }
+    },
+    "text": {
+      "batterijplan_sensor_net": {
+        "name": "Batterijplan grid power sensor"
+      },
+      "batterijplan_sensor_zon": {
+        "name": "Batterijplan solar power sensor"
+      },
+      "batterijplan_sensor_batterij": {
+        "name": "Batterijplan battery power sensor"
+      },
+      "batterijplan_sensor_ev": {
+        "name": "Batterijplan EV charger sensor (optional)"
+      }
+    }
+  }
+}

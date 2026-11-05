@@ -1,52 +1,63 @@
-# 05 · Probleme lösen
+# 05 · Fehlerbehebung
 
 *English: [05-troubleshooting.md](05-troubleshooting.md) · Nederlands: [05-troubleshooting.nl.md](05-troubleshooting.nl.md)*
 
 **Kurz gesagt**
-- Kurz nach einem Neustart sind manche Karten eine Weile leer. Das erledigt sich innerhalb einer Viertelstunde.
-- Schau zuerst auf die Statuskarte: Modus, Lernen, HBC-Strategie und nächste Viertelstunde sagen meist schon, was los ist.
-- Eine Meldung? Mach einen Screenshot und nenne deine HBC-Version in einem [Issue](https://github.com/satscan1/hbc-batterijplan/issues).
+- Direkt nach einem Neustart sind manche Karten kurz leer. Das erledigt sich innerhalb einer Viertelstunde.
+- Schau zuerst auf die Statuskarte: Modus, Lernen, HBC-Strategie und nächste Viertelstunde verraten meist schon, was los ist.
+- Ein Problem, das du nicht gelöst bekommst? Mache einen Screenshot und nenne deine HBC-Version in einem [Issue](https://github.com/satscan1/hbc-batterijplan/issues).
 
-## Meldungen im Plan
+## Der Plan ist leer oder die Sensoren sind unbekannt
 
-| Was du siehst | Was es bedeutet | Was du tust |
-|---|---|---|
-| **Nicht eingerichtet** | Die nutzbare Kapazität ist nicht ausgefüllt. | Fülle sie aus (Einstellungen). |
-| **Keine Batteriedaten** | Batterijplan kann die Ladung von einem oder mehreren Speichern nicht lesen. Es hält dann nichts fest. | Prüfe in HBC die Anzahl der Speicher und ob ihr Ladestand verfügbar ist. |
-| **Keine Preisdaten** | HBC hat (noch) keine Preise mit Labels. | Prüfe, dass HBC auf Dynamic steht und die Preise ankommen (`sensor.hbc_energy_prices_data`). |
-| **Batterijplan pausiert: HBC steht auf …** | HBC steht nicht auf Dynamic. | Normal, wenn du bewusst eine andere Strategie wählst. Stelle HBC zurück auf Dynamic, damit Batterijplan mitmacht. |
-| **Nichts zu steuern bis …** | Bis zum nächsten günstigen Moment gibt es nichts zu verbessern. HBC macht das Übliche. | Nichts, das ist normal. |
+Der Sensor `sensor.batterijplan` ist *unbekannt*, solange es keinen Plan gibt. Ein Plan braucht all das:
+
+| Prüfung | Was zu tun ist |
+|---|---|
+| Die nutzbare Kapazität ist ausgefüllt. | Trage sie ein (*Einstellungen → Basis*, oder *Konfigurieren* bei der Integration). Bei 0 gibt es keinen Plan. |
+| HBC hat Preise mit Labels. | Prüfe, ob HBC auf Dynamic steht und ob die Preise eintreffen (`sensor.hbc_energy_prices_data`). |
+| Batterijplan kann die Ladung **aller** Batterien lesen. | Prüfe in HBC die Anzahl der Batterien (`input_number.house_battery_count`) und ob der Ladestand jeder Batterie verfügbar ist. Eine Batterie ohne Wert genügt für einen leeren Plan. |
+| Die Sensoren sind gewählt und melden einen Wert. | Öffne den Knopf *Sensoren*. Ein Sensor, der *nicht verfügbar* oder *unbekannt* ist, liefert keinen Hausverbrauch und nichts zum Lernen. |
+
+Die Sensoren für Hausverbrauch, Profil und Prognose sind in den ersten Minuten und den ersten Tagen *unbekannt* oder zeigen *noch am Messen*. Das ist normal.
+
+Bleibt der Plan leer? Dann schau in *Einstellungen → System → Protokolle* nach "batterijplan".
+
+## Entitäts-IDs mit `_2` am Ende
+
+Du siehst `sensor.batterijplan_2`, `switch.batterijplan_live_2` und so weiter? Das passiert, wenn das alte Paket (`packages/batterijplan.yaml`) noch neben der Integration steht: Die IDs mit den normalen Namen sind dann noch belegt.
+
+1. Entferne das Paket, die alten Karten und das alte Dashboard. Siehe [01 · Installation](01-installation.de.md#umstieg-vom-paket-100-rc1rc2).
+2. Starte Home Assistant neu. Beim Start setzt Batterijplan die IDs auf die normalen Namen zurück, wo diese frei sind.
+
+Entferne die `_2`-Entitäten nicht von Hand, bevor das passiert ist.
 
 ## Dashboard und Karten
 
 | Problem | Prüfe |
 |---|---|
-| Eine Karte meldet *Custom element doesn't exist: batterijplan-…* | Die Karten sind nicht als Ressource angemeldet, oder der Browser hat noch die alte Version. Siehe [01 · Installation, Schritt 5](01-installation.de.md#schritt-5--karten-und-dashboard). Lade danach den Browser neu (Handy: App schließen und öffnen). |
-| Eine Fehlermeldung *can only concatenate str (not "int") to str* | Das war ein Fehler in Version 0.1.5 bei manchen HBC-Versionen. Behoben in 1.0.0-dev1: aktualisiere. |
-| *Live* und die Felder in *Einstellungen* stehen auf *Nicht verfügbar* | Das Paket ist nicht geladen. Wähle *Entwicklerwerkzeuge → YAML → Konfiguration prüfen*, behebe eine eventuelle Meldung und starte Home Assistant neu. |
-| Eine Karte meldet *t is not a function* beim Zeigen mit der Maus | Fehler in 1.0.0-dev1. Behoben in 1.0.0-rc1: aktualisiere und erhöhe die Nummer hinter der Karten-Ressource. |
-| Die Icons in den Karten fehlen | Lade den Browser neu. Die Icons stecken in der Kartendatei selbst. |
-| Die Karten sind in der falschen Sprache | Die Karten folgen der Sprache deines **Profils** in Home Assistant (links unten dein Name → Sprache). |
-| Die Grafik zeigt keine durchgezogene Linie (gemessene Ladung) | Dein Recorder speichert `sensor.batterijplan_lading` nicht. Setze ihn auf deine include-Liste und starte neu. Bis dahin liest die Grafik die Ladung aus dem Verlauf des Plans, ab dem Moment, an dem Version 1.0.0-dev1 läuft. |
-| Woche oder Monat ist leer, oder die Summe passt nicht zu *Was bringt es* | Die Tageszählung von Home Assistant beginnt erst einen Tag nach dem Start des Zählers. Das gleicht sich von selbst aus. |
-| *Empfehlung für HBC* bleibt bei "Noch am Messen" | Normal in der ersten Woche: Der Verbrauch muss gelernt sein, und es muss eine Woche gemessen sein. |
-| Der Plan blieb nach einem Neustart bei einer alten Viertelstunde hängen | Fehler in 1.0.0-dev1 (der Plan wurde als Text gespeichert). Behoben in 1.0.0-rc1. |
-| Die Beträge im Plan sind viel zu hoch | Liefert HBC All-in-Preise? Stelle *Preise von HBC* auf *all-in*, sonst rechnet Batterijplan die Steuer und die MwSt. doppelt dazu. |
+| In der Seitenleiste steht kein **Batterijplan** | Aktualisiere den Browser (Handy: App schließen und neu öffnen). Ist die Integration eingerichtet (*Einstellungen → Geräte & Dienste*)? |
+| Eine Reparaturmeldung sagt, dass die **Dashboard-Adresse belegt ist** | Du hast ein eigenes Dashboard unter `/batterijplan`. Batterijplan lässt es in Ruhe und fügt sein eigenes nicht hinzu. Benenne deines um oder entferne es und starte Home Assistant neu. |
+| Eine Karte sagt *Custom element doesn't exist: batterijplan-…* | Ist die alte Ressource `/local/batterijplan/batterijplan-cards.js` noch da? Entferne sie (*Einstellungen → Dashboards → ⋮ → Ressourcen*) und aktualisiere den Browser: Die Integration lädt die Karten selbst. Zwei Kopien stören sich gegenseitig. |
+| *Live*, die Regeln und die Felder in *Einstellungen* zeigen *Nicht verfügbar* | Die Integration ist nicht gestartet. Schau in *Einstellungen → System → Protokolle* nach "batterijplan" und starte Home Assistant neu. |
+| Die Karten sind in der falschen Sprache | Die Karten folgen der Sprache deines **Profils** in Home Assistant (dein Name unten links → Sprache). In deinem eigenen Dashboard kannst du an einer Karte `taal: nl`, `en` oder `de` setzen. |
+| Die Grafik zeigt keine durchgezogene Linie (gemessene Ladung) | Dein Recorder speichert `sensor.batterijplan_lading` nicht. Nimm ihn in deine Include-Liste auf und starte neu. Siehe [01 · Installation](01-installation.de.md#recorder-nur-wenn-du-eine-include-liste-nutzt). |
+| Die Beträge im Plan sind viel zu hoch | Liefert HBC all-in-Preise? Stelle *Preise von HBC* auf *all-in*, sonst rechnet Batterijplan Aufschlag und MwSt. doppelt. |
 
 ## Sonne und Verbrauch
 
 | Problem | Prüfe |
 |---|---|
-| Batterijplan rechnet mit 0 Sonne | Ist die Integration *Solcast PV Forecast* installiert? Batterijplan sucht die Solcast-Sensoren selbst, in jeder Sprache. |
-| *Hausverbrauch jetzt* ist nachts *Nicht verfügbar* | Fehler in 1.0.0-dev1 bei Wechselrichtern, die nachts nichts melden. Behoben in 1.0.0-rc1: Sonne ohne Wert zählt als 0 W. |
-| *Kontrolle: Hausverbrauch jetzt* stimmt nicht | Prüfe die Vorzeichen: Netzleistung Bezug = +, Speicherleistung entladen = +. Und die Solarleistung ist die Leistung von jetzt in W, nicht der Tagesertrag. |
-| Die Prognose bleibt *schwankend* | Ein Haushalt mit stark wechselndem Verbrauch ist schwerer vorherzusagen. Batterijplan rechnet dann selbst mit zusätzlicher Reserve (siehe [03 · So funktioniert es](03-how-it-works.de.md)). Ist der Speicher trotzdem zu oft zu früh leer, erhöhe deine eigene Sicherheitsreserve. |
+| Batterijplan rechnet mit 0 Sonne | Ist die Integration *Solcast PV Forecast* installiert? Batterijplan findet die Solcast-Sensoren selbst, in jeder Sprache. |
+| *Hausverbrauch jetzt* ist *Nicht verfügbar* | Prüfe den Netzsensor und den Batteriesensor. Solar ohne Wert zählt als 0 W. |
+| *Kontrolle: Hausverbrauch jetzt* stimmt nicht | Prüfe die Vorzeichen: Netzleistung Bezug = +, Batterieleistung Entladen = +. Und Solarleistung ist die Leistung gerade jetzt in W, nicht der Tagesertrag. |
+| Die Prognose bleibt *wechselhaft* | Ein Haushalt mit stark wechselndem Verbrauch ist schwerer vorherzusagen. Läuft die Batterie zu oft zu früh leer, erhöhe deine Sicherheitsmarge. |
 
 ## Steuern
 
 | Problem | Prüfe |
 |---|---|
-| Live ist an, aber der Speicher tut nicht, was der Plan sagt | Steht HBC auf **Full control** und **Dynamic**? Schau im Logbuch bei "Batterijplan": Dort steht jede Änderung. HBC liest seine Stellungen pro Viertelstunde, eine Änderung wirkt also erst ab der nächsten Viertelstunde. |
-| Bei "Überschuss entladen" sinkt die Ladung kaum | Die Sonne deckt das Haus schon. Dann gibt es nichts zu entladen; der Zähler rechnet in dem Fall auch nichts. |
-| Nach Live aus steht HBC anders als vorher | Batterijplan stellt die Stellungen wieder her, die es sich gemerkt hat, als du *Live* eingeschaltet hast. Hast du sie danach selbst geändert, während *Live* an war, stelle sie selbst zurück. |
-| Batterijplan steuert im teuren Zeitraum nichts | Steht deine teure Stellung in HBC auf etwas anderem als *Self-consumption* (zum Beispiel *Sell*)? Dann lässt Batterijplan diesen Zeitraum bewusst in Ruhe. |
+| **HBC steht nicht auf Dynamic** | Batterijplan steuert dann nichts und der Zähler zählt nichts. Die Statuskarte zeigt die Strategie von HBC. Stelle HBC zurück auf **Dynamic**: Der Plan rechnet sofort neu und steuert wieder nach. War *Live* an? Dann werden deine eigenen Modi zurückgesetzt, sobald HBC Dynamic verlässt. |
+| Live ist an, aber die Batterie tut nicht, was der Plan sagt | Steht HBC auf **Full control** und **Dynamic**? Schau ins Logbuch unter "Batterijplan": Jede Änderung steht dort. HBC liest seine Modi pro Viertelstunde, eine Änderung wirkt also erst ab der nächsten Viertelstunde. |
+| Es wird nichts gesteuert | Vielleicht ist eine Regel aus (*Einstellungen → Regeln*), oder der Plan hat in den nächsten Viertelstunden nichts Besseres als HBC. Das ist normal. |
+| Nach Live aus steht HBC anders als vorher | Batterijplan stellt die Modi zurück, die es sich gemerkt hat, als du *Live* eingeschaltet hast. Hast du sie danach selbst geändert, während *Live* an war, stelle sie selbst zurück. |
+| Der Zähler bewegt sich nicht | Er zählt nur mit *Live* an **und** HBC auf Dynamic. Sonst zählt es als *Schatten*. |

@@ -1,0 +1,20 @@
+{
+  "domain": "batterijplan",
+  "name": "HBC Batterijplan",
+  "after_dependencies": [
+    "frontend",
+    "http",
+    "lovelace"
+  ],
+  "codeowners": [
+    "@satscan1"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/satscan1/hbc-batterijplan",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/satscan1/hbc-batterijplan/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "1.0.0-rc3"
+}

@@ -1,0 +1,227 @@
+# Batterijplan built-in dashboard (English). Cards: custom:batterijplan-*; served by the integration.
+# The card language follows the user profile (optional per card: taal: nl|en|de).
+title: Batterijplan
+views:
+- title: Batterijplan
+  path: batterijplan
+  icon: mdi:battery-clock
+  type: sections
+  max_columns: 3
+  sections:
+  - type: grid
+    column_span: 3
+    cards:
+    - type: custom:batterijplan-knoppen
+      live: switch.batterijplan_live
+      knoppen:
+      - naam: Earnings
+        kaarten:
+        - type: custom:batterijplan-opbrengst
+          title: What does it earn
+          icon: batterijplan:euro
+          perioden: true
+      - naam: Report
+        kaarten:
+        - type: custom:batterijplan-rapport
+          title: Report
+          icon: batterijplan:info
+        breed: 820
+      - naam: Advice HBC
+        melding: advies
+        kaarten:
+        - type: custom:batterijplan-advies
+          title: Advice for HBC
+          icon: batterijplan:schuifregelaars
+      - naam: Settings
+        melding: instellingen
+        kaarten:
+        - type: custom:batterijplan-velden
+          title: Settings
+          icon: batterijplan:schuifregelaars
+          info: |-
+            Here you set up Batterijplan for your batteries and your energy contract.
+
+            **Basic** you fill in once. **Expert** usually does not need changing.
+
+            If something essential is missing, the Settings button gets an orange dot.
+
+            All values are stored by the integration and survive restarts and updates.
+          tabs:
+          - naam: Basic
+            sub: Set once and forget
+            rows:
+            - entity: number.batterijplan_capaciteit
+              name: Usable battery capacity
+              info: |-
+                What your batteries can really deliver together, above the lower limit set in HBC.
+
+                Example: 2 batteries of 5 kWh with a 10 % lower limit is about 9.0 kWh.
+
+                As long as this is not filled in, the plan does nothing.
+            - entity: select.batterijplan_hbc_prijzen
+              name: Prices from HBC
+              info: |-
+                If the prices in HBC are the bare market price (without tax and mark-up), choose **kaal**.
+
+                If HBC gives all-in prices (with energy tax, mark-up and VAT), choose **all-in**. Batterijplan then adds nothing itself, and Energy tax + purchase is not needed.
+            - entity: date.batterijplan_contract_start
+              name: Contract start date
+              info: |-
+                The day your contract year starts. The year does not matter.
+
+                The earnings "this contract year" count from this date and start again every contract year.
+          - naam: Rules
+            sub: What Batterijplan may steer
+            rows:
+            - entity: switch.batterijplan_regel_laden
+              name: Extra charging from the grid
+              info: |-
+                **On:** Batterijplan charges extra from the grid when a shortage is coming for expensive quarters, and in a cheap quarter it does not charge from the grid when that is not needed.
+
+                **Off:** like HBC: only charge in the cheap hours of HBC, and then always.
+            - entity: switch.batterijplan_regel_ontladen
+              name: Discharging outside HBC hours
+              info: |-
+                **On:** also discharge in quarters that are at least the HBC threshold more expensive, even if HBC does not call them expensive.
+
+                **Off:** like HBC: only discharge in the expensive hours of HBC.
+            - entity: switch.batterijplan_regel_vasthouden
+              name: Holding for later
+              info: |-
+                **On:** keep charge for a quarter that is at least the HBC threshold more expensive.
+
+                **Off:** like HBC: discharge straight away in an expensive quarter.
+            - entity: switch.batterijplan_regel_terugleveren
+              name: Feeding in
+              info: |-
+                **On:** feed in what is certainly left over, only when the feed-in payment is at least the HBC threshold higher than the cheapest purchase later on.
+
+                **Off:** never feed in.
+          - naam: Expert
+            sub: Only change if you know why
+            rows:
+            - entity: number.batterijplan_marge
+              name: Safety margin
+              info: |-
+                Charge the plan never counts on, so it does not plan too tightly.
+
+                Start with a small margin, for example 0.3 kWh. If the battery often runs empty too early, raise the margin.
+            - entity: number.batterijplan_opslag
+              name: Energy tax + purchase (excl. VAT)
+              kind: stepper
+              step: 0.001
+              info: |-
+                What you pay per kWh on top of the bare market price, excluding VAT: the energy tax plus the purchase fee of your supplier (see your contract).
+
+                Tap the number to type it exactly. With Prices from HBC = all-in this is not needed.
+            - entity: number.batterijplan_btw
+              name: VAT
+              info: |-
+                The VAT percentage Batterijplan adds to the purchase price.
+
+                In the Netherlands that is 21 %. If Prices from HBC is set to all-in, this is not needed.
+            - entity: number.batterijplan_teruglever_toeslag
+              name: Feed-in supplement (excl. VAT)
+              kind: stepper
+              step: 0.001
+              info: |-
+                What you receive per kWh on top of the market price for electricity fed back, excluding VAT. A negative number means you receive less.
+
+                Example: 0.02 means market + € 0.02 per kWh. You can find this in the terms of your contract.
+            - entity: number.batterijplan_teruglever_bonus
+              name: Daytime feed-in bonus
+              info: |-
+                Extra percentage you receive during the day (with sun, or between 08:00 and 17:00) on top of the feed-in payment, when that is positive.
+
+                Example: 10 % means the payment is 10 % higher in the daytime. If your contract has no bonus, set this to 0.
+      - naam: Sensors
+        melding: sensoren
+        kaarten:
+        - type: custom:batterijplan-velden
+          title: Sensors
+          icon: batterijplan:thuisbatterij
+          info: |-
+            Tap a field: you get a list of the power sensors in your Home Assistant, the most likely at the top, with what they report now on the right. Tap the right one. Typing filters the list; you may also type the name yourself.
+
+            It is always the power of **this moment in watts (W)**, not a daily total in kWh.
+
+            Under each chosen name you see what that sensor reports now.
+
+            **House use now** should roughly match what your house really uses.
+          rows:
+          - entity: text.batterijplan_sensor_net
+            name: Grid power (W)
+            info: Import from the grid is +, feed-in is -.
+            pick: true
+            suggest:
+            - p1
+            - grid
+            - net
+            - meter
+            - dsmr
+            - consumption
+            - afname
+            pick_hint: Import is +, feed-in is -. Choose the sensor that reports the grid power of your whole house now.
+          - entity: text.batterijplan_sensor_zon
+            name: Solar power now (W)
+            info: |-
+              What all your solar panels produce together now.
+
+              Several inverters? Make a helper Combine the state of several sensors, with type Sum.
+            pick: true
+            suggest:
+            - pv
+            - solar
+            - zon
+            - inverter
+            - omvormer
+            - opbrengst
+            - production
+            pick_hint: Choose the sensor that reports what all your solar panels produce together now.
+          - entity: text.batterijplan_sensor_batterij
+            name: Battery power (W)
+            info: |-
+              Total of all your batteries, discharging is +.
+
+              With HBC usually sensor.house_total_battery_power.
+            pick: true
+            suggest:
+            - house_total_battery
+            - battery
+            - batterij
+            - accu
+            pick_hint: 'Choose the total of all your batteries (discharging is +). With HBC usually: house total battery power.'
+          - entity: text.batterijplan_sensor_ev
+            name: Charger (W, optional)
+            info: Charging power of your car charger. It is subtracted from the house use. May stay empty.
+            pick: true
+            suggest:
+            - wallbox
+            - charger
+            - laad
+            - ev
+            - charge
+            pick_hint: Choose the charging power of your car charger.
+          - type: section
+            name: Check
+          - entity: sensor.batterijplan_huisverbruik
+            name: House use now
+            info: Grid power + solar power + battery power - charger. Should roughly match what your house really uses, and is never negative.
+  - type: grid
+    cards:
+    - type: custom:batterijplan-status
+  - type: grid
+    column_span: 2
+    cards:
+    - type: custom:batterijplan-plan-card
+      weergave: briefing
+      grid_options:
+        columns: full
+  - type: grid
+    column_span: 4
+    cards:
+    - type: custom:batterijplan-plan-card
+      weergave: samen
+      grid_options:
+        columns: full
+  badges: []

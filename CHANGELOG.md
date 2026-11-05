@@ -1,5 +1,44 @@
 # Changelog
 
+## 1.0.0-rc3 — now a Home Assistant integration, new rules, cards built in (release candidate)
+
+**Also in rc3 (after the first live days)**
+- **Grid charging in blocks of at least 30 minutes.** A single cheap quarter was too short for HBC to start charging; the plan now keeps a started grid-charge block going for at least two quarters (part of the optimisation, not added afterwards).
+- **Advice for HBC is part of the integration.** New sensor `sensor.batterijplan_advies_zon_na_goedkoop_laden` (expected house use covered by solar after the first cheap quarter of the day) and the card *Advice for HBC* behind the button in the button row. The status card shows *Advice house consumption* only after 7 days of measuring (7-day average).
+- **Button row order:** Earnings – Report – Advice HBC – Settings – Sensors.
+- **Settings:** back-up, restore and defaults are real buttons with a confirmation; the four rules are on/off switches that the briefing shows right away.
+- **Shadow value only while Live is off.** The shadow counter starts at zero for every new shadow period and keeps at most 30 days.
+- **This contract year** counts everything since the counter started when that lies inside the contract year (after a take-over it missed the taken-over part).
+- **Numbers follow the number format of the Home Assistant user profile** (comma or point).
+- **Season picture:** tap the logo on the status card to see the season picture (spring, summer, autumn, winter).
+- Shorter texts on the status card (no time behind *Coming quarter*, short HBC mode names).
+
+**New**
+- **Planning by dynamic programming.** The plan now looks at the whole price horizon at once (charge level in steps of 0.05 kWh) and only picks actions HBC can really execute: cheap quarters *Charge*, *Charge PV* or *Standby*; regular quarters *Charge PV*, *Self-consumption* or *Standby*; expensive quarters *Self-consumption*, *Standby* or *Sell*. No more grid charging in regular quarters. Wear (the HBC threshold delta) is counted per discharged kWh; the end charge is valued at the cheapest purchase price. The earlier rule set is kept as `plan_heuristiek`.
+- **Entity ids stay plain.** While an older package owns the plain id, ids get a `_2` (never a doubled name); they are restored when the id is free.
+- **A real integration, installed with HACS.** The YAML package, the `www` folder and the dashboard resource are gone. Add it under *Settings → Devices & services → Add integration → Batterijplan*. Category in HACS: *Integration*.
+- **Config flow.** One form asks for the grid and battery power sensors, solar (optional) and EV charger (optional), the usable capacity, the safety margin, *Prices from HBC* (raw or all-in), the supplier mark-up per kWh excl. VAT and the contract start date.
+- **Expert settings** in the options flow (*Configure*): VAT, feed-in add-on, daytime feed-in bonus and the hours of that bonus.
+- **New rules** in plain words, each with its own on/off switch: *charge from the grid*, *discharge outside HBC hours*, *hold*, *feed in*. One threshold: the HBC setting *Dynamic threshold delta*. Costs are counted without net metering, with purchase and feed-in each at their own price.
+- **Steers HBC's three Dynamic modes** (expensive, regular, cheap) for the coming quarter, only with *Live* on and HBC on *Dynamic*. Your own modes are remembered and put back.
+- **Cards and dashboard built in.** The integration serves its own cards (no dashboard resource) and its own dashboard at `/batterijplan`, in the sidebar: buttons *Earnings*, *Settings* (*Basic · Rules · Expert*), *Report* and *Sensors*, a status card, a briefing in two columns with the rules on the right, and a chart with HBC alone and Batterijplan across the full width.
+- **Card language option.** Every card accepts `taal: nl|en|de`, which goes before the language of your profile. The plan card now speaks Dutch, English and German.
+- **Counter *added value*** (`sensor.batterijplan_meerwaarde`), per quarter, an estimate, only with *Live* on and HBC on Dynamic. A second counter per contract year (`sensor.batterijplan_meerwaarde_periode`).
+- **Take over from the package.** If the old package is still there, the setup offers *Take over from the Batterijplan package*: it takes over the settings, the learned usage profile and the counter. See *Upgrading from the package* in the installation chapter.
+- **Settings as entities** (`number`, `select`, `date`, `text`, `switch`) with the same ids as the old helpers, so history and your own cards keep working.
+- **Documentation** rewritten for the integration, in three languages.
+
+**Improved**
+- Learning over 7 days and the forecast per block of 3 hours work as before, now inside the integration.
+- The ids of the new entities are put back to the normal names at the first restart after the package is removed.
+
+**Removed**
+- The old rules (surplus discharging, charging when needed, the fixed limit of € 0.10), the *Advice for HBC* with `sensor.batterijplan_advies_*`, the setting *efficiency* (the threshold of HBC covers it), the buttons *Make back-up*, *Restore back-up* and *Defaults* (the configuration entry keeps everything).
+
+**Note when updating**
+- From the package (1.0.0-rc1/rc2): make a back-up, install the integration, choose *Take over from the Batterijplan package*, then remove the package, `www/batterijplan` and the dashboard resource, remove the old dashboard and restart Home Assistant.
+- Recorder with an include list: replace `input_boolean.batterijplan_live` by `switch.batterijplan_live`.
+
 ## 1.0.0-rc1 — knoppenrij, vergelijking met HBC alleen, sneller leren (release candidate)
 
 **Nieuw**

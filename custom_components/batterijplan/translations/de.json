@@ -75,99 +75,96 @@
   },
   "entity": {
     "sensor": {
-      "batterijplan": {
-        "name": "Batterieplan"
-      },
       "batterijplan_lading": {
-        "name": "Batterieplan Ladung"
+        "name": "Ladung"
       },
       "batterijplan_prijs": {
-        "name": "Batterieplan Preis"
+        "name": "Preis"
       },
       "batterijplan_huisverbruik": {
-        "name": "Batterieplan Hausverbrauch"
+        "name": "Hausverbrauch"
       },
       "batterijplan_huisverbruik_15m": {
-        "name": "Batterieplan Hausverbrauch 15m"
+        "name": "Hausverbrauch 15m"
       },
       "batterijplan_verbruiksprofiel": {
-        "name": "Batterieplan Verbrauchsprofil"
+        "name": "Verbrauchsprofil"
       },
       "batterijplan_voorspelling": {
-        "name": "Batterieplan Prognose"
+        "name": "Prognose"
       },
       "batterijplan_voorspelling_kleur": {
-        "name": "Batterieplan Prognose Farbe"
+        "name": "Prognose Farbe"
       },
       "batterijplan_meerwaarde": {
-        "name": "Batterieplan Mehrwert"
+        "name": "Mehrwert"
       },
       "batterijplan_meerwaarde_periode": {
-        "name": "Batterieplan Mehrwert Periode"
+        "name": "Mehrwert Periode"
       },
       "batterijplan_advies_zon_na_goedkoop_laden": {
-        "name": "Batterijplan Empfehlung Sonne nach günstigem Laden"
+        "name": "Empfehlung Sonne nach günstigem Laden"
       }
     },
     "switch": {
       "batterijplan_live": {
-        "name": "Batterieplan live (steuert HBC)"
+        "name": "Live (steuert HBC)"
       },
       "batterijplan_regel_laden": {
-        "name": "Batterieplan Regel: zusätzlich aus dem Netz laden"
+        "name": "Regel: zusätzlich aus dem Netz laden"
       },
       "batterijplan_regel_ontladen": {
-        "name": "Batterieplan Regel: Entladen außerhalb der HBC-Zeiten"
+        "name": "Regel: Entladen außerhalb der HBC-Zeiten"
       },
       "batterijplan_regel_vasthouden": {
-        "name": "Batterieplan Regel: für später halten"
+        "name": "Regel: für später halten"
       },
       "batterijplan_regel_terugleveren": {
-        "name": "Batterieplan Regel: einspeisen"
+        "name": "Regel: einspeisen"
       }
     },
     "number": {
       "batterijplan_capaciteit": {
-        "name": "Batterieplan nutzbare Kapazität"
+        "name": "Nutzbare Kapazität"
       },
       "batterijplan_marge": {
-        "name": "Batterieplan Sicherheitsmarge"
+        "name": "Sicherheitsmarge"
       },
       "batterijplan_opslag": {
-        "name": "Batterieplan Aufschlag pro kWh ohne MwSt."
+        "name": "Aufschlag pro kWh ohne MwSt."
       },
       "batterijplan_btw": {
-        "name": "Batterieplan MwSt."
+        "name": "MwSt."
       },
       "batterijplan_teruglever_toeslag": {
-        "name": "Batterieplan Einspeise-Aufschlag"
+        "name": "Einspeise-Aufschlag"
       },
       "batterijplan_teruglever_bonus": {
-        "name": "Batterieplan Tages-Einspeisebonus"
+        "name": "Tages-Einspeisebonus"
       }
     },
     "select": {
       "batterijplan_hbc_prijzen": {
-        "name": "Batterieplan Preise von HBC"
+        "name": "Preise von HBC"
       }
     },
     "date": {
       "batterijplan_contract_start": {
-        "name": "Batterieplan Vertragsbeginn"
+        "name": "Vertragsbeginn"
       }
     },
     "text": {
       "batterijplan_sensor_net": {
-        "name": "Batterieplan Sensor Netzleistung"
+        "name": "Sensor Netzleistung"
       },
       "batterijplan_sensor_zon": {
-        "name": "Batterieplan Sensor Solarleistung"
+        "name": "Sensor Solarleistung"
       },
       "batterijplan_sensor_batterij": {
-        "name": "Batterieplan Sensor Batterieleistung"
+        "name": "Sensor Batterieleistung"
       },
       "batterijplan_sensor_ev": {
-        "name": "Batterieplan Sensor Ladestation (optional)"
+        "name": "Sensor Ladestation (optional)"
       }
     }
   }

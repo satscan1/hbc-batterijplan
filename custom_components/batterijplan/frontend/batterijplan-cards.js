@@ -927,7 +927,7 @@
       if (key !== this._key) { this._key = key; this._render(); }
     }
     connectedCallback() { if (!this._tick) this._tick = setInterval(() => this._render(), 60000); }
-    disconnectedCallback() { clearInterval(this._tick); this._tick = null; }
+    disconnectedCallback() { clearInterval(this._tick); this._tick = null; if (this._uiDicht) this._uiDicht(); }
     getCardSize() { return 6; }
     getGridOptions() { return { columns: "full", rows: "auto" }; }
     _shell() {
@@ -965,11 +965,11 @@
       const scherm = document.createElement("div"); scherm.className = "ui-scherm";
       scherm.innerHTML = "<div class='ui-paneel'><div class='ui-kop'><span class='terug'>‹ " + esc(t("Terug")) + "</span><b>" + esc(t("Hoe lees je dit?")) + "</b></div><div class='ui-tekst'></div></div>";
       scherm.querySelector(".ui-tekst").innerHTML = this._uitlegHtml || "";
-      const dicht = () => { scherm.remove(); this._uiScherm = null; document.removeEventListener("keydown", esc_); };
+      const dicht = () => { scherm.remove(); this._uiScherm = null; this._uiDicht = null; document.removeEventListener("keydown", esc_); };
       const esc_ = (e) => { if (e.key === "Escape") dicht(); };
       scherm.addEventListener("click", (e) => { if (e.target === scherm || e.target.classList.contains("terug")) dicht(); });
       document.addEventListener("keydown", esc_);
-      this.shadowRoot.appendChild(scherm); this._uiScherm = scherm;
+      this.shadowRoot.appendChild(scherm); this._uiScherm = scherm; this._uiDicht = dicht;
     }
     _setUitleg(html) {
       this._uitlegHtml = html;
@@ -1116,7 +1116,7 @@
         rij(t("Totaal sinds") + " " + esc(a.sinds || t("start")), eur(m.state), true) +
         rij(t("waarvan schaduw (zou opleveren)"), eur(a.eur_schaduw)) +
         rij(t("waarvan live (echt gestuurd)"), eur(a.eur_live)) +
-        rij(t("Kwartieren ontladen / vastgehouden / teruggeleverd"), (a.kwartieren_ontladen || 0) + " / " + (a.kwartieren_vastgehouden || 0) + " / " + (a.kwartieren_teruggeleverd || 0)) +
+        rij(t("Kwartieren ontladen / vastgehouden / teruggeleverd"), esc((a.kwartieren_ontladen || 0) + " / " + (a.kwartieren_vastgehouden || 0) + " / " + (a.kwartieren_teruggeleverd || 0))) +
         rij(t("Dit contractjaar"), eur((this._hass.states[(this._hass.states["sensor.batterijplan_meerwaarde_periode_2"] ? "sensor.batterijplan_meerwaarde_periode_2" : "sensor.batterijplan_meerwaarde_periode")] || {}).state)) + "</table>";
     }
   }
@@ -1179,7 +1179,7 @@
       // only rebuild the pills when they really change, so a click is never lost halfway
       if (pilHtml !== this._pilHtml) { this._pilHtml = pilHtml; this._pillen.innerHTML = pilHtml; }
       this._sw.setAttribute("aria-checked", String(live));
-      this._liveTxt.innerHTML = "<b>" + t("Live") + "</b> <span class='s'>" + esc(live ? t("stuurt HBC") : t("schaduw")) + "</span>";
+      this._liveTxt.innerHTML = "<b>" + esc(t("Live")) + "</b> <span class='s'>" + esc(live ? t("stuurt HBC") : t("schaduw")) + "</span>";
       this.shadowRoot.querySelector(".live").classList.toggle("aan", live);
       this.shadowRoot.querySelector(".live").title = t("Uit = schaduw: het plan rekent alleen mee. Aan = Batterijplan stuurt HBC bij.");
     }
@@ -1550,11 +1550,12 @@
       zetTaal(this._hass, this._config);
       const scherm = document.createElement("div"); scherm.className = "ui-scherm";
       scherm.innerHTML = "<div class='ui-paneel'><div class='ui-kop'><span class='terug'>‹ " + esc(t("Terug")) + "</span><b>" + esc(t("Hoe lees je dit?")) + "</b></div>" + infoHtml(text) + "</div>";
-      const dicht = (e) => { if (e && e.type === "keydown") { if (e.key !== "Escape") return; e.stopPropagation(); } scherm.remove(); document.removeEventListener("keydown", dicht, true); };
+      const dicht = (e) => { if (e && e.type === "keydown") { if (e.key !== "Escape") return; e.stopPropagation(); } scherm.remove(); this._uiDicht = null; document.removeEventListener("keydown", dicht, true); };
       scherm.addEventListener("click", (e) => { if (e.target === scherm || e.target.classList.contains("terug")) dicht(); });
       document.addEventListener("keydown", dicht, true);
-      this.shadowRoot.appendChild(scherm);
+      this.shadowRoot.appendChild(scherm); this._uiDicht = dicht;
     }
+    disconnectedCallback() { if (this._uiDicht) this._uiDicht(); }
     _wire(rows) {
       const R = this.shadowRoot, H = this._hass, call = (d, s, x) => H.callService(d, s, x);
       const dom = (r) => r.entity.split(".")[0];
@@ -1634,6 +1635,7 @@
       if (sig !== this._sig) { this._sig = sig; this._render(); }
     }
     getCardSize() { return 5; }
+    disconnectedCallback() { if (this._uiDicht) this._uiDicht(); }
     getGridOptions() { return { columns: "full", rows: "auto" }; }
     _render() {
       if (!this._hass) return;
@@ -1762,7 +1764,7 @@
           (Number.isFinite(Number(h.duur_s)) ? " · " + t("duurde") + " " + nl(Number(h.duur_s), 1) + " s" : "")) + "</div>";
       }
       const blo = String(pa.bijladen).toLowerCase() === "true", nk = blo ? (Number(pa.nachtladen_kwh) || 0) : 0, nkw = blo ? arr(pa.bijladen_kwartieren) : [];
-      const nacht = nk > 0 ? "<div style='font-size:13px;margin-top:8px'>" + t("Bijladen van het net:") + " " + nl(nk, 1) + " kWh" + (nkw.length ? " " + t("om") + " " + nkw[0] : "") + "</div>" : "";
+      const nacht = nk > 0 ? "<div style='font-size:13px;margin-top:8px'>" + esc(t("Bijladen van het net:") + " " + nl(nk, 1) + " kWh" + (nkw.length ? " " + t("om") + " " + nkw[0] : "")) + "</div>" : "";
       const sw = "<div style='display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--divider-color)'>" +
         "<div style='flex:1;font-size:14px'>" + esc(t("HBC-instellingen automatisch")) + "<div style='font-size:12px;color:var(--secondary-text-color)'>" + esc(auto ? t("Aan: Batterijplan zet de waarden zelf in HBC, alleen als het verschil minstens 1 uur of 0,5 kWh is. Jouw eigen waarden worden onthouden en komen exact terug als je dit uitzet. Elke wijziging staat in het logboek.") : t("Uit: Batterijplan verandert niets in HBC. Je ziet hierboven alleen het advies.")) + "</div></div>" +
         "<button data-auto style='cursor:pointer;font:inherit;font-size:13px;padding:5px 16px;border-radius:999px;border:1px solid " + (auto ? "#66bb6a" : "var(--divider-color)") + ";background:" + (auto ? "rgba(102,187,106,0.15)" : "var(--secondary-background-color)") + ";color:var(--primary-text-color)'>" + esc(auto ? t("aan") : t("uit")) + "</button></div>";

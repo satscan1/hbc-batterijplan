@@ -31,6 +31,16 @@ const BP_PLAN_TX = {
     'stroomkosten': 'Stromkosten', 't.o.v. HBC': 'ggü. HBC', 'stroomkosten tot': 'Stromkosten bis', 'Kale prijs nu': 'Reiner Preis jetzt', 'Verwachte besparing t.o.v. HBC alleen': 'Erwartete Ersparnis gegenüber HBC allein', 'In de batterij nu': 'Jetzt in der Batterie',
   },
 };
+// escape everything that ends up in innerHTML (card config, state attributes): & < > " '
+const bpEsc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// plan points from an attribute (the entity is set in the card config, so it can be any entity): only numbers and action letters get through
+const bpPts = (s) => {
+  let v = [];
+  try { v = s && s.attributes && s.attributes.punten ? (typeof s.attributes.punten === 'string' ? JSON.parse(s.attributes.punten.replace(/'/g, '"')) : s.attributes.punten) : []; } catch (e) { v = []; }
+  if (!Array.isArray(v)) return [];
+  const num = (x) => { const n = Number(x); return Number.isFinite(n) ? n : 0; }, act = (x) => ('LOHVZ'.includes(String(x)) && String(x).length === 1 ? String(x) : 'Z');
+  return v.filter(Array.isArray).map((p) => [num(p[0]), num(p[1]), num(p[2]), act(p[3]), num(p[4]), act(p[5]), num(p[6]), num(p[7]), num(p[8])]);
+};
 const BP_PLAN_LOC = { nl: 'nl-NL', en: 'en-GB', de: 'de-DE' };
 class BatterijplanPlanCard extends HTMLElement {
   setConfig(c) { this._c = Object.assign({ entity: 'sensor.batterijplan', weergave: 'samen' }, c); this.style.display = 'block'; this._sig = null; this.style.display = 'block'; }
@@ -89,7 +99,10 @@ class BatterijplanPlanCard extends HTMLElement {
     if (!this._docDown) { this._docDown = e => { if (this._hide && !e.composedPath().includes(this)) this._hide(); }; document.addEventListener('pointerdown', this._docDown); }
     if (this._hvOn && this._hvX != null) { px = this._hvX; show(); }  // card was redrawn while the pointer is over it
   }
-  disconnectedCallback() { if (this._docDown) { document.removeEventListener('pointerdown', this._docDown); this._docDown = null; } }
+  disconnectedCallback() {
+    if (this._docDown) { document.removeEventListener('pointerdown', this._docDown); this._docDown = null; }
+    if (this._ro) { this._ro.disconnect(); this._ro = null; this._sig = null; }  // re-observed at the next render
+  }
   _glad(pt) {
     if (pt.length < 2) return '';
     let d = `M${pt[0][0]},${pt[0][1]}`;
@@ -109,7 +122,7 @@ class BatterijplanPlanCard extends HTMLElement {
     const NAAM = { L: T('laden van het net'), O: T('ontladen'), H: T('vasthouden'), V: T('terugleveren'), Z: T('alleen zon / niets') };
     const NAAMB = { L: T('extra laden van het net'), O: T('extra ontladen'), H: T('vasthouden voor later'), V: T('terugleveren'), Z: T('niet laden / niet ontladen') };
     let pts = [];
-    try { pts = s && s.attributes.punten ? (typeof s.attributes.punten === 'string' ? JSON.parse(s.attributes.punten.replace(/'/g, '"')) : s.attributes.punten) : []; } catch (e) { pts = []; }
+    pts = bpPts(s);
     const a = s ? s.attributes : {};
     const tijd = t => new Date(t * 1000).toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' });
     const dag = t => new Date(t * 1000).toLocaleDateString(LOC, { weekday: 'short' });
@@ -146,7 +159,7 @@ class BatterijplanPlanCard extends HTMLElement {
       .r i{width:10px;height:10px;border-radius:2px;flex:none;display:inline-block}
       .r span{color:var(--secondary-text-color)}
     </style><ha-card>
-      <div class="t">${this._c.titel || T('Briefing en plan')}</div>
+      <div class="t">${bpEsc(this._c.titel || T('Briefing en plan'))}</div>
       <div class="b"><div>${kop}</div><div class="rg"><div class="rh">${T('Regels').toUpperCase()}</div>${regels}</div></div>
       <div class="h">${T('Waar Batterijplan bijstuurt').toUpperCase()}</div>
       <div class="cols">${lijst}</div>
@@ -167,9 +180,9 @@ class BatterijplanPlanCard extends HTMLElement {
     const dec = x => (this._lng() === 'en' ? x : String(x).replace('.', ','));
     const NAAM = { L: T('laden van het net'), O: T('ontladen'), H: T('vasthouden'), V: T('terugleveren'), Z: T('niet laden / niet ontladen') };
     const sol = k => `data-solo="${k}" class="solo${this._solo && this._solo !== k ? ' uit' : ''}" title="${T('klik: alleen deze / beide')}"`;
-    const titel = this._c.titel || (w === 'samen' ? `<span ${sol('hbc')} style="color:${GEEL}">HBC</span> + <span ${sol('plan')} style="color:${BG}">Batterijplan</span>` : w === 'plan' ? `<span style="color:${BG}">Batterijplan</span>` : `<span style="color:${GEEL}">${T('HBC origineel')}</span>`);
+    const titel = this._c.titel ? bpEsc(this._c.titel) : (w === 'samen' ? `<span ${sol('hbc')} style="color:${GEEL}">HBC</span> + <span ${sol('plan')} style="color:${BG}">Batterijplan</span>` : w === 'plan' ? `<span style="color:${BG}">Batterijplan</span>` : `<span style="color:${GEEL}">${T('HBC origineel')}</span>`);
     let pts = [];
-    try { pts = s && s.attributes.punten ? (typeof s.attributes.punten === 'string' ? JSON.parse(s.attributes.punten.replace(/'/g, '"')) : s.attributes.punten) : []; } catch (e) { pts = []; }
+    pts = bpPts(s);
     const a = s ? s.attributes : {};
     const W = Math.max(480, Math.round((this.getBoundingClientRect().width || 748) - 28)), H = 290, L = 34, R = 30, Tp = 22, B = 64;
     const iw = W - L - R, ih = H - Tp - B;

@@ -6,7 +6,7 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Versie 1.0.0-rc4 · release candidate*
+*Versie 1.0.0-rc6 · release candidate*
 
 Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** momenten van de dag. Het werkt samen met [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) en neemt HBC niet over: HBC blijft de batterij aansturen, Batterijplan geeft alleen per kwartier een aanwijzing.
 
@@ -26,9 +26,18 @@ Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** 
 - **Bewaart lading voor de duurste kwartieren.** HBC (strategie Dynamic) ontlaadt in elk duur kwartier op volgorde, ook als er een uur later een nog duurder moment komt. Batterijplan rekent vooruit tot het volgende goedkope moment en geeft de lading eerst aan de duurste kwartieren. In de andere dure kwartieren houdt de batterij zijn lading vast.
 - **Gebruikt overschot slim.** Zit er meer in de batterij dan nodig is tot het volgende goedkope moment? Dan levert Batterijplan dat overschot al aan het huis in de duurste gewone kwartieren, in plaats van met een volle batterij te gaan laden.
 - **Leert je verbruik.** Per uur van de dag, in 7 dagen, en daarna glijdend mee met de seizoenen. Met de zonverwachting van Solcast erbij.
-- **Geeft advies voor HBC.** Hoeveel zonne-energie je huis zelf gebruikt (de HBC-instelling *Solar reserved for house*), op basis van de laatste 7 dagen. Batterijplan verandert die instelling zelf nooit.
+- **Geeft advies voor HBC.** Hoeveel zonne-energie je huis zelf gebruikt (de HBC-instelling *Solar reserved for house*), op basis van de laatste 7 dagen. Sinds rc6 adviseert het ook over *cheapest hrs* en *expensive hrs*. Alleen als je de schakelaar *HBC-instellingen automatisch* aanzet (standaard uit) past het deze drie HBC-instellingen zelf aan; je eigen waarden komen terug als je hem uitzet. Aan de flows of code van HBC komt het nooit.
 - **Laat zien wat het oplevert.** Een eerlijke schatting bovenop HBC alleen: bij overschot ontladen telt alleen wat er echt uit de batterij ging.
 - **Begint veilig.** Eerst in schaduwmodus (rekent mee, stuurt niets). Pas als jij *Live* aanzet, stuurt het HBC bij.
+
+## Nieuw in 1.0.0-rc6 (inclusief rc5)
+
+- **Zonvoorspelling voor HBC:** de nieuwe sensor `sensor.batterijplan_zon_voor_hbc` laat HBC stoppen met laden van het net op het niveau dat het plan wil. Zonder plan, of met Live uit, geeft hij de echte voorspelling 1 op 1 door.
+- **Solcast-namen:** automatisch gevonden in Engels, Nederlands en Duits, of vul je eigen sensoren in bij het venster *Sensoren*.
+- **HBC-instellingen automatisch:** een schakelaar (standaard uit) die *cheapest hrs*, *expensive hrs* en *Solar reserved for house* op het advies zet. Je eigen waarden komen terug als je hem uitzet. De kaart *Advies HBC* toont alle drie de instellingen.
+- **Live lading:** *In de batterij nu* volgt de batterij zodra die verandert, in stappen van 0,1 kWh.
+- **Lichter voor de database:** de grote plandetails worden niet meer in de recorder geschreven.
+- **Tooltip in de grafiek:** hover of tik voor tijd, prijs, zon, lading en acties per kwartier.
 
 ## Nieuw in 1.0.0-rc3
 

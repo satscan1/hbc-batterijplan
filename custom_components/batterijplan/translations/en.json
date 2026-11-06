@@ -17,6 +17,8 @@
           "sensor_batterij": "Battery power sensor (+ = discharging)",
           "sensor_zon": "Solar power sensor (optional)",
           "sensor_ev": "EV charger power sensor (optional)",
+          "sensor_zon_vandaag": "Solar forecast sensor today (optional)",
+          "sensor_zon_morgen": "Solar forecast sensor tomorrow (optional)",
           "capaciteit": "Usable capacity of the batteries",
           "marge": "Safety margin",
           "hbc_prijzen": "Prices from HBC",
@@ -42,6 +44,8 @@
           "sensor_batterij": "Battery power sensor (+ = discharging)",
           "sensor_zon": "Solar power sensor (optional)",
           "sensor_ev": "EV charger power sensor (optional)",
+          "sensor_zon_vandaag": "Solar forecast sensor today (optional)",
+          "sensor_zon_morgen": "Solar forecast sensor tomorrow (optional)",
           "capaciteit": "Usable capacity of the batteries",
           "marge": "Safety margin",
           "hbc_prijzen": "Prices from HBC",
@@ -104,11 +108,20 @@
       },
       "batterijplan_advies_zon_na_goedkoop_laden": {
         "name": "Advice solar after cheap charging"
+      },
+      "batterijplan_zon_voor_hbc": {
+        "name": "Solar forecast for HBC (charge target)"
+      },
+      "batterijplan_advies_hbc": {
+        "name": "HBC settings advice"
       }
     },
     "switch": {
       "batterijplan_live": {
         "name": "Live (steers HBC)"
+      },
+      "batterijplan_hbc_auto": {
+        "name": "Auto-adjust HBC settings"
       },
       "batterijplan_regel_laden": {
         "name": "Rule: extra charging from the grid"
@@ -165,6 +178,12 @@
       },
       "batterijplan_sensor_ev": {
         "name": "EV charger sensor (optional)"
+      },
+      "batterijplan_sensor_zon_vandaag": {
+        "name": "Solar forecast sensor today (optional)"
+      },
+      "batterijplan_sensor_zon_morgen": {
+        "name": "Solar forecast sensor tomorrow (optional)"
       }
     }
   }

@@ -17,6 +17,8 @@
           "sensor_batterij": "Sensor Batterieleistung (+ = Entladen)",
           "sensor_zon": "Sensor Solarleistung (optional)",
           "sensor_ev": "Sensor Ladestation (optional)",
+          "sensor_zon_vandaag": "Sensor Solarprognose heute (optional)",
+          "sensor_zon_morgen": "Sensor Solarprognose morgen (optional)",
           "capaciteit": "Nutzbare Kapazität der Batterien",
           "marge": "Sicherheitsmarge",
           "hbc_prijzen": "Preise von HBC",
@@ -42,6 +44,8 @@
           "sensor_batterij": "Sensor Batterieleistung (+ = Entladen)",
           "sensor_zon": "Sensor Solarleistung (optional)",
           "sensor_ev": "Sensor Ladestation (optional)",
+          "sensor_zon_vandaag": "Sensor Solarprognose heute (optional)",
+          "sensor_zon_morgen": "Sensor Solarprognose morgen (optional)",
           "capaciteit": "Nutzbare Kapazität der Batterien",
           "marge": "Sicherheitsmarge",
           "hbc_prijzen": "Preise von HBC",
@@ -104,11 +108,20 @@
       },
       "batterijplan_advies_zon_na_goedkoop_laden": {
         "name": "Empfehlung Sonne nach günstigem Laden"
+      },
+      "batterijplan_zon_voor_hbc": {
+        "name": "Solarprognose für HBC (Ladeziel)"
+      },
+      "batterijplan_advies_hbc": {
+        "name": "Empfehlung HBC-Einstellungen"
       }
     },
     "switch": {
       "batterijplan_live": {
         "name": "Live (steuert HBC)"
+      },
+      "batterijplan_hbc_auto": {
+        "name": "HBC-Einstellungen automatisch anpassen"
       },
       "batterijplan_regel_laden": {
         "name": "Regel: zusätzlich aus dem Netz laden"
@@ -165,6 +178,12 @@
       },
       "batterijplan_sensor_ev": {
         "name": "Sensor Ladestation (optional)"
+      },
+      "batterijplan_sensor_zon_vandaag": {
+        "name": "Sensor Solarprognose heute (optional)"
+      },
+      "batterijplan_sensor_zon_morgen": {
+        "name": "Sensor Solarprognose morgen (optional)"
       }
     }
   }

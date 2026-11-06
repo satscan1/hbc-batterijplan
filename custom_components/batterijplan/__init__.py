@@ -96,8 +96,10 @@ async def _settings_changed(hass: HomeAssistant, entry: BatterijplanConfigEntry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry) -> bool:
-    entry.runtime_data.async_stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
+    entry.runtime_data.async_stop()  # timers and listeners go only when the platforms really unloaded
+    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry) -> None:

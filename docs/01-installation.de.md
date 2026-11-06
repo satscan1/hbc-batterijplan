@@ -28,10 +28,9 @@ Welche HBC-Modi du für günstig, normal und teuer eingestellt hast, spielt für
 
 ## Schritt 2 — Mit HACS installieren
 
-1. Öffne in HACS das Menü (⋮) oben rechts und wähle **Benutzerdefinierte Repositories**.
-2. Repository: `https://github.com/satscan1/hbc-batterijplan`, Kategorie **Integration**. Hinzufügen.
-3. Suche in HACS nach **HBC Batterijplan** und wähle **Herunterladen**.
-4. Starte Home Assistant neu.
+1. Suche in HACS nach **HBC Batterijplan** und wähle **Herunterladen** (sobald die Integration in der HACS-Standardliste steht).
+2. Noch nicht gelistet, oder du findest sie nicht? Füge sie als benutzerdefiniertes Repository hinzu: öffne in HACS das Menü (⋮) oben rechts und wähle **Benutzerdefinierte Repositories**. Repository: `https://github.com/satscan1/hbc-batterijplan`, Kategorie **Integration**. Hinzufügen, dann **HBC Batterijplan** suchen und **Herunterladen** wählen.
+3. Starte Home Assistant neu.
 
 ## Schritt 3 — Integration hinzufügen
 

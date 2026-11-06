@@ -28,10 +28,9 @@ Welke HBC-standen je nu hebt voor goedkoop, gewoon en duur maakt voor de install
 
 ## Stap 2 — Installeren met HACS
 
-1. Open in HACS het menu (⋮) rechtsboven en kies **Aangepaste repositories**.
-2. Repository: `https://github.com/satscan1/hbc-batterijplan`, categorie **Integratie**. Voeg toe.
-3. Zoek in HACS naar **HBC Batterijplan** en kies **Downloaden**.
-4. Herstart Home Assistant.
+1. Zoek in HACS naar **HBC Batterijplan** en kies **Downloaden** (zodra de integratie in de standaardlijst van HACS staat).
+2. Staat hij er nog niet, of zie je hem niet? Voeg hem dan toe als aangepaste repository: open in HACS het menu (⋮) rechtsboven en kies **Aangepaste repositories**. Repository: `https://github.com/satscan1/hbc-batterijplan`, categorie **Integratie**. Voeg toe, zoek dan **HBC Batterijplan** en kies **Downloaden**.
+3. Herstart Home Assistant.
 
 ## Stap 3 — Integratie toevoegen
 

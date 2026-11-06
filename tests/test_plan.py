@@ -20,6 +20,16 @@ def _inp(**kw):
     return plan.PlanInput(**d)
 
 
+def test_points_carry_normal_and_cautious_solar():
+    """Point = [t, price, kind, act HBC, charge HBC, act plan, charge plan, solar kW, cautious solar kW] (tooltip of the plan card)."""
+    half = (T0 + 90) // 1800 * 1800
+    r = plan.compute(_inp(pv={half: 2.0, half + 1800: 3.0}, pv10={half: 1.2, half + 1800: 2.5}))
+    assert all(len(pt) == 9 for pt in r["punten"])
+    first = r["punten"][0]
+    assert first[7] == 2.0 and first[8] == 1.2
+    assert plan.compute(_inp())["punten"][0][7:] == [0, 0]
+
+
 def test_unknown_soc_not_ok():
     assert plan.compute(_inp(soc=[-1]))["ok"] is False
 

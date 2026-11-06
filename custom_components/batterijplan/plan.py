@@ -25,7 +25,7 @@ from zoneinfo import ZoneInfo
 from typing import Any
 
 QUARTER = 900
-MIN_CHARGE_QUARTERS = 2  # grid charging in blocks of at least 30 minutes (one quarter was too short for HBC; Adrie 05-11-2026)
+MIN_CHARGE_QUARTERS = 2  # grid charging in blocks of at least 30 minutes (one quarter was too short for HBC)
 MAX_HORIZON = 129600  # 36 hours
 
 
@@ -62,6 +62,24 @@ class PlanInput:
     rule_feed_in: bool = True
     prev_l_run: int = 0  # quarters in a row just before now that charged from the grid
     engine: str = "dp"  # "dp" (default) or "heuristiek"
+    # replay of measured days (advisor.py); None / defaults = normal behaviour
+    use_q: dict[int, float] | None = None  # quarter start ts -> measured house use W (replaces profile / fallback)
+    solar_q: dict[int, float] | None = None  # quarter start ts -> measured solar kW (replaces pv10 / pv)
+    horizon: int = 0  # seconds of price quarters to plan (0 = MAX_HORIZON)
+    grid_step: float = 0.05  # kWh step of the dp level grid (coarser = faster, used by the replay)
+
+
+def stored_energy(soc: list[float], cutoff: list[float], nbat: int, cap: float) -> float:
+    """Usable charge in kWh above the HBC cut-off, averaged over all batteries; -1 when a SOC or the capacity is unknown."""
+    s_sum = 0.0
+    ok = 0
+    for i in range(nbat):
+        so = soc[i] if i < len(soc) else -1
+        cut = cutoff[i] if i < len(cutoff) else 10
+        if so >= 0:
+            s_sum += max(so - cut, 0) / max(100 - cut, 1)
+            ok += 1
+    return (s_sum / ok * cap) if (nbat > 0 and ok == nbat and cap > 1) else -1.0
 
 
 def _mark_start_ms(start: Any) -> float:
@@ -89,15 +107,7 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
     nbat = inp.battery_count
 
     # --- stored energy above HBC cut-off, averaged over all batteries ---
-    s_sum = 0.0
-    ok = 0
-    for i in range(nbat):
-        soc = inp.soc[i] if i < len(inp.soc) else -1
-        cut = inp.cutoff[i] if i < len(inp.cutoff) else 10
-        if soc >= 0:
-            s_sum += max(soc - cut, 0) / max(100 - cut, 1)
-            ok += 1
-    Eruw = (s_sum / ok * cap) if (nbat > 0 and ok == nbat and cap > 1) else -1.0
+    Eruw = stored_energy(inp.soc, inp.cutoff, nbat, cap)
     E = max(Eruw - marge, 0)
     top = max(cap - marge, 0)
     lw = sum(inp.charge_w[:nbat])
@@ -120,11 +130,15 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
         p = float(m.get("price") or 0)
         for j in range(nsub):
             t = int(st / 1000) + j * QUARTER
-            if T <= t < T + MAX_HORIZON:
+            if T <= t < T + (inp.horizon or MAX_HORIZON):
                 h = datetime.fromtimestamp(t, tz).hour  # local hour of day
                 w = prof[h] if (have_prof and isinstance(prof[h], (int, float))) else fallback
                 half = (t // 1800) * 1800
                 pv = inp.pv10.get(half, 0)
+                if inp.use_q is not None and t in inp.use_q:
+                    w = inp.use_q[t]
+                if inp.solar_q is not None:
+                    pv = inp.solar_q.get(t, 0.0)
                 d = mark == "high" or (p - mn) >= delta
                 dag = pv > 0 or (inp.bonus_from <= h < inp.bonus_to)
                 ex = p * 0.01 + inp.feed_in_fee
@@ -132,7 +146,8 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
                 Qraw.append(
                     dict(
                         t=t, p=p, m=mark, d=d, b=(p * fa + fb), e=ex,
-                        z=inp.pv.get(half, 0),
+                        z=inp.pv.get(half, 0) if inp.solar_q is None else pv,
+                        z10=pv,  # cautious estimate (the one the plan uses)
                         need=round((w / 1000 - pv) * 0.25, 3),
                     )
                 )
@@ -199,7 +214,7 @@ def _assemble(inp: PlanInput, P: dict[str, Any], engine: str, hl, hk, hk0, hs, b
         x = Q[i]
         # kind decides which HBC mode class steering sets: HBC's own marks first, then 'extra expensive'
         kind = 1 if x["m"] == "high" else (-1 if x["m"] == "low" else (2 if x["d"] else 0))
-        punten.append([x["t"], round(x["p"], 1), kind, hl[i][0], hl[i][1], bl[i][0], bl[i][1], round(x["z"], 2)])
+        punten.append([x["t"], round(x["p"], 1), kind, hl[i][0], hl[i][1], bl[i][0], bl[i][1], round(x["z"], 2), round(x["z10"], 2)])
     return {
         "ok": P["Eruw"] >= 0 and n > 0,
         "opbrengst": round(opbrengst, 2),
@@ -401,7 +416,8 @@ def evaluate_actions(inp: PlanInput, actions: list[str], P: dict[str, Any] | Non
 def _dp(P: dict[str, Any], inp: PlanInput):
     Q, n, top, laadq, ontlq = P["Q"], P["n"], P["top"], P["laadq"], P["ontlq"]
     marge, wear, pmin_b = P["marge"], P["wear"], P["pmin_b"]
-    ns = 0 if top <= 0.001 else min(max(int(-(-top // 0.05)), 1), 800)  # grid 0.05 kWh (coarser for huge batteries)
+    gs = max(inp.grid_step, 0.01)
+    ns = 0 if top <= 0.001 else min(max(int(-(-top // gs)), 1), 800)  # grid 0.05 kWh (coarser for huge batteries)
     step = top / ns if ns else 1.0
     grid = [i * step for i in range(ns + 1)]
     inv = 1.0 / step
@@ -487,6 +503,16 @@ def plan_dp(inp: PlanInput) -> dict[str, Any]:
     hl, hk, hk0, hs = _hbc_alone(P)
     bl, bk, bk0, bs, bw = _dp(P, inp)
     return _assemble(inp, P, "dp", hl, hk, hk0, hs, bl, bk, bk0, bs, bw)
+
+
+def plan_cost(inp: PlanInput) -> dict[str, float] | None:
+    """Only the dp plan's grid cost, end level and cheapest purchase price (for the HBC settings replay,
+    advisor.py): no HBC-alone simulation, no point list. None when the plan cannot run (no battery data)."""
+    P = _prepare(inp)
+    if P["Eruw"] < 0 or not P["n"]:
+        return None
+    _bl, bk, _bk0, bs, bw = _dp(P, inp)
+    return {"cost": bk, "end": bs, "pmin_b": P["pmin_b"], "wear": bw}
 
 
 def compute(inp: PlanInput) -> dict[str, Any]:

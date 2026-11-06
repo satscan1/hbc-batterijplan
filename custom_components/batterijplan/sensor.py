@@ -38,7 +38,8 @@ SENSORS: tuple[BpSensorDescription, ...] = (
                         native_unit_of_measurement="EUR", value=lambda d: d["saving"], attrs=lambda d: d["plan_attrs"]),
     BpSensorDescription(key="batterijplan_lading", translation_key="batterijplan_lading", icon="mdi:battery-clock-outline",
                         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR, device_class=SensorDeviceClass.ENERGY_STORAGE,
-                        state_class=SensorStateClass.MEASUREMENT, value=lambda d: d["charge"]),
+                        state_class=SensorStateClass.MEASUREMENT, value=lambda d: d["charge"],
+                        attrs=lambda d: {"lading_plan": d["plan_attrs"]["lading"]}),
     BpSensorDescription(key="batterijplan_prijs", translation_key="batterijplan_prijs", icon="mdi:currency-eur",
                         native_unit_of_measurement="ct/kWh", state_class=SensorStateClass.MEASUREMENT, value=lambda d: d["price"]),
     BpSensorDescription(key="batterijplan_huisverbruik", translation_key="batterijplan_huisverbruik", icon="mdi:home-lightning-bolt",
@@ -61,6 +62,14 @@ SENSORS: tuple[BpSensorDescription, ...] = (
                         icon="mdi:home-lightning-bolt-outline", native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                         state_class=SensorStateClass.MEASUREMENT, value=lambda d: d["advice"]["vandaag"],
                         attrs=lambda d: {k: v for k, v in d["advice"].items() if k != "vandaag"}),
+    BpSensorDescription(key="batterijplan_advies_hbc", translation_key="batterijplan_advies_hbc", icon="mdi:tune-vertical",
+                        value=lambda d: d["hbc_advice"]["status"],
+                        attrs=lambda d: {k: v for k, v in d["hbc_advice"].items() if k != "status"}),
+    BpSensorDescription(key="batterijplan_zon_voor_hbc", translation_key="batterijplan_zon_voor_hbc",
+                        icon="mdi:solar-power-variant", native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                        state_class=SensorStateClass.MEASUREMENT,
+                        value=lambda d: d["hbc_solar"]["value"],
+                        attrs=lambda d: {k: v for k, v in d["hbc_solar"].items() if k != "value"}),
     BpSensorDescription(key="batterijplan_meerwaarde_periode", translation_key="batterijplan_meerwaarde_periode", icon="mdi:calendar-check",
                         native_unit_of_measurement="EUR", device_class=SensorDeviceClass.MONETARY,
                         value=lambda d: d["period"], attrs=lambda d: {"periode_start": d["period_start"]}),
@@ -71,8 +80,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
     async_add_entities(BatterijplanSensor(entry.runtime_data, d) for d in SENSORS)
 
 
+# Attributes the cards only read live from the state machine; they stay in the state machine but are not written to
+# the recorder database (the large plan, the explanation, quarter timestamps and the figures that change with every
+# plan run). Nothing reads their history (history calls in the cards use no_attributes; statistics use the state).
+# Kept in the database on purpose: actie, hbc_actie, modus, hbc_strategie (the decisions), sinds, advice fields.
+UNRECORDED = frozenset({
+    "punten", "uitleg", "versie", "zon_vandaag", "zon_morgen", "zon_rest_vandaag",
+    "kosten_hbc", "kosten_plan", "lading", "start", "komend_kwartier",
+    "lading_plan", "eur_live", "eur_schaduw",
+    "kwartieren_vastgehouden", "kwartieren_teruggeleverd", "kwartieren_ontladen",
+})
+
+
 class BatterijplanSensor(BatterijplanEntity, SensorEntity):
     _platform_domain = "sensor"
+    _unrecorded_attributes = UNRECORDED
     entity_description: BpSensorDescription
 
     def __init__(self, coordinator, description: BpSensorDescription) -> None:

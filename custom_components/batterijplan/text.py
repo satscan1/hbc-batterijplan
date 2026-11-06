@@ -1,4 +1,4 @@
-"""Text settings: the sensors that give grid, solar, battery and EV charger power (entity ids)."""
+"""Text settings: the sensors that give grid, solar, battery and EV charger power and the solar forecast (entity ids)."""
 from __future__ import annotations
 
 from homeassistant.components.text import TextEntity
@@ -6,7 +6,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SENSOR_BATTERY, CONF_SENSOR_EV, CONF_SENSOR_NET, CONF_SENSOR_SOLAR
+from .const import CONF_SENSOR_BATTERY, CONF_SENSOR_EV, CONF_SENSOR_NET, CONF_SENSOR_SOLAR, CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW
 from .coordinator import BatterijplanConfigEntry
 from .entity import BatterijplanEntity
 
@@ -15,6 +15,8 @@ TEXTS = (
     ("batterijplan_sensor_zon", CONF_SENSOR_SOLAR, "mdi:solar-power"),
     ("batterijplan_sensor_batterij", CONF_SENSOR_BATTERY, "mdi:home-battery"),
     ("batterijplan_sensor_ev", CONF_SENSOR_EV, "mdi:ev-station"),
+    ("batterijplan_sensor_zon_vandaag", CONF_SOLAR_TODAY, "mdi:weather-sunny"),
+    ("batterijplan_sensor_zon_morgen", CONF_SOLAR_TOMORROW, "mdi:weather-sunset-up"),
 )
 
 

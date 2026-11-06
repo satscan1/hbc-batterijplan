@@ -9,14 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import SWITCH_LIVE, SWITCH_RULES
+from .const import SWITCH_HBC_AUTO, SWITCH_LIVE, SWITCH_RULES
 from .coordinator import BatterijplanConfigEntry
 from .entity import BatterijplanEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback) -> None:
     c = entry.runtime_data
-    async_add_entities([LiveSwitch(c), *(RuleSwitch(c, rule, key) for rule, key in SWITCH_RULES.items())])
+    async_add_entities([LiveSwitch(c), HbcAutoSwitch(c), *(RuleSwitch(c, rule, key) for rule, key in SWITCH_RULES.items())])
 
 
 class LiveSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
@@ -41,6 +41,32 @@ class LiveSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.async_set_live(False)
+
+
+class HbcAutoSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
+    """Auto-adjust the HBC settings (cheapest hours, expensive hours, solar reserved for house) to the advice. Default off."""
+
+    _platform_domain = "switch"
+    _attr_icon = "mdi:tune-vertical"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, SWITCH_HBC_AUTO)
+
+    @property
+    def is_on(self) -> bool:
+        return self.coordinator.hbc_auto
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is not None and last.state == STATE_ON and not self.coordinator.hbc_auto:
+            self.coordinator.hbc_auto = True  # remembered own values are loaded from storage; nothing is changed at start
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_hbc_auto(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_hbc_auto(False)
 
 
 class RuleSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):

@@ -12,7 +12,7 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE,
     CONF_MARGIN, CONF_PRICES, CONF_SENSOR_BATTERY, CONF_SENSOR_EV, CONF_SENSOR_NET, CONF_SENSOR_SOLAR,
-    CONF_STORAGE_FEE, CONF_VAT, DEFAULTS, DOMAIN, PRICES_ALL_IN, PRICES_RAW,
+    CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW, CONF_STORAGE_FEE, CONF_VAT, DEFAULTS, DOMAIN, PRICES_ALL_IN, PRICES_RAW,
 )
 
 SENSOR = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor"))
@@ -34,6 +34,8 @@ def _schema(values: dict[str, Any], expert: bool) -> vol.Schema:
         vol.Required(CONF_SENSOR_BATTERY, description=sug(CONF_SENSOR_BATTERY)): SENSOR,
         vol.Optional(CONF_SENSOR_SOLAR, description=sug(CONF_SENSOR_SOLAR)): SENSOR,
         vol.Optional(CONF_SENSOR_EV, description=sug(CONF_SENSOR_EV)): SENSOR,
+        vol.Optional(CONF_SOLAR_TODAY, description=sug(CONF_SOLAR_TODAY)): SENSOR,
+        vol.Optional(CONF_SOLAR_TOMORROW, description=sug(CONF_SOLAR_TOMORROW)): SENSOR,
         vol.Required(CONF_CAPACITY, description=sug(CONF_CAPACITY)): _number(1, 40, 0.1, "kWh"),
         vol.Required(CONF_MARGIN, description=sug(CONF_MARGIN)): _number(0, 3, 0.1, "kWh"),
         vol.Required(CONF_PRICES, description=sug(CONF_PRICES)): selector.SelectSelector(selector.SelectSelectorConfig(
@@ -57,7 +59,7 @@ def _clean(user_input: dict[str, Any]) -> dict[str, Any]:
     for k in (CONF_BONUS_FROM, CONF_BONUS_TO):
         if k in out:
             out[k] = int(out[k])
-    for k in (CONF_SENSOR_SOLAR, CONF_SENSOR_EV, CONF_CONTRACT_START):
+    for k in (CONF_SENSOR_SOLAR, CONF_SENSOR_EV, CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW, CONF_CONTRACT_START):
         out.setdefault(k, "")
     return out
 

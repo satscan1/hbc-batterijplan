@@ -132,3 +132,32 @@ It only counts when **Live** is on and HBC is on **Dynamic**. Otherwise the quar
 - **A cheap afternoon that HBC does not mark as cheap** (because of the limit on hours per day or the minimum price difference in HBC) does not count as topping up.
 - **Difference between weekdays and weekends** in usage.
 - **Charging the battery from the grid in a regular quarter in HBC mode *Charge PV*:** HBC offers no mode for it (see [the table](#what-batterijplan-steers-in-hbc)).
+
+## Solar forecast for HBC (charge target)
+
+`sensor.batterijplan_zon_voor_hbc` makes HBC stop grid charging at the level the plan wants. Value = reserve + max energy - target (kWh). Target = planned charge (kWh above the discharge cut-off) at the end of the coming consecutive grid-charge block. A target at or above max energy gives a full charge; with no grid-charge block in the plan the target is the energy stored now.
+
+- Works only with HBC charge goal *solar forecast*, and only when you set `input_text.house_battery_strategy_solar_forecast_entity_id` to this sensor yourself. Batterijplan never changes HBC.
+- Every plan run (30 s before each quarter) updates the sensor; the HBC template reads it at :00, :15, :30 and :45.
+- HBC has no hysteresis on this goal: the battery may switch on and off around the target.
+
+### Pass-through and Solcast names (rc5)
+
+- **Pass-through.** When Live is off, HBC is not on Dynamic, the rule *charge* is off, there is no plan, or reserve and maximum are unknown, the sensor passes the real solar forecast on 1:1, so HBC does exactly what it did without Batterijplan. The source is the sensor HBC pointed to before (remembered whenever the pointer is not this sensor), otherwise Solcast *remaining today*. The attributes `modus`, `reden` and `bron` show what happens.
+- **Solcast names.** Settings has two optional fields, *Solar forecast today* and *tomorrow*. A filled field always wins. Otherwise Batterijplan looks itself: first Solcast by platform (language-independent), then the known names in the order English, Dutch, German. If nothing is found, the report says *not found* with the tip to fill the fields.
+
+### Advice and auto-adjust for the HBC settings (rc6)
+
+Batterijplan can advise on three HBC settings: *cheapest hrs*, *expensive hrs* and *Solar reserved for house*. The card **Advice for HBC** shows for each one the current value, the advice, a one-line reason and an orange dot when they differ (also when auto-adjust is off).
+
+**What is kept.** Per quarter, for 7 days: the bare HBC price, your measured house use and your measured solar. It is stored compactly in its own file and survives restarts. Until 7 full days are there the card says *Still measuring: day x of 7* and nothing changes.
+
+**How the advice is made.** Once a night (about 03:10) Batterijplan plays the last 7 days again with its own planner (Live on, current rules). For every candidate pair of *cheapest hrs* and *expensive hrs* it marks the quarters exactly the way HBC does (per calendar day, cheapest against most expensive, as long as the spread is at least the threshold delta, capped by the number of hours) and adds up the grid cost. Every replayed day starts with an empty battery, and charge that is left at the end of the day is valued at that day's cheapest purchase price, so it does not count as a loss. The pair with the lowest cost wins. When two results are practically equal (less than 1 cent over the 7 days) the value closest to your current setting wins. The candidates are whole hours up to 12 (or the maximum of the helper), always inside the helper's limits. The calculation takes a few seconds of processor time, once a day. *Solar reserved for house* is the 7-day average of the existing advice, rounded to 0.5 kWh.
+
+**Auto-adjust.** The switch *Auto-adjust HBC settings* is **off** by default. When you turn it on, Batterijplan first remembers your own three values and then sets a setting to the advice, only when the difference is at least 1 hour (cheapest, expensive) or 0.5 kWh (solar reserved). Turning it off puts your own values back exactly. Every change is written to the logbook. Batterijplan only changes these three settings; it never touches HBC's flows or code.
+
+### Live charge level and lighter recorder load (rc6)
+
+*In the battery now* is recalculated, with the same formula as the plan, whenever a battery charge or a discharge cut-off changes (at most once per 5 seconds, without a new plan run). The value lives in the small sensor `sensor.batterijplan_lading`: the state is the live charge in kWh, rounded to 0.1 kWh, so it only writes when it changes by that much. The attribute `lading_plan` holds the planned charge. The big sensor `sensor.batterijplan` and the chart keep the plan values.
+
+The large or constantly changing attributes of the sensors (the plan points, the explanation, the Solcast names, the quarter times and the live figures) are still available to the cards, but are no longer written to the recorder database. The decisions (action, HBC action, mode, HBC strategy) stay recorded. On a typical system this takes the attribute data of the main sensor from about 690 kB to a few kB per day.

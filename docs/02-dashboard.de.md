@@ -12,7 +12,7 @@
 <p align="center"><img src="images/overview.de.png" width="95%" alt="Batterijplan-Dashboard"></p>
 
 1. **Live**: an = Batterijplan steuert HBC. Aus = Schattenmodus: es rechnet mit, steuert aber nichts.
-2. **Knöpfe**: Ertrag, Bericht, Empfehlung HBC, Einstellungen und Sensoren. Jeder Knopf öffnet ein Fenster.
+2. **Knöpfe**: Ertrag, Bericht, Empfehlung HBC, Einstellungen und Sensoren. Jeder Knopf öffnet ein Fenster. Der orange Punkt auf **Empfehlung HBC** bedeutet, dass *cheapest hrs*, *expensive hrs* oder *Solar reserved for house* von der Empfehlung abweicht (um mindestens 1 Stunde oder 0,5 kWh); im Fenster steht auch der Schalter *HBC-Einstellungen automatisch anpassen*.
 3. **Statuskarte**: Modus, Verbrauch lernen, HBC-Strategie, nächste Viertelstunde und Empfehlung Hausverbrauch. Das (i) hinter jeder Zeile erklärt sie.
 4. **Briefing und Plan**: was jetzt in der Batterie ist, was der Plan in der nächsten Viertelstunde tut, und der Unterschied zu HBC allein.
 5. **Regeln**: die vier Regeln, jede mit eigenem Ein/Aus-Schalter.
@@ -63,6 +63,7 @@ Oben das Logo, der Name und die Version, mit der Frage, die Batterijplan beantwo
 ## Das Briefing
 
 - Oben drei Zahlen: **Reiner Preis jetzt**, **Erwartete Ersparnis gegenüber HBC allein** und **Jetzt in der Batterie**.
+- *Jetzt in der Batterie* folgt der Batterie live (Schritte von 0,1 kWh); der Plan und das Diagramm behalten die geplante Ladung.
 - Darunter **Wo Batterijplan nachsteuert**: die Blöcke in Worten, in denen der Plan etwas anderes tut als HBC, zum Beispiel "Di 08:30–10:30 für später halten". Nichts zu tun: HBC macht sein Übliches.
 - Rechts die **Regeln**: die vier Regeln, jede mit eigenem Ein/Aus-Schalter. Siehe [03 · So funktioniert es](03-how-it-works.de.md#die-regeln).
 - Der Plan schaut höchstens 36 Stunden voraus. Morgen erscheint, sobald HBC die Preise von morgen hat (meist gegen 13:00 Uhr).
@@ -77,7 +78,7 @@ Die Grafik steht über die volle Breite und zeigt HBC allein und Batterijplan ne
 - Die Linie *Jetzt* trennt Vergangenheit und Zukunft. Links davon ist es leicht abgedunkelt.
 - Die **Datumsauswahl** steht rechts in der Kopfzeile. Wähle *Jetzt* oder einen anderen Tag und blättere mit ‹ ›.
 - Der Kopf zeigt die Zahlen: die Fakten, die Ersparnis und die kWh.
-- Fahre mit der Maus über die Grafik für den Preis, was die Batterie tut und die Ladung in dieser Viertelstunde.
+- Fahre mit der Maus über die Grafik (auf dem Handy: tippe darauf). Eine senkrechte Linie folgt dem Zeiger, und ein kleines Feld zeigt für diese Viertelstunde: die Uhrzeit, den reinen Preis (ct), die erwartete Sonne in kW (die normale Schätzung und die vorsichtige Schätzung, die der Plan verwendet), die Ladung von HBC und von Batterijplan (kWh) und was HBC und Batterijplan tun. Nur die Linie und das Feld bewegen sich, die Karte wird nicht neu gezeichnet. Auf dem Handy verschwindet das Feld, wenn du woanders tippst.
 
 **Der Unterschied zu HBC allein** steht in Euro. Mehr als 0 zeigt **+ 0,35 €** in grün, genau 0 zeigt **0,00 €** in grau, weniger als 0 zeigt **– 0,02 €** in orange. Dieselbe Regel gilt für die Beträge in *Was bringt es*.
 
@@ -104,6 +105,8 @@ Drei Reiter, mit eigenen Eingabefeldern und einem (i) neben jedem Feld:
 | **Basis** — einstellen und vergessen | Nutzbare Kapazität, Sicherheitsmarge, *Preise von HBC* (*rein* oder *all-in*), Aufschlag und Vertragsbeginn. |
 | **Regeln** | Die vier Regeln mit ihrem Ein/Aus-Schalter. |
 | **Experte** — nur ändern, wenn du weißt warum | MwSt., Einspeise-Aufschlag, Tages-Einspeisebonus und die Stunden für diesen Bonus. |
+
+Hier liegt auch der Schalter *HBC-Einstellungen automatisch* (standardmäßig aus): Er setzt die drei HBC-Einstellungen auf die Empfehlung und stellt deine eigenen Werte wieder her, wenn du ihn ausschaltest. Die zwei Felder für die Solarprognose-Sensoren liegen im Fenster *Sensoren*.
 
 Die Erklärung zu jedem Feld steht auch in [01 · Installation](01-installation.de.md#schritt-3--integration-hinzufügen). Alle Einstellungen werden von der Integration gespeichert: siehe [04 · Wartung](04-maintenance.de.md#backup).
 

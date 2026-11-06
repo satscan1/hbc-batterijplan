@@ -132,3 +132,32 @@ Er zählt nur, wenn **Live** an ist und HBC auf **Dynamic** steht. Sonst geht di
 - **Ein günstiger Nachmittag, den HBC nicht als günstig markiert** (wegen der Grenze für Stunden pro Tag oder des Mindestpreisunterschieds in HBC), zählt nicht als Nachladen.
 - **Unterschied zwischen Werktagen und Wochenende** beim Verbrauch.
 - **Die Batterie in einer normalen Viertelstunde im HBC-Modus *Charge PV* aus dem Netz laden:** Dafür bietet HBC keinen Modus (siehe [die Tabelle](#was-batterijplan-in-hbc-steuert)).
+
+## Solarprognose für HBC (Ladeziel)
+
+`sensor.batterijplan_zon_voor_hbc` lässt HBC das Netzladen auf dem vom Plan gewünschten Stand beenden. Wert = Reserve + maximale Energie − Ziel (kWh). Ziel = geplante Ladung (kWh über der Entlade-Abschaltung) am Ende des kommenden zusammenhängenden Netzladeblocks. Ein Ziel auf oder über der maximalen Energie ergibt volles Laden; ohne Netzladeblock im Plan ist das Ziel die jetzt gespeicherte Energie.
+
+- Funktioniert nur mit dem HBC-Ladeziel *solar forecast* und nur, wenn du `input_text.house_battery_strategy_solar_forecast_entity_id` selbst auf diesen Sensor setzt. Batterijplan ändert HBC nie.
+- Jeder Planlauf (30 s vor jedem Viertel) aktualisiert den Sensor; das HBC-Template liest ihn um :00, :15, :30 und :45.
+- HBC hat für dieses Ziel keine Hysterese: die Batterie kann um das Ziel herum ein- und ausschalten.
+
+### Durchreichen und Solcast-Namen (rc5)
+
+- **Durchreichen.** Ist Live aus, steht HBC nicht auf Dynamic, ist die Regel *Laden* aus, gibt es keinen Plan oder sind Reserve und Maximum unbekannt, reicht der Sensor die echte Solarprognose 1:1 weiter. HBC verhält sich dann genau wie ohne Batterijplan. Die Quelle ist der Sensor, auf den HBC vorher zeigte (gemerkt, sobald der Zeiger nicht auf diesem Sensor steht), sonst Solcast *verbleibend heute*. Die Attribute `modus`, `reden` und `bron` zeigen, was passiert.
+- **Solcast-Namen.** In den Einstellungen gibt es zwei optionale Felder, *Solarprognose heute* und *morgen*. Ein ausgefülltes Feld gewinnt immer. Sonst sucht Batterijplan selbst: zuerst Solcast über die Plattform (sprachunabhängig), dann die bekannten Namen in der Reihenfolge Englisch, Niederländisch, Deutsch. Wird nichts gefunden, meldet der Bericht *nicht gefunden* mit dem Tipp, die Felder auszufüllen.
+
+### Empfehlung und automatisches Anpassen der HBC-Einstellungen (rc6)
+
+Batterijplan kann zu drei HBC-Einstellungen eine Empfehlung geben: *cheapest hrs*, *expensive hrs* und *Solar reserved for house*. Die Karte **Empfehlung für HBC** zeigt je Einstellung den aktuellen Wert, die Empfehlung, eine Begründung in einer Zeile und einen orangen Punkt, wenn sie sich unterscheiden (auch bei ausgeschaltetem automatischem Anpassen).
+
+**Was gespeichert wird.** Pro Viertelstunde, 7 Tage lang: der reine HBC-Preis, dein gemessener Hausverbrauch und deine gemessene Solarerzeugung. Das liegt kompakt in einer eigenen Datei und bleibt nach einem Neustart erhalten. Solange keine 7 vollen Tage vorliegen, steht dort *Noch am Messen: Tag x von 7* und nichts ändert sich.
+
+**Wie die Empfehlung entsteht.** Einmal pro Nacht (gegen 03:10) spielt Batterijplan die letzten 7 Tage mit seinem eigenen Planer noch einmal ab (Live an, aktuelle Regeln). Für jedes Kandidatenpaar aus *cheapest hrs* und *expensive hrs* markiert es die Viertelstunden genau wie HBC (pro Kalendertag, günstigste gegen teuerste, solange der Abstand mindestens die HBC-Schwelle beträgt, begrenzt durch die Stundenzahl) und summiert die Netzkosten. Jeder nachgespielte Tag beginnt mit leerer Batterie, und Ladung, die am Tagesende übrig ist, wird mit dem günstigsten Einkaufspreis dieses Tages bewertet, zählt also nicht als Verlust. Das Paar mit den niedrigsten Kosten gewinnt. Sind zwei Ergebnisse praktisch gleich (weniger als 1 Cent über die 7 Tage), gewinnt der Wert, der deiner aktuellen Einstellung am nächsten liegt. Die Kandidaten sind ganze Stunden bis 12 (oder das Maximum des Helfers), immer innerhalb der Grenzen des Helfers. Die Berechnung braucht wenige Sekunden Rechenzeit, einmal am Tag. *Solar reserved for house* ist der Durchschnitt der bestehenden 7-Tage-Empfehlung, auf 0,5 kWh gerundet.
+
+**Automatisch anpassen.** Der Schalter *HBC-Einstellungen automatisch anpassen* ist standardmäßig **aus**. Schaltest du ihn ein, merkt sich Batterijplan zuerst deine eigenen drei Werte und setzt dann eine Einstellung auf die Empfehlung, nur wenn der Unterschied mindestens 1 Stunde (cheapest, expensive) oder 0,5 kWh (solar reserved) beträgt. Beim Ausschalten kommen deine eigenen Werte genau zurück. Jede Änderung steht im Logbuch. Batterijplan ändert nur diese drei Einstellungen; an den Flows oder am Code von HBC ändert es nie etwas.
+
+### Live-Ladestand und geringere Recorder-Last (rc6)
+
+*Jetzt in der Batterie* wird mit derselben Formel wie der Plan neu berechnet, sobald sich ein Batterieladestand oder eine Entladegrenze ändert (höchstens alle 5 Sekunden, ohne neue Planberechnung). Der Wert liegt im kleinen Sensor `sensor.batterijplan_lading`: Der Zustand ist die Live-Ladung in kWh, auf 0,1 kWh gerundet, er schreibt also nur, wenn er sich um so viel ändert. Das Attribut `lading_plan` enthält die geplante Ladung. Der große Sensor `sensor.batterijplan` und das Diagramm behalten die Planwerte.
+
+Die großen oder ständig wechselnden Attribute der Sensoren (die Planpunkte, die Erklärung, die Solcast-Namen, die Viertelstundenzeiten und die Live-Zahlen) stehen den Karten weiter zur Verfügung, werden aber nicht mehr in die Recorder-Datenbank geschrieben. Die Entscheidungen (Aktion, HBC-Aktion, Modus, HBC-Strategie) bleiben gespeichert. Auf einem üblichen System sinkt die Attributdatenmenge des Hauptsensors damit von etwa 690 kB auf wenige kB pro Tag.

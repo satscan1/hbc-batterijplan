@@ -94,9 +94,12 @@ recorder:
       - sensor.batterijplan_lading
       - input_select.house_battery_strategy_dynamic_expensive
       - switch.batterijplan_live
+      - sensor.batterijplan_advies_hbc
 ```
 
 If you do not use an include list (the default), you do not need to do anything.
+
+Batterijplan no longer writes its large plan details (the points, the explanation and similar) to the database. The entities in the list above stay the same.
 
 ## The first 7 days: watch and learn
 

@@ -132,3 +132,32 @@ Hij telt alleen als **Live** aan staat en HBC op **Dynamic** staat. Anders gaat 
 - **Een goedkope middag die HBC niet als goedkoop markeert** (door de grens op uren per dag of het minimale prijsverschil in HBC) telt niet als bijladen.
 - **Verschil tussen weekdagen en weekend** in verbruik.
 - **De batterij van het net laden in een gewoon kwartier in HBC-stand *Charge PV*:** daar biedt HBC geen stand voor (zie [de tabel](#wat-batterijplan-in-hbc-stuurt)).
+
+## Zonvoorspelling voor HBC (laaddoel)
+
+`sensor.batterijplan_zon_voor_hbc` laat HBC stoppen met laden van het net op het niveau dat het plan wil. Waarde = reserve + maximale energie − doel (kWh). Doel = geplande lading (kWh boven de ontlaad-afkap) aan het einde van het komende aaneengesloten blok netladen. Een doel op of boven de maximale energie geeft vol laden; zonder netlaadblok in het plan is het doel de nu opgeslagen energie.
+
+- Werkt alleen met HBC-laaddoel *solar forecast*, en alleen als je zelf `input_text.house_battery_strategy_solar_forecast_entity_id` op deze sensor zet. Batterijplan wijzigt HBC nooit.
+- Elke plan-run (30 s vóór elk kwartier) werkt de sensor bij; de HBC-template leest hem op :00, :15, :30 en :45.
+- HBC heeft op dit doel geen hysterese: de batterij kan rond het doel aan- en uitschakelen.
+
+### Pass-through en Solcast-namen (rc5)
+
+- **Doorgifte.** Staat Live uit, staat HBC niet op Dynamic, staat de regel *laden* uit, is er geen plan, of zijn reserve en maximum onbekend, dan geeft de sensor de echte zonvoorspelling 1:1 door. HBC doet dan precies wat het zonder Batterijplan deed. De bron is de sensor waar HBC eerder naar wees (onthouden zodra de aanwijzer niet op deze sensor staat), anders Solcast *resterend vandaag*. De attributen `modus`, `reden` en `bron` laten zien wat er gebeurt.
+- **Solcast-namen.** In Instellingen staan twee optionele velden, *Zonvoorspelling vandaag* en *morgen*. Een ingevuld veld wint altijd. Anders zoekt Batterijplan zelf: eerst Solcast op platform (taalonafhankelijk), dan de bekende namen in de volgorde Engels, Nederlands, Duits. Staat er niets, dan meldt het rapport *niet gevonden* met de tip om de velden te vullen.
+
+### Advies en automatisch aanpassen van de HBC-instellingen (rc6)
+
+Batterijplan kan advies geven over drie HBC-instellingen: *cheapest hrs*, *expensive hrs* en *Solar reserved for house*. De kaart **Advies voor HBC** toont per instelling de huidige waarde, het advies, een reden in één regel en een oranje stip als ze verschillen (ook als automatisch aanpassen uit staat).
+
+**Wat wordt bewaard.** Per kwartier, 7 dagen lang: de kale HBC-prijs, je gemeten huisverbruik en je gemeten zon. Dat staat compact in een eigen bestand en blijft staan bij een herstart. Zolang er geen 7 volle dagen zijn, staat er *Nog aan het meten: dag x van 7* en verandert er niets.
+
+**Hoe het advies ontstaat.** Eén keer per nacht (rond 03:10) speelt Batterijplan de laatste 7 dagen opnieuw af met zijn eigen planner (Live aan, huidige regels). Voor elk kandidaatpaar van *cheapest hrs* en *expensive hrs* markeert het de kwartieren precies zoals HBC dat doet (per kalenderdag, goedkoopste tegen duurste, zolang het verschil minstens de drempel van HBC is, begrensd door het aantal uren) en telt de netkosten op. Elke nagespeelde dag begint met een lege batterij, en lading die aan het eind van de dag over is, wordt gewaardeerd tegen de goedkoopste inkoopprijs van die dag, zodat die niet als verlies telt. Het paar met de laagste kosten wint. Zijn twee uitkomsten praktisch gelijk (minder dan 1 cent over de 7 dagen), dan wint de waarde die het dichtst bij je huidige instelling ligt. De kandidaten zijn hele uren tot 12 (of het maximum van de helper), altijd binnen de grenzen van de helper. De berekening kost een paar seconden rekentijd, één keer per dag. *Solar reserved for house* is het gemiddelde van de bestaande 7-daagse advieswaarde, afgerond op 0,5 kWh.
+
+**Automatisch aanpassen.** De schakelaar *HBC-instellingen automatisch* staat standaard **uit**. Zet je hem aan, dan onthoudt Batterijplan eerst je eigen drie waarden en zet daarna een instelling op het advies, alleen als het verschil minstens 1 uur (cheapest, expensive) of 0,5 kWh (solar reserved) is. Zet je hem uit, dan komen je eigen waarden exact terug. Elke wijziging komt in het logboek. Batterijplan past alleen deze drie instellingen aan; aan de flows of code van HBC komt het nooit.
+
+### Live lading en lichtere recorderbelasting (rc6)
+
+*In de batterij nu* wordt met dezelfde formule als het plan opnieuw berekend zodra een batterijlading of een ontlaadgrens verandert (hoogstens eens per 5 seconden, zonder nieuwe planberekening). De waarde staat in de kleine sensor `sensor.batterijplan_lading`: de state is de live lading in kWh, afgerond op 0,1 kWh, dus hij schrijft alleen als hij zoveel verandert. Het attribuut `lading_plan` bevat de geplande lading. De grote sensor `sensor.batterijplan` en de grafiek houden de planwaarden.
+
+De grote of steeds veranderende attributen van de sensoren (de planpunten, de uitleg, de Solcast-namen, de kwartiertijden en de live cijfers) blijven beschikbaar voor de kaarten, maar worden niet meer in de recorderdatabase geschreven. De beslissingen (actie, HBC-actie, modus, HBC-strategie) blijven wel bewaard. Op een gewoon systeem gaat de attribuutdata van de hoofdsensor daarmee van ongeveer 690 kB naar enkele kB per dag.

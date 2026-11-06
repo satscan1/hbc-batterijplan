@@ -12,7 +12,7 @@
 <p align="center"><img src="images/overview.en.png" width="95%" alt="Batterijplan dashboard"></p>
 
 1. **Live**: on = Batterijplan steers HBC. Off = shadow mode: it calculates along, but steers nothing.
-2. **Buttons**: Earnings, Report, Advice HBC, Settings and Sensors. Each button opens a window.
+2. **Buttons**: Earnings, Report, Advice HBC, Settings and Sensors. Each button opens a window. The orange dot on **Advice HBC** means that *cheapest hrs*, *expensive hrs* or *Solar reserved for house* differs from the advice (by at least 1 hour or 0.5 kWh); the window also has the switch *Auto-adjust HBC settings*.
 3. **Status card**: mode, learning usage, HBC strategy, next quarter and advice house use. The (i) behind each line explains it.
 4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference with HBC alone.
 5. **Rules**: the four rules, each with its own on/off switch.
@@ -63,6 +63,7 @@ At the top the logo, the name and the version, with the question Batterijplan an
 ## The briefing
 
 - At the top three numbers: **Bare price now**, **Expected saving compared to HBC alone** and **In the battery now**.
+- *In the battery now* follows the battery live (steps of 0.1 kWh); the plan and the chart keep the planned charge.
 - Then **Where Batterijplan steers**: the blocks in words in which the plan does something different from HBC, for example "Tue 08:30–10:30 holding for later". Nothing to do: HBC does its usual thing.
 - On the right the **Rules**: the four rules, each with its own on/off switch. See [03 · How it works](03-how-it-works.md#the-rules).
 - The plan covers the next 36 hours at most. Tomorrow appears as soon as HBC has tomorrow's prices (usually around 13:00).
@@ -77,7 +78,7 @@ The chart is across the full width and shows HBC alone and Batterijplan side by 
 - The line *Now* splits the past from the future. Left of it is slightly dimmed.
 - The **date picker** is on the right in the header. Choose *Now* or another day and browse with ‹ ›.
 - The header shows the numbers: the facts, the saving and the kWh.
-- Hover over the chart for the price, what the battery does and the charge in that quarter.
+- Hover over the chart (on a phone: tap it). A vertical line follows your pointer and a small box shows for that quarter: the time, the bare price (ct), the expected solar in kW (the normal estimate and the cautious estimate the plan uses), the charge of HBC and of Batterijplan (kWh), and what HBC and Batterijplan do. Only the line and the box move; the card is not redrawn. On a phone the box goes away when you tap elsewhere.
 
 **The difference with HBC alone** is shown in euros. More than 0 shows as **+ € 0.35** in green, exactly 0 as **€ 0.00** in grey, less than 0 as **– € 0.02** in orange. The same rule applies to the amounts in *What does it earn*.
 
@@ -104,6 +105,8 @@ Three tabs, with their own input fields and an (i) next to every field:
 | **Basic** — set and forget | Usable capacity, safety margin, *Prices from HBC* (*raw* or *all-in*), supplier mark-up and contract start date. |
 | **Rules** | The four rules with their on/off switch. |
 | **Expert** — only change if you know why | VAT, feed-in add-on, daytime feed-in bonus and the hours for that bonus. |
+
+The switch *Auto-adjust HBC settings* (off by default) is here too: it sets the three HBC settings to the advice and puts your own values back when you turn it off. The two fields for the solar forecast sensors are in the *Sensors* window.
 
 The explanation for each field is also in [01 · Installation](01-installation.md#step-3--add-the-integration). All settings are kept by the integration: see [04 · Maintenance](04-maintenance.md#back-up).
 

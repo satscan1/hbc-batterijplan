@@ -94,9 +94,12 @@ recorder:
       - sensor.batterijplan_lading
       - input_select.house_battery_strategy_dynamic_expensive
       - switch.batterijplan_live
+      - sensor.batterijplan_advies_hbc
 ```
 
 Nutzt du keine Include-Liste (Standard), musst du nichts tun.
+
+Batterijplan schreibt seine großen Plandetails (die Punkte, die Erklärung und Ähnliches) nicht mehr in die Datenbank. Die Entitäten in der Liste oben bleiben gleich.
 
 ## Die ersten 7 Tage: beobachten und lernen
 

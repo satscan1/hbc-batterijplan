@@ -136,6 +136,14 @@ views:
                 Extra percentage you receive during the day (with sun, or between 08:00 and 17:00) on top of the feed-in payment, when that is positive.
 
                 Example: 10 % means the payment is 10 % higher in the daytime. If your contract has no bonus, set this to 0.
+            - entity: switch.batterijplan_hbc_auto
+              name: Auto-adjust HBC settings
+              info: |-
+                **Off (default):** Batterijplan changes nothing in HBC. Under HBC advice you only see the advice.
+
+                **On:** Batterijplan sets *cheapest hrs*, *expensive hrs* and *Solar reserved for house* in HBC to the advice itself, only when the difference is at least 1 hour or 0.5 kWh. Your own values are remembered first and come back exactly when you switch this off again. Every change is in the logbook.
+
+                The first advice comes after 7 full days of measuring.
       - naam: Sensors
         melding: sensoren
         kaarten:
@@ -204,6 +212,22 @@ views:
             - ev
             - charge
             pick_hint: Choose the charging power of your car charger.
+          - entity: text.batterijplan_sensor_zon_vandaag
+            name: Solar forecast today (optional)
+            info: Sensor with the Solcast forecast for today (kWh). May stay empty. Batterijplan finds Solcast itself (by platform, then by known names).
+            pick: true
+            suggest:
+            - forecast
+            - solcast
+            pick_hint: Pick the sensor with the solar forecast for today.
+          - entity: text.batterijplan_sensor_zon_morgen
+            name: Solar forecast tomorrow (optional)
+            info: Sensor with the Solcast forecast for tomorrow (kWh). May stay empty. Batterijplan finds Solcast itself (by platform, then by known names).
+            pick: true
+            suggest:
+            - forecast
+            - solcast
+            pick_hint: Pick the sensor with the solar forecast for tomorrow.
           - type: section
             name: Check
           - entity: sensor.batterijplan_huisverbruik

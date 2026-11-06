@@ -136,6 +136,14 @@ views:
                 Zusätzlicher Prozentsatz, den du tagsüber (bei Sonne oder zwischen 08:00 und 17:00 Uhr) auf die Einspeisevergütung erhältst, wenn diese positiv ist.
 
                 Beispiel: 10 % bedeutet, dass die Vergütung tagsüber 10 % höher ist. Hat dein Vertrag keinen Bonus, setze dies auf 0.
+            - entity: switch.batterijplan_hbc_auto
+              name: HBC-Einstellungen automatisch anpassen
+              info: |-
+                **Aus (Standard):** Batterijplan ändert nichts in HBC. Unter HBC-Empfehlung siehst du nur die Empfehlung.
+
+                **An:** Batterijplan stellt *cheapest hrs*, *expensive hrs* und *Solar reserved for house* in HBC selbst auf die Empfehlung ein, nur wenn der Unterschied mindestens 1 Stunde oder 0,5 kWh beträgt. Deine eigenen Werte werden zuerst gemerkt und kommen beim Ausschalten genau zurück. Jede Änderung steht im Logbuch.
+
+                Die erste Empfehlung kommt nach 7 vollen Messtagen.
       - naam: Sensoren
         melding: sensoren
         kaarten:
@@ -204,6 +212,24 @@ views:
             - ev
             - charge
             pick_hint: Wähle die Ladeleistung deiner Wallbox.
+          - entity: text.batterijplan_sensor_zon_vandaag
+            name: Solarprognose heute (optional)
+            info: Sensor mit der Solcast-Prognose für heute (kWh). Darf leer bleiben. Batterijplan findet Solcast selbst (über die Plattform, dann über bekannte Namen).
+            pick: true
+            suggest:
+            - prognose
+            - forecast
+            - solcast
+            pick_hint: Wähle den Sensor mit der Solarprognose für heute.
+          - entity: text.batterijplan_sensor_zon_morgen
+            name: Solarprognose morgen (optional)
+            info: Sensor mit der Solcast-Prognose für morgen (kWh). Darf leer bleiben. Batterijplan findet Solcast selbst (über die Plattform, dann über bekannte Namen).
+            pick: true
+            suggest:
+            - prognose
+            - forecast
+            - solcast
+            pick_hint: Wähle den Sensor mit der Solarprognose für morgen.
           - type: section
             name: Kontrolle
           - entity: sensor.batterijplan_huisverbruik

@@ -134,6 +134,14 @@ views:
                 Extra percentage dat je overdag (met zon, of tussen 08:00 en 17:00) bovenop de terugleververgoeding krijgt, als die positief is.
 
                 Voorbeeld: 10 % betekent dat de vergoeding overdag 10 % hoger is. Heeft je contract geen bonus, zet dit dan op 0.
+            - entity: switch.batterijplan_hbc_auto
+              name: HBC-instellingen automatisch
+              info: |-
+                **Uit (standaard):** Batterijplan verandert niets in HBC. Onder Advies HBC zie je alleen het advies.
+
+                **Aan:** Batterijplan zet *cheapest hrs*, *expensive hrs* en *Solar reserved for house* in HBC zelf op het advies, alleen als het verschil minstens 1 uur of 0,5 kWh is. Jouw eigen waarden worden eerst onthouden en komen exact terug als je dit weer uitzet. Elke wijziging staat in het logboek.
+
+                Er komt pas een advies na 7 volle dagen meten.
       - naam: Sensoren
         melding: sensoren
         kaarten:
@@ -202,6 +210,24 @@ views:
             - ev
             - charge
             pick_hint: Kies het laadvermogen van je auto-lader.
+          - entity: text.batterijplan_sensor_zon_vandaag
+            name: Zonvoorspelling vandaag (optioneel)
+            info: Sensor met de Solcast-verwachting voor vandaag (kWh). Mag leeg blijven. Batterijplan zoekt Solcast zelf (op platform, daarna op bekende namen).
+            pick: true
+            suggest:
+            - voorspelling
+            - forecast
+            - prognose
+            pick_hint: Kies de sensor met de zonvoorspelling voor vandaag.
+          - entity: text.batterijplan_sensor_zon_morgen
+            name: Zonvoorspelling morgen (optioneel)
+            info: Sensor met de Solcast-verwachting voor morgen (kWh). Mag leeg blijven. Batterijplan zoekt Solcast zelf (op platform, daarna op bekende namen).
+            pick: true
+            suggest:
+            - voorspelling
+            - forecast
+            - prognose
+            pick_hint: Kies de sensor met de zonvoorspelling voor morgen.
           - type: section
             name: Controle
           - entity: sensor.batterijplan_huisverbruik

@@ -21,9 +21,11 @@
   const IDS = {
     plan: "sensor.batterijplan",
     marks: "sensor.hbc_energy_prices_data",
-    solar_today: "sensor.solcast_pv_forecast_forecast_today",
-    solar_tomorrow: "sensor.solcast_pv_forecast_forecast_tomorrow",
   };
+  // Solcast sensors chosen by the backend (filled-in fields, then Solcast by platform, then known names); old backend: English ids
+  const zonIds = (S) => { const pa = ((S["sensor.batterijplan_2"] || S[IDS.plan] || {}).attributes) || {};
+    return { vandaag: "zon_vandaag" in pa ? pa.zon_vandaag : "sensor.solcast_pv_forecast_forecast_today",
+             morgen: "zon_morgen" in pa ? pa.zon_morgen : "sensor.solcast_pv_forecast_forecast_tomorrow" }; };
   // Dutch is the source language; English and German come from I18N (below). Translation key = the Dutch text.
   const TIP = {};
   let LANG = "nl";
@@ -57,6 +59,26 @@
     "Aanpassen naar": "Change to",
     "Advies volgt als je verbruik geleerd is en er een week gemeten is": "Advice follows once your consumption is learned and a week has been measured",
     "Advies voor HBC": "Advice for HBC",
+    "geen grens": "no limit",
+    "Aantal goedkope uren": "Cheapest hours",
+    "Aantal dure uren": "Expensive hours",
+    "Huisverbruik op zon": "House use on solar",
+    "Gemiddeld {x} kWh huisverbruik op zon in de laatste 7 dagen.": "On average {x} kWh of house use on solar in the last 7 days.",
+    "De laatste 7 dagen opnieuw doorgerekend: {x} goedkoper dan nu.": "The last 7 days calculated again: {x} cheaper than now.",
+    "Past het best bij de laatste 7 dagen.": "Fits the last 7 days best.",
+    "Advies wijkt minder dan {x} af: Batterijplan laat het zoals het is.": "Advice differs by less than {x}: Batterijplan leaves it as it is.",
+    "Nog aan het meten: dag {x} van 7": "Still measuring: day {x} of 7",
+    "Batterijplan bewaart per kwartier de prijs, je huisverbruik en je zon. Na 7 volle dagen rekent het die opnieuw door en komt het advies. Tot die tijd verandert er niets.": "Batterijplan keeps the price, your house use and your solar per quarter. After 7 full days it calculates them again and the advice follows. Until then nothing changes.",
+    "Zonnesensor ontbreekt: kies die bij Sensoren, anders kan er niet worden doorgerekend.": "Solar sensor missing: choose it under Sensors, otherwise nothing can be calculated.",
+    "Advies nog niet te berekenen: de gegevens van HBC of de batterijcapaciteit ontbreken.": "Advice cannot be calculated yet: the HBC data or the battery capacity is missing.",
+    "Berekend op": "Calculated on",
+    "duurde": "took",
+    "HBC-instellingen automatisch": "Auto-adjust HBC settings",
+    "Aan: Batterijplan zet de waarden zelf in HBC, alleen als het verschil minstens 1 uur of 0,5 kWh is. Jouw eigen waarden worden onthouden en komen exact terug als je dit uitzet. Elke wijziging staat in het logboek.": "On: Batterijplan sets the values in HBC itself, only when the difference is at least 1 hour or 0.5 kWh. Your own values are remembered and come back exactly when you switch this off. Every change is in the logbook.",
+    "Uit: Batterijplan verandert niets in HBC. Je ziet hierboven alleen het advies.": "Off: Batterijplan changes nothing in HBC. Above you only see the advice.",
+    "In HBC stel je in hoeveel uur van de dag als goedkoop en als duur telt (cheapest hrs, expensive hrs) en hoeveel zonne-energie je huis zelf direct opmaakt (Solar reserved for house).": "In HBC you set how many hours of the day count as cheap and as expensive (cheapest hrs, expensive hrs) and how much solar energy your house uses directly (Solar reserved for house).",
+    "Batterijplan bewaart 7 dagen per kwartier de prijs, je huisverbruik en je zon. Elke nacht rekent het die 7 dagen opnieuw door met zijn eigen plan, voor verschillende waarden van cheapest hrs en expensive hrs, en kiest de goedkoopste. Bij een gelijke uitkomst blijft het bij de waarde die het dichtst bij de huidige ligt.": "Batterijplan keeps 7 days of the price, your house use and your solar per quarter. Every night it calculates those 7 days again with its own plan, for different values of cheapest hrs and expensive hrs, and picks the cheapest. With an equal result it stays with the value closest to the current one.",
+    "Een oranje stip betekent: het advies wijkt minstens 1 uur (of 0,5 kWh) af van wat in HBC staat. Je ziet dat ook als automatisch aanpassen uit staat.": "An orange dot means: the advice differs by at least 1 hour (or 0.5 kWh) from what is set in HBC. You see that also when auto-adjust is off.",
     "Alleen de momenten waarop Batterijplan iets anders doet dan HBC.": "Only the moments when Batterijplan does something different from HBC.",
     "Batterijplan rekent elke dag uit wat je huis op zon kan gebruiken vanaf het eerste goedkope kwartier tot het eind van de dag (geleerd verbruik naast de zonverwachting) en vergelijkt het gemiddelde van de laatste 7 dagen met jouw instelling.": "Every day Batterijplan works out how much solar your house can use from the first cheap quarter to the end of the day (learned usage next to the solar forecast) and compares the average of the last 7 days with your setting.",
     "Batterijplan staat stil": "Batterijplan is paused",
@@ -164,6 +186,9 @@
     "Nog geen back-up": "No back-up yet",
     "Zeker? Tik nog een keer": "Sure? Tap once more",
     "niet gevonden": "not found",
+    "zonvoorspelling vandaag": "solar forecast today",
+    "zonvoorspelling morgen": "solar forecast tomorrow",
+    "Zonvoorspelling niet gevonden. Vul de velden 'Zonvoorspelling vandaag' en 'Zonvoorspelling morgen' in bij Instellingen.": "Solar forecast not found. Fill in the fields 'Solar forecast today' and 'Solar forecast tomorrow' in Settings.",
     "Tik om te typen": "Tap to type",
     "minder": "less",
     "meer": "more",
@@ -464,6 +489,26 @@
     "Aanpassen naar": "Ändern auf",
     "Advies volgt als je verbruik geleerd is en er een week gemeten is": "Empfehlung folgt, sobald dein Verbrauch gelernt ist und eine Woche gemessen wurde",
     "Advies voor HBC": "Empfehlung für HBC",
+    "geen grens": "keine Grenze",
+    "Aantal goedkope uren": "Günstigste Stunden",
+    "Aantal dure uren": "Teuerste Stunden",
+    "Huisverbruik op zon": "Hausverbrauch aus Solar",
+    "Gemiddeld {x} kWh huisverbruik op zon in de laatste 7 dagen.": "Im Durchschnitt {x} kWh Hausverbrauch aus Solar in den letzten 7 Tagen.",
+    "De laatste 7 dagen opnieuw doorgerekend: {x} goedkoper dan nu.": "Die letzten 7 Tage neu berechnet: {x} günstiger als jetzt.",
+    "Past het best bij de laatste 7 dagen.": "Passt am besten zu den letzten 7 Tagen.",
+    "Advies wijkt minder dan {x} af: Batterijplan laat het zoals het is.": "Die Empfehlung weicht um weniger als {x} ab: Batterijplan lässt es so.",
+    "Nog aan het meten: dag {x} van 7": "Noch am Messen: Tag {x} von 7",
+    "Batterijplan bewaart per kwartier de prijs, je huisverbruik en je zon. Na 7 volle dagen rekent het die opnieuw door en komt het advies. Tot die tijd verandert er niets.": "Batterijplan speichert pro Viertelstunde den Preis, deinen Hausverbrauch und deine Solarerzeugung. Nach 7 vollen Tagen rechnet es sie neu durch und die Empfehlung folgt. Bis dahin ändert sich nichts.",
+    "Zonnesensor ontbreekt: kies die bij Sensoren, anders kan er niet worden doorgerekend.": "Solarsensor fehlt: wähle ihn unter Sensoren, sonst kann nicht gerechnet werden.",
+    "Advies nog niet te berekenen: de gegevens van HBC of de batterijcapaciteit ontbreken.": "Die Empfehlung kann noch nicht berechnet werden: die HBC-Daten oder die Batteriekapazität fehlen.",
+    "Berekend op": "Berechnet am",
+    "duurde": "dauerte",
+    "HBC-instellingen automatisch": "HBC-Einstellungen automatisch anpassen",
+    "Aan: Batterijplan zet de waarden zelf in HBC, alleen als het verschil minstens 1 uur of 0,5 kWh is. Jouw eigen waarden worden onthouden en komen exact terug als je dit uitzet. Elke wijziging staat in het logboek.": "An: Batterijplan stellt die Werte selbst in HBC ein, nur wenn der Unterschied mindestens 1 Stunde oder 0,5 kWh beträgt. Deine eigenen Werte werden gemerkt und kommen beim Ausschalten genau zurück. Jede Änderung steht im Logbuch.",
+    "Uit: Batterijplan verandert niets in HBC. Je ziet hierboven alleen het advies.": "Aus: Batterijplan ändert nichts in HBC. Oben siehst du nur die Empfehlung.",
+    "In HBC stel je in hoeveel uur van de dag als goedkoop en als duur telt (cheapest hrs, expensive hrs) en hoeveel zonne-energie je huis zelf direct opmaakt (Solar reserved for house).": "In HBC stellst du ein, wie viele Stunden des Tages als günstig und als teuer gelten (cheapest hrs, expensive hrs) und wie viel Solarenergie dein Haus direkt verbraucht (Solar reserved for house).",
+    "Batterijplan bewaart 7 dagen per kwartier de prijs, je huisverbruik en je zon. Elke nacht rekent het die 7 dagen opnieuw door met zijn eigen plan, voor verschillende waarden van cheapest hrs en expensive hrs, en kiest de goedkoopste. Bij een gelijke uitkomst blijft het bij de waarde die het dichtst bij de huidige ligt.": "Batterijplan speichert 7 Tage lang pro Viertelstunde den Preis, deinen Hausverbrauch und deine Solarerzeugung. Jede Nacht rechnet es diese 7 Tage mit seinem eigenen Plan neu durch, für verschiedene Werte von cheapest hrs und expensive hrs, und wählt den günstigsten. Bei gleichem Ergebnis bleibt es bei dem Wert, der dem aktuellen am nächsten liegt.",
+    "Een oranje stip betekent: het advies wijkt minstens 1 uur (of 0,5 kWh) af van wat in HBC staat. Je ziet dat ook als automatisch aanpassen uit staat.": "Ein oranger Punkt bedeutet: die Empfehlung weicht um mindestens 1 Stunde (oder 0,5 kWh) von der HBC-Einstellung ab. Du siehst das auch, wenn das automatische Anpassen aus ist.",
     "Alleen de momenten waarop Batterijplan iets anders doet dan HBC.": "Nur die Momente, in denen Batterijplan etwas anderes tut als HBC.",
     "Batterijplan rekent elke dag uit wat je huis op zon kan gebruiken vanaf het eerste goedkope kwartier tot het eind van de dag (geleerd verbruik naast de zonverwachting) en vergelijkt het gemiddelde van de laatste 7 dagen met jouw instelling.": "Batterijplan berechnet jeden Tag, wie viel Solarstrom dein Haus ab der ersten günstigen Viertelstunde bis zum Tagesende nutzen kann (gelerntes Verbrauchsprofil neben der Solarprognose) und vergleicht den Durchschnitt der letzten 7 Tage mit deiner Einstellung.",
     "Batterijplan staat stil": "Batterijplan pausiert",
@@ -571,6 +616,9 @@
     "Nog geen back-up": "Noch keine Sicherung",
     "Zeker? Tik nog een keer": "Sicher? Nochmal tippen",
     "niet gevonden": "nicht gefunden",
+    "zonvoorspelling vandaag": "Solarprognose heute",
+    "zonvoorspelling morgen": "Solarprognose morgen",
+    "Zonvoorspelling niet gevonden. Vul de velden 'Zonvoorspelling vandaag' en 'Zonvoorspelling morgen' in bij Instellingen.": "Solarprognose nicht gefunden. Fülle die Felder 'Solarprognose heute' und 'Solarprognose morgen' in den Einstellungen aus.",
     "Tik om te typen": "Tippen zum Eingeben",
     "minder": "weniger",
     "meer": "mehr",
@@ -853,7 +901,7 @@
     const o = String((c && c.taal) || "").slice(0, 2).toLowerCase();
     const l = ["nl", "en", "de"].includes(o) ? o : String((h && ((h.locale && h.locale.language) || h.language)) || "nl").slice(0, 2).toLowerCase();
     LANG = l === "nl" || l === "de" ? l : "en"; DAG = DAGEN[LANG]; MAAND = MAANDEN[LANG];
-    // number notation follows the HA profile setting (Adrie 05-11-2026)
+    // number notation follows the HA profile setting
     const nf = h && h.locale && h.locale.number_format;
     NUMLOC = nf === "comma_decimal" || nf === "none" ? "en-US" : nf === "decimal_comma" ? "de-DE" : nf === "space_comma" ? "fr-FR" : nf === "system" ? undefined : (LOC[LANG] || "nl-NL");
   };
@@ -875,7 +923,7 @@
       this._hass = h;
       zetTaal(h, this._config);
       if (this._lang !== LANG) { this._lang = LANG; this._key = null; if (this._card) { this._card.remove(); this._card = null; this._knoppen = false; this.shadowRoot.innerHTML = ""; } }
-      const key = [IDS.plan, IDS.marks, IDS.solar_today, "sensor.batterijplan_meerwaarde", "sensor.batterijplan_meerwaarde_periode", "switch.batterijplan_live"].map((id) => (h.states[id] || {}).last_updated || "").join("|");
+      const key = [IDS.plan, IDS.marks, zonIds(h.states).vandaag, "sensor.batterijplan_meerwaarde", "sensor.batterijplan_meerwaarde_periode", "switch.batterijplan_live", "sensor.batterijplan_advies_hbc", "switch.batterijplan_hbc_auto", "input_number.house_battery_strategy_dynamic_cheapest_hrs", "input_number.house_battery_strategy_dynamic_expensive_hrs", "input_number.house_battery_solar_reserved_for_house"].map((id) => (h.states[id] || {}).last_updated || "").join("|");
       if (key !== this._key) { this._key = key; this._render(); }
     }
     connectedCallback() { if (!this._tick) this._tick = setInterval(() => this._render(), 60000); }
@@ -1030,7 +1078,7 @@
       const totalen = "<div class='tot'><div class='k'>" + esc(t("Totalen") + " · " + scope + (sinds ? " · " + t("geteld sinds") + " " + sinds.toLocaleDateString(loc) : "")) + "</div><div class='bxs'>" +
         bx(t("Opgeleverd"), eurK(tot)) + bx(t("Gemiddeld per dag"), eurK(inScope.length ? tot / inScope.length : 0)) +
         bx(t("Beste dag"), beste.d ? eurK(beste.v) + "<div class='vt'>" + esc((DG[beste.d.getDay()] || "") + " " + beste.d.getDate() + " " + MN[beste.d.getMonth()]) + "</div>" : "–") +
-        bx(t("Live (echt gestuurd)"), eurK(live)) + ((this._hass.states["switch.batterijplan_live"] || {}).state === "on" ? "" : bx(t("Schaduw (zou opleveren)"), eurK(schaduw), "var(--secondary-text-color)")) +  // schaduw alleen tonen als Live uit staat (Adrie 05-11-2026)
+        bx(t("Live (echt gestuurd)"), eurK(live)) + ((this._hass.states["switch.batterijplan_live"] || {}).state === "on" ? "" : bx(t("Schaduw (zou opleveren)"), eurK(schaduw), "var(--secondary-text-color)")) +  // schaduw alleen tonen als Live uit staat
         
         bx(t("Dit contractjaar"), pk.state && !["unknown", "unavailable"].includes(pk.state) ? eurK(Number(pk.state) || 0) + (pk.attributes && pk.attributes.periode_start ? "<div class='vt'>" + esc(t("sinds") + " " + pk.attributes.periode_start) + "</div>" : "") : "–") + "</div>" +
         ((this._hass.states["switch.batterijplan_live"] || {}).state === "on" ? "" : "<div class='lb'><i style='width:" + (totaal ? Math.abs(live) / totaal * 100 : 0) + "%;background:#66bb6a'></i><i style='flex:1;background:#94a3b8'></i></div>") +
@@ -1083,7 +1131,7 @@
       (this._kaarten || []).forEach((k) => { k.hass = h; });
       const S = h.states, ids = [this._config.live, "number.batterijplan_capaciteit",
         "text.batterijplan_sensor_net", "text.batterijplan_sensor_zon", "text.batterijplan_sensor_batterij", "text.batterijplan_sensor_ev"];
-      const sen = this._sensoren(), key = ids.concat(sen).map((id) => (S[id] || {}).state).join("|") + LANG;
+      const sen = this._sensoren(), ha = (S["sensor.batterijplan_advies_hbc"] || {}).attributes || {}, key = ids.concat(sen).map((id) => (S[id] || {}).state).join("|") + LANG + [ha.cheapest_verschil, ha.expensive_verschil, ha.solar_verschil].join("");
       if (key !== this._key) { this._key = key; this._teken(); }
     }
     getCardSize() { return 1; }
@@ -1096,6 +1144,7 @@
       const S = this._hass.states;
       const leeg = (k) => { const v = String((S["text.batterijplan_sensor_" + k] || {}).state || "").trim(); return !v || v === "unknown"; };
       if (m === "instellingen") return !(Number((S["number.batterijplan_capaciteit"] || {}).state) > 1.05);
+      if (m === "advies") { const a = (S["sensor.batterijplan_advies_hbc"] || {}).attributes || {}; adviesGem(this._hass, () => { this._key = null; this._teken(); }); return !!(a.cheapest_verschil || a.expensive_verschil || zonAdvies(S).verschil); }
       if (m === "sensoren") return ["net", "zon", "batterij"].some(leeg) ||
         this._sensoren().some((id) => { const st = (S[id] || {}).state; return st == null || st === "unavailable" || st === "unknown"; });
       return false;
@@ -1153,7 +1202,7 @@
       scherm.addEventListener("click", (e) => { if (e.target === scherm || e.target === sluit || e.target === kruis) this._openen(null); });
       document.addEventListener("keydown", this._esc);
       const helpers = await window.loadCardHelpers();
-      // wacht tot de kaarten in het venster bestaan (anders soms "Configuratiefout" vlak na laden; Adrie 04-11-2026)
+      // wacht tot de kaarten in het venster bestaan (anders soms "Configuratiefout" vlak na laden)
       await Promise.all((k.kaarten || []).map((c) => String(c.type || "").startsWith("custom:") ? Promise.race([customElements.whenDefined(c.type.slice(7)), new Promise((r) => setTimeout(r, 8000))]) : null));
       if (this._open == null || this._laag.firstChild !== scherm) return;
       (k.kaarten || []).forEach((cfg) => {
@@ -1232,9 +1281,10 @@
   // Nothing is stored on the server; only a logged-in user can build it.
   const RAPPORT_HBC = ["input_select.house_battery_strategy", "input_select.house_battery_strategy_dynamic_cheapest", "input_select.house_battery_strategy_dynamic_default",
     "input_select.house_battery_strategy_dynamic_expensive", "input_number.house_battery_strategy_dynamic_threshold_delta", "input_number.house_battery_solar_reserved_for_house",
-    "input_number.house_battery_count", IDS.marks, IDS.solar_today, IDS.solar_tomorrow];
+    "input_number.house_battery_count", IDS.marks];
+  const ZON_TIP = "Zonvoorspelling niet gevonden. Vul de velden 'Zonvoorspelling vandaag' en 'Zonvoorspelling morgen' in bij Instellingen.";
   const EIGEN_INST = /^(number|select|switch|text|date)\./;
-  // plan points: [t, price_ct, kind, action_hbc, charge_hbc, action_plan, charge_plan, solar_kw]
+  // plan points: [t, price_ct, kind, action_hbc, charge_hbc, action_plan, charge_plan, solar_kw, solar_kw_cautious]
   const planPunten = (pa) => { const v = arr(pa.punten); return Array.isArray(v) ? v : []; };
   const telActies = (pts, i) => { const tel = {}; pts.forEach((x) => { tel[x[i]] = (tel[x[i]] || 0) + 1; }); return tel; };
   async function bpRapport(hass, cfg) {
@@ -1253,6 +1303,7 @@
     r.push("- " + t("Komend kwartier") + ": " + t(ACT_NAAM[pa.actie] || "—") + " (HBC: " + t(ACT_NAAM[pa.hbc_actie] || "—") + ")", "");
     r.push("## " + t("Instellingen") + " (Batterijplan)"); eigen.filter((k) => EIGEN_INST.test(k)).forEach((k) => r.push(regel(k))); r.push("");
     r.push("## HBC"); RAPPORT_HBC.forEach((k) => r.push(regel(k)));
+    const zon = zonIds(S); [["vandaag", zon.vandaag], ["morgen", zon.morgen]].forEach((z) => r.push(z[1] ? regel(z[1]) : "- " + t("zonvoorspelling " + z[0]) + ": **" + t("niet gevonden") + "** — " + t(ZON_TIP)));
     const mk = (S[IDS.marks] || {}).attributes || {}, marks = Array.isArray(mk.marks) ? mk.marks : [];
     if (marks.length) { const ms = (v) => (typeof v === "number" ? v : Date.parse(v)); const st = marks.map((m) => ms(m.start)).filter(Number.isFinite).sort((a, b) => a - b);
       r.push("- " + t("prijzen") + ": " + marks.length + " · datapoints_per_hour " + (mk.datapoints_per_hour || "?") + " · " + new Date(st[0]).toLocaleString(LOC[LANG] || "nl-NL") + " → " + new Date(st[st.length - 1]).toLocaleString(LOC[LANG] || "nl-NL") +
@@ -1265,7 +1316,8 @@
     }
     ["sensor.batterijplan_verbruiksprofiel", "sensor.batterijplan_meerwaarde", "sensor.batterijplan_meerwaarde_periode"].forEach((id) => { r.push("### " + id); r.push(regel(id)); attrs(id, 40).forEach((x) => r.push(x)); r.push(""); });
     r.push("## " + t("Overige sensoren")); eigen.filter((k) => /^(sensor|binary_sensor)\./.test(k) && !["sensor.batterijplan", "sensor.batterijplan_verbruiksprofiel", "sensor.batterijplan_meerwaarde", "sensor.batterijplan_meerwaarde_periode"].includes(k)).forEach((k) => r.push(regel(k))); r.push("");
-    const mist = eigen.length ? [] : ["sensor.batterijplan"]; RAPPORT_HBC.forEach((k) => { if (!S[k]) mist.push(k); });
+    const mist = eigen.length ? [] : ["sensor.batterijplan"]; RAPPORT_HBC.concat([zon.vandaag, zon.morgen].filter(Boolean)).forEach((k) => { if (!S[k]) mist.push(k); });
+    if (!zon.vandaag || !zon.morgen) mist.push(t(ZON_TIP));
     r.push("## " + t("Ontbreekt"), mist.length ? mist.map((k) => "- " + k).join("\n") : "- " + t("niets"), "");
     return r.join("\n");
   }
@@ -1307,7 +1359,8 @@
     const tabel = (koppen, rijen, leeg) => "<div class='box'><table><tr>" + koppen.map((k) => "<th>" + esc(k) + "</th>").join("") + "</tr>" + (rijen.length ? rijen.join("") : "<tr><td colspan='" + koppen.length + "' class='mut'>" + esc(leeg || "–") + "</td></tr>") + "</table></div>";
     const eigen = Object.keys(S).filter((k) => k.includes("batterijplan")).sort();
     const live = st("switch.batterijplan_live") === "on", strat = st("input_select.house_battery_strategy"), mw = at("sensor.batterijplan_meerwaarde");
-    const mist = RAPPORT_HBC.filter((k) => !S[k]).concat(S[IDS.plan] ? [] : [IDS.plan]);
+    const zon = zonIds(S), mist = RAPPORT_HBC.concat([zon.vandaag, zon.morgen].filter(Boolean)).filter((k) => !S[k]).concat(S[IDS.plan] ? [] : [IDS.plan]),
+      zonMist = !zon.vandaag || !zon.morgen;
     const an = (l) => esc(t(ACT_NAAM[l] || "—"));
     const kwTxt = ACT_NAAM[pa.actie] ? (pa.actie === pa.hbc_actie ? an(pa.actie) + " (" + esc(t("hetzelfde als HBC")) + ")" : esc(t("Plan")) + ": " + an(pa.actie) + " · HBC: " + an(pa.hbc_actie)) : "–";
     const telP = telActies(pts, 5), telH = telActies(pts, 3);
@@ -1318,11 +1371,11 @@
       (strat === "Dynamic" ? esc(t("HBC staat op Dynamic.")) : "<span class='warn'>" + esc(t("HBC staat niet op Dynamic; Batterijplan wacht.")) + "</span>") + "</p>" +
       "<p>" + esc(t("Komend kwartier:")) + " <b>" + kwTxt + "</b> · " + esc(t("Verbruik leren:")) + " <b>" + esc(st("sensor.batterijplan_voorspelling") || "–") + "</b></p>" +
       "<p>" + esc(t("Opgeleverd sinds")) + " " + esc(mw.sinds || "–") + ": <b>" + geldH(st("sensor.batterijplan_meerwaarde")) + "</b></p>" +
-      "<p>" + (mist.length ? "<span class='warn'>" + esc(t("Ontbreekt:")) + " " + mist.map(esc).join(", ") + "</span>" : "<span class='ok'>✓ " + esc(t("Alle sensoren en HBC-instellingen gevonden.")) + "</span>") + "</p></div>";
+      "<p>" + (mist.length ? "<span class='warn'>" + esc(t("Ontbreekt:")) + " " + mist.map(esc).join(", ") + "</span>" : "<span class='ok'>✓ " + esc(t("Alle sensoren en HBC-instellingen gevonden.")) + "</span>") + (zonMist ? "<br><span class='warn'>" + esc(t(ZON_TIP)) + "</span>" : "") + "</p></div>";
     const status = "<div class='kpis'>" +
       kaart(t("Modus"), live ? "live" : esc(t("schaduw")), live ? esc(t("stuurt HBC")) : "", live ? "ok" : "or") +
       kaart(t("Komend kwartier"), kwTxt, "") +
-      kaart(t("In de batterij nu"), esc(nl(Number(pa.lading), 2)) + " kWh", "") +
+      kaart(t("In de batterij nu"), esc(nl(Number(Number.isFinite(parseFloat((S["sensor.batterijplan_lading_2"] || S["sensor.batterijplan_lading"] || {}).state)) ? parseFloat((S["sensor.batterijplan_lading_2"] || S["sensor.batterijplan_lading"]).state) : pa.lading), 1)) + " kWh", "") +
       kaart(t("Prijs nu"), val("sensor.batterijplan_prijs"), "") +
       kaart(t("Huisverbruik nu"), val("sensor.batterijplan_huisverbruik"), "") +
       kaart(t("Voorspelling"), esc(st("sensor.batterijplan_voorspelling") || "–"), esc(t("Verbruik leren"))) + "</div>";
@@ -1599,7 +1652,7 @@
         : "<b>" + esc(t("aan het leren")) + "</b> · " + esc(t("dag")) + " " + dag + " " + esc(t("van")) + " 7 · " + esc(t("voorspelling")) + " " + vtxt +
           (gezien >= 24 ? "" : " · " + gezien + " " + esc(t("van 24 uren al gezien")));
       // next quarter: action of the plan versus what HBC alone would do
-      const KORT = { L: "laden", O: "ontladen", H: "vasthouden", V: "terugleveren", Z: "zon" }; // kort, past op één regel (Adrie 05-11-2026)
+      const KORT = { L: "laden", O: "ontladen", H: "vasthouden", V: "terugleveren", Z: "zon" }; // kort, past op één regel
       const an = (l) => esc(t(KORT[l] || ACT_NAAM[l] || "—"));
       let kw = "<b>—</b>";
       if (ACT_NAAM[pa.actie]) kw = pa.actie === pa.hbc_actie ? "<b>" + an(pa.actie) + "</b> — " + esc(t("hetzelfde als HBC"))
@@ -1622,7 +1675,7 @@
         (() => { const ad = S["sensor.batterijplan_advies_zon_na_goedkoop_laden"], ing = Number(st("input_number.house_battery_solar_reserved_for_house")); const av7 = this._adv7 || {}; const uurNu = Math.floor(Date.now() / 3600000); if (av7.uur !== uurNu && !av7.bezig) { this._adv7 = { uur: av7.uur, n: av7.n, v: av7.v, bezig: true }; this._hass.callWS({ type: "recorder/statistics_during_period", start_time: new Date(Date.now() - 7 * 86400000).toISOString(), statistic_ids: ["sensor.batterijplan_advies_zon_na_goedkoop_laden"], period: "day", types: ["mean"] }).then((r) => { const l = (r["sensor.batterijplan_advies_zon_na_goedkoop_laden"] || []).map((x) => Number(x.mean)).filter((v) => Number.isFinite(v)); this._adv7 = { uur: uurNu, n: l.length, v: l.length ? l.reduce((p, q) => p + q, 0) / l.length : null }; this._sig = ""; this._render(); }).catch(() => { this._adv7 = { uur: uurNu, n: 0, v: null }; }); } const meet = !(this._adv7 && this._adv7.n >= 7); const av = !ad || meet ? NaN : Number(this._adv7.v); const ok = Number.isFinite(av) && Number.isFinite(ing); const kl = !ok ? "" : Math.abs(av - ing) < 1 ? "#66bb6a" : "#ff9800"; const w = "<b>" + (Number.isFinite(ing) ? esc(nl(ing, Number.isInteger(ing) ? 0 : 1)) + " kWh" : "—") + "</b> " + esc(t("ingesteld")) + " · " + esc(t("advies")) + " <b" + (kl ? " style='color:" + kl + "'" : "") + ">" + (Number.isFinite(av) ? esc(nl(Math.round(av * 2) / 2, 1)) + " kWh" : "– –") + "</b>"; return rij(ic("schuifregelaars"), esc(t("Advies huisverbruik")), w, "advies"); })() +
         "</ha-card>";
       this.shadowRoot.querySelectorAll("[data-info]").forEach((b) => b.addEventListener("click", () => BpVelden.prototype._uitleg.call(this, ST_INFO[b.dataset.info])));
-      // klik op het logo: seizoensplaat groot (huisstijl, zoals HESC; Adrie 04-11-2026)
+      // klik op het logo: seizoensplaat groot (huisstijl, zoals HESC)
       const lg = this.shadowRoot.querySelector("img.logo");
       if (lg) lg.addEventListener("click", () => {
         const m = new Date().getMonth() + 1, s = [3, 4, 5].includes(m) ? "lente" : [6, 7, 8].includes(m) ? "zomer" : [9, 10, 11].includes(m) ? "herfst" : "winter";
@@ -1637,6 +1690,18 @@
     }
   }
 
+  // One source for the solar advice on both the card and the dot on the button: the backend's 7 days of history,
+  // else the earlier 7-day mean of the advice sensor from the statistics (module-level ADV, filled by adviesGem)
+  function zonAdvies(S) {
+    const h = (S["sensor.batterijplan_advies_hbc"] || {}).attributes || {}, ad = (S["sensor.batterijplan_advies_zon_na_goedkoop_laden"] || {}).attributes || {};
+    const num = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
+    const lerend = String(ad.voorlopig) === "true";
+    let adv = num(h.solar_advies), uitStats = false;
+    if (!Number.isFinite(adv) && !lerend && ADV.n >= 7 && ADV.v != null) { adv = Math.round(ADV.v * 2) / 2; uitStats = true; }
+    const ni = num((S["input_number.house_battery_solar_reserved_for_house"] || {}).state), nu = Number.isFinite(ni) ? ni : num(h.solar_nu);
+    return { adv, nu, lerend, gem: uitStats ? ADV.v : adv, verschil: Number.isFinite(adv) && Number.isFinite(nu) && Math.abs(adv - nu) >= 0.5 - 1e-9 };
+  }
+
   // Advies voor HBC: verwacht huisverbruik op zon (instelling "Solar reserved for house") en nachtladen
   class BpAdvies extends BpBase {
     static getStubConfig() { return { title: "Advies voor HBC", icon: "batterijplan:schuifregelaars" }; }
@@ -1644,21 +1709,66 @@
     _render() {
       if (!this._hass) return;
       this._shell();
-      const S = this._hass.states, ad = S["sensor.batterijplan_advies_zon_na_goedkoop_laden"] || { state: null, attributes: {} }, a = ad.attributes || {};
+      const S = this._hass.states, ad = S["sensor.batterijplan_advies_zon_na_goedkoop_laden"] || { state: null, attributes: {} };
+      const hv = S["sensor.batterijplan_advies_hbc"] || { state: null, attributes: {} }, h = hv.attributes || {};
       const pa = (S[IDS.plan] || {}).attributes || {};
+      const auto = (S["switch.batterijplan_hbc_auto"] || {}).state === "on";
       this._chips.style.display = "none";
       adviesGem(this._hass, this._terug || (this._terug = () => this._render()));
-      this._setUitleg("<p><b>" + t("Wat is dit?") + "</b> " + t("In HBC vul je in hoeveel zonne-energie je huis zelf direct opmaakt (Solar reserved for house). HBC trekt dat af van de zon die nog komt, op het moment dat het goedkoop laadt.") + " " +
-        t("Staat dat te hoog, dan laadt HBC meer van het net dan nodig; te laag, dan is de batterij 's avonds te leeg voor de dure uren.") + "</p>" +
-        "<p>" + t("Batterijplan rekent elke dag uit wat je huis op zon kan gebruiken vanaf het eerste goedkope kwartier tot het eind van de dag (geleerd verbruik naast de zonverwachting) en vergelijkt het gemiddelde van de laatste 7 dagen met jouw instelling.") + " " +
-        t("Pas als het 1 kWh of meer afwijkt, krijg je een advies.") + " " + (String((S["input_boolean.batterijplan_advies_toepassen"] || {}).state) === "on" ? t("Zelf instellen staat aan (Instellingen, Expert): Batterijplan zet dit getal elke nacht om 23:50 zelf in HBC.") : t("Batterijplan verandert zelf niets in HBC, tenzij je Solar reserved for house zelf instellen aanzet (Instellingen, Expert).")) + "</p>");
-      const oo = adviesOordeel(this._hass), { kop, kleur, sub } = oo;
+      this._setUitleg("<p><b>" + t("Wat is dit?") + "</b> " + t("In HBC stel je in hoeveel uur van de dag als goedkoop en als duur telt (cheapest hrs, expensive hrs) en hoeveel zonne-energie je huis zelf direct opmaakt (Solar reserved for house).") + "</p>" +
+        "<p>" + t("Batterijplan bewaart 7 dagen per kwartier de prijs, je huisverbruik en je zon. Elke nacht rekent het die 7 dagen opnieuw door met zijn eigen plan, voor verschillende waarden van cheapest hrs en expensive hrs, en kiest de goedkoopste. Bij een gelijke uitkomst blijft het bij de waarde die het dichtst bij de huidige ligt.") + "</p>" +
+        "<p>" + t("Een oranje stip betekent: het advies wijkt minstens 1 uur (of 0,5 kWh) af van wat in HBC staat. Je ziet dat ook als automatisch aanpassen uit staat.") + " " + t("Aan: Batterijplan zet de waarden zelf in HBC, alleen als het verschil minstens 1 uur of 0,5 kWh is. Jouw eigen waarden worden onthouden en komen exact terug als je dit uitzet. Elke wijziging staat in het logboek.") + "</p>");
+      const oo = adviesOordeel(this._hass);
+      const num = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v)); // null from the backend = no value (Number(null) would be 0)
+      const fh = (v) => nl(Number(v), Number.isInteger(Number(v)) ? 0 : 2), eur = (v) => "€ " + nl(Number(v), 2);
+      const meten = h.status === "meten" || !h.status, lerend = oo.stand === "meten" && oo.dagen === 0 && ad.attributes && String(ad.attributes.voorlopig) === "true";
+      // solar advice: backend (7 days of its own history) else the earlier 7-day mean from the statistics
+      const zon = zonAdvies(S), zonAdv = zon.adv;
+      const rijen = [
+        { k: "cheapest", naam: t("Aantal goedkope uren"), hbc: "cheapest hrs", eenh: " h", nul: true, dec: fh, nu: num(h.cheapest_nu), adv: num(h.cheapest_advies), thr: 1, thrTxt: "1 h" },
+        { k: "expensive", naam: t("Aantal dure uren"), hbc: "expensive hrs", eenh: " h", nul: true, dec: fh, nu: num(h.expensive_nu), adv: num(h.expensive_advies), thr: 1, thrTxt: "1 h" },
+        { k: "solar", naam: t("Huisverbruik op zon"), hbc: "Solar reserved for house", eenh: " kWh", dec: (v) => nl(Number(v), Number.isInteger(Number(v)) ? 0 : 1), nu: zon.nu, adv: zonAdv, thr: 0.5, thrTxt: nl(0.5, 1) + " kWh" },
+      ];
+      const txt = (r, v) => (r.nul && Number(v) === 0 ? t("geen grens") : r.dec(v) + r.eenh); // HBC: 0 hours = no limit
+      let verschilAantal = 0;
+      const rhtml = rijen.map((r) => {
+        const heeft = Number.isFinite(r.adv), nuOk = Number.isFinite(r.nu);
+        const verschil = heeft && nuOk && Math.abs(r.adv - r.nu) >= r.thr - 1e-9;
+        if (verschil) verschilAantal++;
+        let reden = "";
+        if (r.k === "solar") reden = heeft ? t("Gemiddeld {x} kWh huisverbruik op zon in de laatste 7 dagen.").replace("{x}", nl(Math.round(zon.gem * 10) / 10, 1)) : "";
+        else if (heeft && verschil && Number(h.besparing) > 0) reden = t("De laatste 7 dagen opnieuw doorgerekend: {x} goedkoper dan nu.").replace("{x}", eur(h.besparing));
+        else if (heeft && !verschil && r.adv === r.nu) reden = t("Past het best bij de laatste 7 dagen.");
+        if (heeft && !verschil && r.adv !== r.nu) reden = t("Advies wijkt minder dan {x} af: Batterijplan laat het zoals het is.").replace("{x}", r.thrTxt);
+        return "<div style='display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.7fr) minmax(0,.9fr);gap:4px 10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--divider-color);font-size:14px'>" +
+          "<div>" + esc(r.naam) + "<div style='font-size:11px;color:var(--secondary-text-color)'>HBC: " + esc(r.hbc) + "</div></div>" +
+          "<div style='text-align:right'><span style='font-size:11px;color:var(--secondary-text-color)'>" + esc(t("nu")) + "</span> <b>" + (nuOk ? esc(txt(r, r.nu)) : "—") + "</b></div>" +
+          "<div style='text-align:right'><span style='font-size:11px;color:var(--secondary-text-color)'>" + esc(t("advies")) + "</span> <b" + (verschil ? " style='color:#ff9800'" : "") + ">" + (heeft ? esc(txt(r, r.adv)) : "– –") + "</b>" +
+          (verschil ? " <span title='" + esc(t("Hier is iets te doen")) + "' style='display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff9800;vertical-align:middle'></span>" : "") + "</div>" +
+          (reden ? "<div style='grid-column:1/-1;font-size:12px;color:var(--secondary-text-color)'>" + esc(reden) + "</div>" : "") + "</div>";
+      }).join("");
+      let kop = "";
+      if (lerend) kop = "<div style='font-size:15px;color:var(--secondary-text-color)'>" + esc(t("Wacht op het leren")) + "</div><div style='font-size:12px;color:var(--secondary-text-color);margin-top:2px'>" + esc(t("Batterijplan leert eerst 7 dagen je verbruik (Verbruik leren). Daarna meet het 7 dagen hoeveel zon je huis gebruikt, en dan komt het eerste advies.")) + "</div>";
+      else if (h.status === "geen_zon") kop = "<div style='font-size:13px;color:#ff9800'>" + esc(t("Zonnesensor ontbreekt: kies die bij Sensoren, anders kan er niet worden doorgerekend.")) + "</div>";
+      else if (h.status === "niet_beschikbaar") kop = "<div style='font-size:13px;color:#ff9800'>" + esc(t("Advies nog niet te berekenen: de gegevens van HBC of de batterijcapaciteit ontbreken.")) + "</div>";
+      else if (meten) {
+        const dag = Number(h.dag) || 1, klaar = Number(h.dagen) || 0;
+        kop = "<div style='font-size:15px;color:var(--secondary-text-color)'>" + esc(t("Nog aan het meten: dag {x} van 7").replace("{x}", dag)) + "</div>" +
+          "<div style='display:flex;gap:4px;margin-top:8px'>" + Array.from({ length: 7 }, (_, k) => "<span style='flex:1;height:6px;border-radius:3px;background:" + (k < klaar ? "#06B6D4" : "var(--divider-color)") + "'></span>").join("") + "</div>" +
+          "<div style='font-size:12px;color:var(--secondary-text-color);margin-top:6px'>" + esc(t("Batterijplan bewaart per kwartier de prijs, je huisverbruik en je zon. Na 7 volle dagen rekent het die opnieuw door en komt het advies. Tot die tijd verandert er niets.")) + "</div>";
+      } else if (h.berekend) {
+        const d = new Date(h.berekend);
+        kop = "<div style='font-size:12px;color:var(--secondary-text-color)'>" + esc(t("Berekend op") + " " + (Number.isNaN(d.getTime()) ? h.berekend : d.toLocaleString(LOC[LANG] || "nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) +
+          (Number.isFinite(Number(h.duur_s)) ? " · " + t("duurde") + " " + nl(Number(h.duur_s), 1) + " s" : "")) + "</div>";
+      }
       const blo = String(pa.bijladen).toLowerCase() === "true", nk = blo ? (Number(pa.nachtladen_kwh) || 0) : 0, nkw = blo ? arr(pa.bijladen_kwartieren) : [];
       const nacht = nk > 0 ? "<div style='font-size:13px;margin-top:8px'>" + t("Bijladen van het net:") + " " + nl(nk, 1) + " kWh" + (nkw.length ? " " + t("om") + " " + nkw[0] : "") + "</div>" : "";
-      this._body.innerHTML = "<div style='font-size:12px;color:var(--secondary-text-color);margin-top:2px'>" + t("Huisverbruik op zon (Solar reserved for house)") + "</div>" +
-        "<div style='font-size:20px;line-height:1.3;margin-top:4px;color:" + kleur + "'>" + esc(kop) + "</div>" +
-        "<div style='font-size:12px;color:var(--secondary-text-color);margin-top:2px'>" + esc(sub) + "</div>" +
-      (oo.stand === "meten" && oo.dagen > 0 ? "<div style='display:flex;gap:4px;margin-top:8px' title='" + esc(oo.dagen + " " + t("van 7 dagen")) + "'>" + Array.from({ length: 7 }, (_, k) => "<span style='flex:1;height:6px;border-radius:3px;background:" + (k < oo.dagen ? "#06B6D4" : "var(--divider-color)") + "'></span>").join("") + "</div>" : "") + nacht;
+      const sw = "<div style='display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--divider-color)'>" +
+        "<div style='flex:1;font-size:14px'>" + esc(t("HBC-instellingen automatisch")) + "<div style='font-size:12px;color:var(--secondary-text-color)'>" + esc(auto ? t("Aan: Batterijplan zet de waarden zelf in HBC, alleen als het verschil minstens 1 uur of 0,5 kWh is. Jouw eigen waarden worden onthouden en komen exact terug als je dit uitzet. Elke wijziging staat in het logboek.") : t("Uit: Batterijplan verandert niets in HBC. Je ziet hierboven alleen het advies.")) + "</div></div>" +
+        "<button data-auto style='cursor:pointer;font:inherit;font-size:13px;padding:5px 16px;border-radius:999px;border:1px solid " + (auto ? "#66bb6a" : "var(--divider-color)") + ";background:" + (auto ? "rgba(102,187,106,0.15)" : "var(--secondary-background-color)") + ";color:var(--primary-text-color)'>" + esc(auto ? t("aan") : t("uit")) + "</button></div>";
+      this._body.innerHTML = kop + (kop ? "<div style='height:6px'></div>" : "") + rhtml + nacht + sw;
+      const knop = this._body.querySelector("[data-auto]");
+      if (knop) knop.addEventListener("click", () => this._hass.callService("switch", auto ? "turn_off" : "turn_on", { entity_id: "switch.batterijplan_hbc_auto" }));
     }
   }
 
@@ -1683,7 +1793,7 @@
     const ing = Number(a.ingesteld), lerend = String(a.voorlopig) === "true" || a.voorlopig === true;
     const n = ADV.n, gem = ADV.v;
     if (lerend || n < 7 || gem == null) {
-      // zeg precies waar het advies nog op wacht (wens Adrie 03-11-2026)
+      // zeg precies waar het advies nog op wacht
       const nuIng = Number.isFinite(ing) ? " " + t("Nu ingesteld:") + " " + nl(ing, 1) + " kWh." : "";
       if (lerend) return { stand: "meten", dagen: 0, kop: t("Wacht op het leren"), kleur: "var(--secondary-text-color)",
         sub: t("Batterijplan leert eerst 7 dagen je verbruik (Verbruik leren). Daarna meet het 7 dagen hoeveel zon je huis gebruikt, en dan komt het eerste advies.") + nuIng };

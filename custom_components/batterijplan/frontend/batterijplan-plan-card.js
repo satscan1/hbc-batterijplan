@@ -14,6 +14,7 @@ const BP_PLAN_TX = {
     'Waar Batterijplan bijstuurt': 'Where Batterijplan steers', 'Regels': 'Rules',
     'zon verwachting (kW)': 'solar forecast (kW)', 'lading Batterijplan (kWh)': 'charge Batterijplan (kWh)', 'lading HBC (kWh)': 'charge HBC (kWh)', 'prijs (ct)': 'price (ct)',
     'bijgestuurd kwartier (kleur = actie)': 'steered quarter (colour = action)', 'balk HBC': 'HBC bar', 'balk Plan': 'Plan bar', 'Nu': 'Now', 'Plan': 'Plan',
+    'Kale prijs': 'Bare price', 'Zon verwacht': 'Solar expected', 'Zon voorzichtig': 'Solar cautious', 'Lading HBC': 'Charge HBC', 'Lading Batterijplan': 'Charge Batterijplan', 'Actie HBC': 'Action HBC', 'Actie Batterijplan': 'Action Batterijplan',
     'stroomkosten': 'electricity cost', 't.o.v. HBC': 'vs HBC', 'stroomkosten tot': 'electricity cost until', 'Kale prijs nu': 'Bare price now', 'Verwachte besparing t.o.v. HBC alleen': 'Expected saving versus HBC alone', 'In de batterij nu': 'In the battery now',
   },
   de: {
@@ -26,6 +27,7 @@ const BP_PLAN_TX = {
     'Waar Batterijplan bijstuurt': 'Wo Batterijplan nachsteuert', 'Regels': 'Regeln',
     'zon verwachting (kW)': 'Sonnenprognose (kW)', 'lading Batterijplan (kWh)': 'Ladung Batterijplan (kWh)', 'lading HBC (kWh)': 'Ladung HBC (kWh)', 'prijs (ct)': 'Preis (ct)',
     'bijgestuurd kwartier (kleur = actie)': 'nachgesteuerte Viertelstunde (Farbe = Aktion)', 'balk HBC': 'Balken HBC', 'balk Plan': 'Balken Plan', 'Nu': 'Jetzt', 'Plan': 'Plan',
+    'Kale prijs': 'Reiner Preis', 'Zon verwacht': 'Sonne erwartet', 'Zon voorzichtig': 'Sonne vorsichtig', 'Lading HBC': 'Ladung HBC', 'Lading Batterijplan': 'Ladung Batterijplan', 'Actie HBC': 'Aktion HBC', 'Actie Batterijplan': 'Aktion Batterijplan',
     'stroomkosten': 'Stromkosten', 't.o.v. HBC': 'ggü. HBC', 'stroomkosten tot': 'Stromkosten bis', 'Kale prijs nu': 'Reiner Preis jetzt', 'Verwachte besparing t.o.v. HBC alleen': 'Erwartete Ersparnis gegenüber HBC allein', 'In de batterij nu': 'Jetzt in der Batterie',
   },
 };
@@ -42,16 +44,52 @@ class BatterijplanPlanCard extends HTMLElement {
   _T(k) { const d = BP_PLAN_TX[this._lng()]; return (d && d[k]) || k; }
   set hass(h) {
     this._h = h;
-    const s = h.states[this._c.entity];
+    // like the status card: with a second Batterijplan (sensor.batterijplan_2) the _2 one is the live one
+    const id = this._c.entity === 'sensor.batterijplan' && h.states['sensor.batterijplan_2'] ? 'sensor.batterijplan_2' : this._c.entity;
+    const s = h.states[id];
     const rg = ['laden', 'ontladen', 'vasthouden', 'terugleveren'].map(k => (h.states['switch.batterijplan_regel_' + k] || {}).state).join() + this._lng();
     if (rg !== this._rg) { this._rg = rg; this._sig = null; }
-    const sig = s ? s.last_updated : '';
+    const sig = (s ? s.last_updated : '') + '|' + this._liveState().last_updated;
     this._s = s;
     if (sig === this._sig) return;
     this._sig = sig;
     this._render(s);
   }
+  // live charge level: small sensor sensor.batterijplan_lading (_2 when a second Batterijplan exists)
+  _liveState() { const S = (this._h || {}).states || {}; return S['sensor.batterijplan_lading_2'] || S['sensor.batterijplan_lading'] || {}; }
+  _liveLading(a) { const v = parseFloat(this._liveState().state); return Number.isFinite(v) ? v : +a.lading; }
   getCardSize() { return 5; }
+  // Tooltip: only the line and the box move on pointer move; the card is not re-rendered. Mouse: hover; phone: tap.
+  _hover(pts, g, html) {
+    const sr = this.shadowRoot, cw = sr.querySelector('.cw'), sv = sr.querySelector('.cw svg'), hl = sr.querySelector('.hl'), tip = sr.querySelector('.tip');
+    this._hide = null;
+    if (!cw || !sv || !hl || !tip || !pts.length) return;
+    let last = -1, raf = 0, px = null;
+    const hide = () => { hl.setAttribute('visibility', 'hidden'); tip.style.display = 'none'; last = -1; this._hvOn = false; };
+    const show = () => {
+      raf = 0;
+      const r = sv.getBoundingClientRect();
+      if (!r.width || px == null) return;
+      const sx = (px - r.left) * (g.W / r.width);
+      if (sx < g.L || sx > g.xn) { hide(); return; }
+      const i = Math.min(pts.length - 1, Math.floor((sx - g.L) / g.bw));
+      hl.setAttribute('x1', sx); hl.setAttribute('x2', sx); hl.setAttribute('visibility', 'visible');
+      if (i !== last) { last = i; tip.innerHTML = html(pts[i]); }  // text only changes per quarter
+      tip.style.display = 'block';
+      const c = cw.getBoundingClientRect(), tw = tip.offsetWidth;
+      let left = px - c.left + 14;
+      if (left + tw > c.width) left = px - c.left - 14 - tw;
+      tip.style.transform = 'translateX(' + Math.max(0, left) + 'px)';
+    };
+    const move = e => { px = e.clientX; this._hvOn = true; this._hvX = px; if (!raf) raf = requestAnimationFrame(show); };
+    cw.addEventListener('pointermove', move);
+    cw.addEventListener('pointerdown', move);
+    cw.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hide(); });
+    this._hide = hide;
+    if (!this._docDown) { this._docDown = e => { if (this._hide && !e.composedPath().includes(this)) this._hide(); }; document.addEventListener('pointerdown', this._docDown); }
+    if (this._hvOn && this._hvX != null) { px = this._hvX; show(); }  // card was redrawn while the pointer is over it
+  }
+  disconnectedCallback() { if (this._docDown) { document.removeEventListener('pointerdown', this._docDown); this._docDown = null; } }
   _glad(pt) {
     if (pt.length < 2) return '';
     let d = `M${pt[0][0]},${pt[0][1]}`;
@@ -82,7 +120,7 @@ class BatterijplanPlanCard extends HTMLElement {
     if (pts.length) {
       const p = pts[0];
       const zelfde = p[5] === p[3];
-      kop = `<b>${dec((+a.lading).toFixed(2))} kWh</b> ${T('in de batterij')}. ${T('Kwartier')} ${tijd(p[0])} (${dec(p[1])} ct): Batterijplan <b style="color:${BG}">${NAAM[p[5]]}</b>`
+      kop = `<b>${dec(this._liveLading(a).toFixed(1))} kWh</b> ${T('in de batterij')}. ${T('Kwartier')} ${tijd(p[0])} (${dec(p[1])} ct): Batterijplan <b style="color:${BG}">${NAAM[p[5]]}</b>`
         + (zelfde ? ` — ${T('hetzelfde als HBC')}.` : ` — ${T('HBC zou')} <span style="color:${GEEL}">${NAAM[p[3]]}</span>.`)
         + `<br>${T('Tot')} ${dag(pts[pts.length - 1][0])} ${tijd(pts[pts.length - 1][0] + 900)}: HBC <span style="color:${GEEL}">${eur(a.kosten_hbc)}</span>, Batterijplan <span style="color:${BG}">${eur(a.kosten_plan)}</span>, ${T('verschil')} <b style="color:${opb >= 0 ? '#22c55e' : '#f59e0b'}">${opb >= 0 ? '+' : ''}${eur(opb)}</b>.`;
       const runs = [];
@@ -168,6 +206,7 @@ class BatterijplanPlanCard extends HTMLElement {
     }
     if (toonH && aan('hbc')) svg += `<path d="${this._glad(lp(4))}" fill="none" stroke="${GEEL}" stroke-width="2" stroke-dasharray="5 4"/>`;
     svg += `<line x1="${x0}" x2="${xn}" y1="${y0}" y2="${y0}" stroke="rgba(148,163,184,.35)"/>`;
+    svg += `<line class="hl" x1="0" x2="0" y1="${Tp}" y2="${(toonH && toonP ? r2 : r1) + 8}" stroke="var(--secondary-text-color)" stroke-width="1" visibility="hidden" pointer-events="none"/>`;
     // nu-lijn
     if (pts.length) { const xs = Math.min(xn, Math.max(x0, L + ((Date.now() / 1000 - pts[0][0]) / 900) * bw)); svg += `<line x1="${xs}" x2="${xs}" y1="${Tp}" y2="${y0}" stroke="${BG}" stroke-width="1.5"/><rect x="${xs - 13}" y="${Tp - 11}" width="26" height="13" rx="3" fill="#0e7490"/><text x="${xs}" y="${Tp - 1}" font-size="9" text-anchor="middle" fill="#fff">${T('Nu')}</text>`; }
     // balk
@@ -203,6 +242,9 @@ class BatterijplanPlanCard extends HTMLElement {
       .t{font-size:16px;font-weight:600;color:var(--primary-text-color)}
       .s{font-size:13px;color:var(--secondary-text-color)}
       svg{width:100%;height:auto;display:block;margin-top:6px}
+      .cw{position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+      .tip{position:absolute;top:10px;left:0;width:214px;display:none;pointer-events:none;z-index:2;will-change:transform;background:var(--card-background-color,#fff);color:var(--primary-text-color);border:1px solid var(--divider-color,rgba(148,163,184,.4));border-radius:8px;box-shadow:var(--ha-card-box-shadow,0 2px 8px rgba(0,0,0,.3));padding:6px 10px;font-size:12px;line-height:1.55;box-sizing:border-box}
+      .tip .th{font-weight:600;margin-bottom:2px}.tip .tr{display:flex;justify-content:space-between;gap:10px;white-space:nowrap}.tip .tr span:first-child{color:var(--secondary-text-color)}.tip .tr i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
       .top{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:10px;margin-top:8px}
       .kader{border:1px solid rgba(148,163,184,.25);border-radius:8px;padding:6px 10px;justify-self:start}
       .mid{text-align:center}.re{text-align:right}
@@ -214,10 +256,21 @@ class BatterijplanPlanCard extends HTMLElement {
       .l i{display:inline-block;width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
     </style><ha-card>
       <div class="k"><span class="t">${titel}</span>${w === 'samen' ? '' : `<span class="s">${kop}</span>`}</div>${w === 'samen' ? kop3 : ''}
-      ${pts.length ? `<svg viewBox="0 0 ${W} ${H}">${svg}</svg>` : `<div class="s">${T('Nog geen berekening.')}</div>`}
+      ${pts.length ? `<div class="cw"><svg viewBox="0 0 ${W} ${H}">${svg}</svg><div class="tip"></div></div>` : `<div class="s">${T('Nog geen berekening.')}</div>`}
       <div class="l">${legLijn}</div><div class="l">${legAct}</div>
     </ha-card>`;
     if (!this._ro && window.ResizeObserver) { this._ro = new ResizeObserver(() => { const cw = this.getBoundingClientRect().width; if (Math.abs(cw - (this._cw || 0)) > 20) { this._cw = cw; this._render(this._s); } }); this._ro.observe(this); }
+    const f2 = v => (v == null || isNaN(v) ? '–' : dec((+v).toFixed(2)));
+    const hvHtml = p => {
+      const d = new Date(p[0] * 1000), tm = t => t.toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' });
+      const row = (k, v) => `<div class="tr"><span>${T(k)}</span><b>${v}</b></div>`;
+      const act = (k, c) => `<i style="background:${ACT[c]}"></i>${NAAM[c] || '–'}`;
+      return `<div class="th">${d.toLocaleDateString(LOC, { weekday: 'short' })} ${tm(d)}–${tm(new Date(d.getTime() + 900000))}</div>`
+        + row('Kale prijs', `${dec((+p[1]).toFixed(1))} ct`) + row('Zon verwacht', `${f2(p[7])} kW`) + row('Zon voorzichtig', `${f2(p[8])} kW`)
+        + (toonH ? row('Lading HBC', `${f2(p[4])} kWh`) : '') + (toonP ? row('Lading Batterijplan', `${f2(p[6])} kWh`) : '')
+        + (toonH ? row('Actie HBC', act('h', p[3])) : '') + (toonP ? row('Actie Batterijplan', act('p', p[5])) : '');
+    };
+    this._hover(pts, { W, L, xn, bw }, hvHtml);
     this.shadowRoot.querySelectorAll('.solo').forEach(el => el.addEventListener('click', () => {
       const k = el.dataset.solo;
       this._solo = this._solo === k ? null : k;

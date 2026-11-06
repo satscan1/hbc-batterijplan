@@ -6,7 +6,7 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Versie 1.0.0-rc6 · release candidate*
+*Versie 1.0.0-rc7 · release candidate*
 
 Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** momenten van de dag. Het werkt samen met [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) en neemt HBC niet over: HBC blijft de batterij aansturen, Batterijplan geeft alleen per kwartier een aanwijzing.
 
@@ -50,6 +50,14 @@ Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** 
 - **Getallen volgen je Home Assistant-getalnotatie** (komma of punt). Tik op het logo voor de seizoensplaat.
 
 Alles op een rij: [CHANGELOG.md](CHANGELOG.md).
+
+## Installatie
+
+1. Open HACS, zoek **HBC Batterijplan** en kies **Downloaden** (zodra de integratie in de standaardlijst van HACS staat).
+2. Staat hij er nog niet, of zie je hem niet? Voeg hem dan toe als aangepaste repository: HACS → menu (⋮) → **Aangepaste repositories** → `https://github.com/satscan1/hbc-batterijplan`, categorie **Integratie**. Zoek hem daarna op en download hem.
+3. Herstart Home Assistant, ga dan naar *Instellingen → Apparaten & diensten → Integratie toevoegen → Batterijplan*.
+
+Details: [01 · Installatie](docs/01-installation.nl.md).
 
 ## Documentatie
 

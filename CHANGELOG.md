@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.0-rc7 — HACS review: security and escaping (release candidate)
+
+Audit before the request for the HACS default list. Nothing changes for the plan, the sensors or HBC.
+
+**Fixed**
+- **Cards: escaping.** `batterijplan-plan-card`: the card option `titel` went unescaped into `innerHTML` (now escaped). The plan points of the configured `entity` (any entity can be configured) are reduced to numbers and the action letters L, O, H, V, Z before anything is drawn, so no attribute text can reach the HTML. `batterijplan-cards.js`: the quarters at *Bijladen van het net* (status/advice card) and the three quarter counters of the old earnings card came straight from state attributes into `innerHTML` (now escaped); the *Live* label too.
+- **Text settings** (sensors for grid, solar, battery, EV, solar forecast) accept only a `sensor.` entity id or empty, anything else is refused with a message. The value is only ever read as a sensor state; the form already used a sensor picker.
+- **Unload.** Timers and listeners are only stopped when the platforms really unloaded. The plan card disconnects its ResizeObserver, and an open explanation window of a card closes (with its keyboard listener) when the card is removed.
+
+**Checked, nothing to change**
+- Nothing is written to `/config/www` or anywhere public. Data lives only in `.storage` (two Store files); the static path `/batterijplan_frontend` serves `frontend/` (code and images only) and the integration never writes there. No reports, exports or logs are stored; the report and the CSV are built in the browser and downloaded.
+- Service calls: only `input_select.select_option` and `input_number.set_value` on the fixed HBC entities, plus `logbook.log`. Domain, service and entity id never come from a setting, text, select or number entity.
+- No own websocket commands, views or services. The built-in dashboard is read-only (YAML mode).
+- No blocking I/O in the event loop (file reads and the planner run in the executor), no personal data in the log.
+
+**Tests**: `tests/test_security.py` (no file writes, fixed service targets, no own views, sensor-id check, manifest/hacs.json) and `tests/test_escaping.mjs` (hostile config, states and attributes through every card and the report: nothing unescaped in `innerHTML`).
+
+**Docs**: README and installation guide (EN/NL/DE): first search for HBC Batterijplan in HACS, custom repository as the fallback.
+
 ## 1.0.0-rc6 — solar forecast for HBC, advice and auto-adjust for the HBC settings, live charge (release candidate)
 
 rc5 was never published, so this release contains everything since rc4.

@@ -6,7 +6,7 @@
 
 *Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Version 1.0.0-rc6 · release candidate*
+*Version 1.0.0-rc7 · release candidate*
 
 Batterijplan makes your home battery save its charge for the **most expensive** moments of the day. It works together with [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) and does not take HBC over: HBC keeps controlling the battery, Batterijplan only gives it a hint for each quarter of an hour.
 
@@ -50,6 +50,14 @@ Batterijplan makes your home battery save its charge for the **most expensive** 
 - **Numbers follow your Home Assistant number format** (comma or point). Tap the logo for the season picture.
 
 Everything at a glance: [CHANGELOG.md](CHANGELOG.md).
+
+## Installation
+
+1. Open HACS, search for **HBC Batterijplan** and choose **Download** (once the integration is in the HACS default list).
+2. Not listed yet, or you do not see it? Add it as a custom repository: HACS → menu (⋮) → **Custom repositories** → `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Then search for it and download it.
+3. Restart Home Assistant, then *Settings → Devices & services → Add integration → Batterijplan*.
+
+Details: [01 · Installation](docs/01-installation.md).
 
 ## Documentation
 

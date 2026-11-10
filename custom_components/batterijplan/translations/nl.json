@@ -74,9 +74,9 @@
     },
     "land": {
       "options": {
-        "NL": "Nederland",
-        "DE": "Duitsland",
-        "BE": "België (Vlaanderen)"
+        "nl": "Nederland",
+        "de": "Duitsland",
+        "be": "België (Vlaanderen)"
       }
     }
   },

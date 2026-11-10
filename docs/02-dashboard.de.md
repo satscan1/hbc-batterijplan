@@ -9,7 +9,7 @@
 - Jede eigene Karte hat ein **(i)** neben dem Titel, und auf der Statuskarte und in den Einstellungen hat auch jede Zeile eins. Klicke darauf für das Fenster *Wie liest man das?* Fahre mit der Maus über eine Zahl mit gepunkteter Linie für einen kurzen Hinweis.
 - Die Farben sind überall gleich. Die Legende der Grafik erklärt sie.
 
-<p align="center"><img src="images/overview.de.png" width="95%" alt="Batterijplan-Dashboard"></p>
+<p align="center"><img src="images/dashboard-overview-de.png" width="95%" alt="Batterijplan-Dashboard"></p>
 
 Die Beträge im Bild sind Beispielzahlen.
 

@@ -6,9 +6,11 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Versie 1.0.0-rc7 · release candidate*
+*Versie 1.0.0*
 
 Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** momenten van de dag. Het werkt samen met [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) en neemt HBC niet over: HBC blijft de batterij aansturen, Batterijplan geeft alleen per kwartier een aanwijzing.
+
+Het is bedoeld voor huishoudens in Nederland, Duitsland en België (Vlaanderen) met een dynamisch energiecontract.
 
 > Batterijplan is een losse, onofficiële aanvulling op HBC. Het wordt niet door de makers van HBC gemaakt of onderhouden. Vragen over Batterijplan stel je hier, niet bij HBC.
 
@@ -30,17 +32,18 @@ Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** 
 - **Laat zien wat het oplevert.** Een eerlijke schatting bovenop HBC alleen: bij overschot ontladen telt alleen wat er echt uit de batterij ging.
 - **Begint veilig.** Eerst in schaduwmodus (rekent mee, stuurt niets). Pas als jij *Live* aanzet, stuurt het HBC bij.
 
-## Nieuw in 1.0.0-rc6 (inclusief rc5)
+## Nieuw in 1.0.0
 
+- **Landinstelling:** Duitsland (vaste terugleververgoeding) en België/Vlaanderen (capaciteitstarief, gebruikt de importgrens van HBC), naast Nederland.
+- **Rustiger plan bij bijna gelijke prijzen:** omschakelkosten van 2 ct tussen vasthouden en terugleveren, zodat het plan niet meer omslaat voor een fractie van een cent.
+- **Leesbaar in lichtmodus:** donkerdere kleuren voor de plankaart en de legenda in het lichte thema van Home Assistant; het donkere thema blijft ongewijzigd.
+- **Tijdzone uit Home Assistant:** gelezen zonder blokkerende aanroep (review-feedback).
 - **Zonvoorspelling voor HBC:** de nieuwe sensor `sensor.batterijplan_zon_voor_hbc` laat HBC stoppen met laden van het net op het niveau dat het plan wil. Zonder plan, of met Live uit, geeft hij de echte voorspelling 1 op 1 door.
 - **Solcast-namen:** automatisch gevonden in Engels, Nederlands en Duits, of vul je eigen sensoren in bij het venster *Sensoren*.
 - **HBC-instellingen automatisch:** een schakelaar (standaard uit) die *cheapest hrs*, *expensive hrs* en *Solar reserved for house* op het advies zet. Je eigen waarden komen terug als je hem uitzet. De kaart *Advies HBC* toont alle drie de instellingen.
 - **Live lading:** *In de batterij nu* volgt de batterij zodra die verandert, in stappen van 0,1 kWh.
 - **Lichter voor de database:** de grote plandetails worden niet meer in de recorder geschreven.
 - **Tooltip in de grafiek:** hover of tik voor tijd, prijs, zon, lading en acties per kwartier.
-
-## Nieuw in 1.0.0-rc3
-
 - **Echte Home Assistant-integratie:** installeren met HACS en instellen in een formulier onder *Apparaten & diensten*. Geen YAML-pakket, geen bestanden kopiëren, geen dashboardbron.
 - **Ingebouwd dashboard** in de zijbalk (`/batterijplan`), in het Nederlands, Engels en Duits.
 - **Vier regels met een eigen schakelaar:** laden van het net, ontladen buiten HBC-uren, vasthouden, terugleveren. De drempel is die van HBC zelf.
@@ -69,9 +72,9 @@ Details: [01 · Installatie](docs/01-installation.nl.md).
 | [04 · Onderhoud en bijwerken](docs/04-maintenance.nl.md) | Wat je af en toe doet, nieuwe versie, verwijderen |
 | [05 · Problemen oplossen](docs/05-troubleshooting.nl.md) | Bekende meldingen en wat je eraan doet |
 
-## Release candidate
+## Status
 
-Dit is een **release candidate** (rc): de laatste testversie voor 1.0.0. Ze draait dagelijks bij de maker en bij een paar testers. Zet hem eerst in schaduwmodus, kijk een paar dagen mee en meld wat je opvalt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues) of op Discord. Vermeld je HBC-versie en, bij een foutmelding, een schermafdruk.
+1.0.0 is de eerste volledige release. Zet hem eerst in schaduwmodus, kijk een paar dagen mee en meld wat je opvalt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Vermeld je HBC-versie en, bij een foutmelding, een schermafdruk.
 
 ## Licentie
 

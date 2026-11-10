@@ -27,6 +27,8 @@ from typing import Any
 QUARTER = 900
 MIN_CHARGE_QUARTERS = 2  # grid charging in blocks of at least 30 minutes (one quarter was too short for HBC)
 MAX_HORIZON = 129600  # 36 hours
+BE_CAP_EUR_PER_KW_MONTH = 4.45  # Flanders capacity tariff: 53.39 EUR/kW/year / 12 (source: energiehulp.be)
+SWITCH_COST = 0.02  # EUR per change between hold (H) and discharge/sell (O/V) in the dp plan; stops flip-flopping on near-equal prices (09-11-2026)
 
 
 @dataclass
@@ -67,6 +69,9 @@ class PlanInput:
     solar_q: dict[int, float] | None = None  # quarter start ts -> measured solar kW (replaces pv10 / pv)
     horizon: int = 0  # seconds of price quarters to plan (0 = MAX_HORIZON)
     grid_step: float = 0.05  # kWh step of the dp level grid (coarser = faster, used by the replay)
+    country: str = "NL"  # "NL" (default), "DE" (fixed feed-in tariff, no selling from the battery) or "BE" (Flanders)
+    feed_in_fixed: float = 0.077  # EUR/kWh fixed feed-in tariff, only used for "DE"
+    limit_w: float | None = None  # W grid import limit (HBC peak shaving), only used for "BE"; None = off
 
 
 def stored_energy(soc: list[float], cutoff: list[float], nbat: int, cap: float) -> float:
@@ -115,6 +120,8 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
     ow = sum(inp.discharge_w[:nbat])
     ontlq = (ow / 1000 * 0.25) if ow > 0 else laadq
 
+    be_limit = inp.limit_w is not None and inp.country == "BE"
+    lim_kwh = inp.limit_w / 1000 * 0.25 if be_limit else None  # kWh per quarter at the limit
     # --- quarter list ---
     dph = inp.datapoints_per_hour
     nsub = max(int(round(4 / max(dph, 0.01))), 1)
@@ -143,12 +150,17 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
                 dag = pv > 0 or (inp.bonus_from <= h < inp.bonus_to)
                 ex = p * 0.01 + inp.feed_in_fee
                 ex = ex * bonus if (dag and ex > 0) else ex
+                if inp.country == "DE":
+                    ex = inp.feed_in_fixed  # fixed tariff: not the market price, no daytime bonus
+                lq = max(0.0, min(laadq, (inp.limit_w - w) / 1000 * 0.25)) if be_limit else laadq  # BE: charge power left under the limit
                 Qraw.append(
                     dict(
                         t=t, p=p, m=mark, d=d, b=(p * fa + fb), e=ex,
                         z=inp.pv.get(half, 0) if inp.solar_q is None else pv,
                         z10=pv,  # cautious estimate (the one the plan uses)
                         need=round((w / 1000 - pv) * 0.25, 3),
+                        lq=lq,  # max grid charge this quarter (kWh); = laadq unless a BE limit applies
+                        lim=lim_kwh,  # kWh per quarter at the BE limit (None = no limit)
                     )
                 )
                 if p < mn:
@@ -322,7 +334,7 @@ def _heuristic(P: dict[str, Any], inp: PlanInput, hbc_only: bool = False):
             elif a == "Z" and x["m"] == "high":
                 a = "O"  # same movement (solar surplus charges); the HBC mode for an expensive quarter
         # feed in: keep reserve for own use, only what is certainly surplus
-        if inp.rule_feed_in and a in ("O", "Z", "H") and s2 > 0.05 and x["e"] > 0 and (not hbc_only or x["m"] == "high"):
+        if inp.rule_feed_in and inp.country != "DE" and a in ("O", "Z", "H") and s2 > 0.05 and x["e"] > 0 and (not hbc_only or x["m"] == "high"):
             rs = s2
             rlaag = s2
             stop = False
@@ -370,7 +382,7 @@ def allowed_actions(mark: Any, inp: PlanInput) -> list[str]:
             acts.remove("O")
     if not inp.rule_hold and "H" in acts:
         acts.remove("H")
-    if not inp.rule_feed_in and "V" in acts:
+    if (not inp.rule_feed_in or inp.country == "DE") and "V" in acts:  # DE: fixed tariff, selling from the battery earns nothing extra
         acts.remove("V")
     return acts
 
@@ -398,19 +410,28 @@ def _cost(x: dict[str, Any], s: float, s2: float, wear: float) -> tuple[float, f
     return c, (s - s2) * wear if s2 < s else 0.0
 
 
+def _cap_pen(x: dict[str, Any], net: float) -> float:
+    """BE: penalty for grid import above the limit in this quarter: (import kW - limit kW) x EUR/kW/month. 0 otherwise.
+    Only steers the dp (holds charge to flatten the peak); not part of ``kosten_plan``."""
+    lim = x["lim"]
+    if lim is None or net <= lim:
+        return 0.0
+    return (net - lim) * 4 * BE_CAP_EUR_PER_KW_MONTH
+
 def evaluate_actions(inp: PlanInput, actions: list[str], P: dict[str, Any] | None = None) -> dict[str, float]:
     """Score an action list (one letter per quarter) with the dp model: grid cost, wear,
     and the objective = cost + wear - end level x cheapest purchase price. Used by the tests."""
     P = P or _prepare(inp)
     s = P["E"]
-    cost = wear = 0.0
+    cost = wear = pen = 0.0
     for x, a in zip(P["Q"], actions):
-        s2 = _move(a, s, x["need"], P["top"], P["laadq"], P["ontlq"])
+        s2 = _move(a, s, x["need"], P["top"], x["lq"], P["ontlq"])
         c, w = _cost(x, s, s2, P["wear"])
         cost += c
         wear += w
+        pen += _cap_pen(x, x["need"] + s2 - s)
         s = s2
-    return {"cost": cost, "wear": wear, "end": s, "objective": cost + wear - s * P["pmin_b"]}
+    return {"cost": cost, "wear": wear, "end": s, "cap": pen, "objective": cost + wear + pen - s * P["pmin_b"]}
 
 
 def _dp(P: dict[str, Any], inp: PlanInput):
@@ -445,46 +466,63 @@ def _dp(P: dict[str, Any], inp: PlanInput):
     def k_next(a: str, k: int) -> int:
         return min(k + 1, M) if a == "L" else 0
 
+    def p_state(a: str, s: float, s2: float) -> int:
+        """0 = other, 1 = held, 2 = discharged/sold (level goes down)."""
+        if a == "H":
+            return 1
+        return 2 if s2 < s - 1e-9 else 0
+
+    def pen(p: int, pn: int) -> float:
+        return SWITCH_COST if (p == 1 and pn == 2) or (p == 2 and pn == 1) else 0.0
+
     # V[t][k][i]: best future cost from quarter t, block state k, level grid[i]
-    V = [[[0.0] * (ns + 1) for _ in range(M + 1)] for _ in range(n + 1)]
+    V = [[[[0.0] * (ns + 1) for _ in range(3)] for _ in range(M + 1)] for _ in range(n + 1)]
     for k in range(M + 1):
-        V[n][k] = [-pmin_b * s for s in grid]
+        for p in range(3):
+            V[n][k][p] = [-pmin_b * s for s in grid]
     for t in range(n - 1, -1, -1):
         x = Q[t]
-        need, b, e = x["need"], x["b"], x["e"]
+        need, b, e, lq, lim = x["need"], x["b"], x["e"], x["lq"], x["lim"]
         for k in range(M + 1):
             acts = acts_for(t, k)
-            vt = V[t][k]
-            for i in range(ns + 1):
-                s = grid[i]
-                best = 1e18
-                for a in acts:
-                    s2 = _move(a, s, need, top, laadq, ontlq)
-                    net = need + s2 - s
-                    v = (net * b if net > 0 else net * e) + ((s - s2) * wear if s2 < s else 0.0) + interp(V[t + 1][k_next(a, k)], s2)
-                    if v < best:
-                        best = v
-                vt[i] = best
+            for p in range(3):
+                vt = V[t][k][p]
+                for i in range(ns + 1):
+                    s = grid[i]
+                    best = 1e18
+                    for a in acts:
+                        s2 = _move(a, s, need, top, lq, ontlq)
+                        net = need + s2 - s
+                        pn = p_state(a, s, s2)
+                        v = (net * b if net > 0 else net * e) + ((s - s2) * wear if s2 < s else 0.0) + pen(p, pn) + interp(V[t + 1][k_next(a, k)][pn], s2)
+                        if lim is not None and net > lim:
+                            v += (net - lim) * 4 * BE_CAP_EUR_PER_KW_MONTH
+                        if v < best:
+                            best = v
+                    vt[i] = best
     # forward pass on exact (continuous) levels
     s = P["E"]
     k = min(max(int(inp.prev_l_run), 0), M)
+    p = 0
     bl: list[list[Any]] = []
     bk = bk0 = bw = 0.0
     for t in range(n):
         x = Q[t]
-        best, ba, bs2, bc, bwr = 1e18, "", s, 0.0, 0.0
+        best, ba, bs2, bc, bwr, bp = 1e18, "", s, 0.0, 0.0, 0
         for a in acts_for(t, k):
-            s2 = _move(a, s, x["need"], top, laadq, ontlq)
+            s2 = _move(a, s, x["need"], top, x["lq"], ontlq)
             c, w = _cost(x, s, s2, wear)
-            v = c + w + interp(V[t + 1][k_next(a, k)], s2)
+            pn = p_state(a, s, s2)
+            v = c + w + _cap_pen(x, x["need"] + s2 - s) + pen(p, pn) + interp(V[t + 1][k_next(a, k)][pn], s2)
             if v < best - 1e-9:
-                best, ba, bs2, bc, bwr = v, a, s2, c, w
+                best, ba, bs2, bc, bwr, bp = v, a, s2, c, w, pn
         if t == 0:
             bk0 = bc
         bk += bc
         bw += bwr
         bl.append([ba, round(bs2 + marge, 2)])
         k = k_next(ba, k)
+        p = bp
         s = bs2
     return bl, bk, bk0, s, bw
 

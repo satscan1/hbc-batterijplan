@@ -11,18 +11,17 @@
 
 <p align="center"><img src="images/overview.nl.png" width="95%" alt="Batterijplan-dashboard"></p>
 
+De bedragen in het plaatje zijn voorbeeldcijfers.
+
 1. **Live**: aan = Batterijplan stuurt HBC. Uit = schaduwmodus: het rekent mee, maar stuurt niets.
 2. **Knoppen**: Opbrengst, Rapport, Advies HBC, Instellingen en Sensoren. Elke knop opent een venster. De oranje stip op **Advies HBC** betekent dat *cheapest hrs*, *expensive hrs* of *Solar reserved for house* afwijkt van het advies (minstens 1 uur of 0,5 kWh); in het venster staat ook de schakelaar *HBC-instellingen automatisch*.
-3. **Statuskaart**: modus, verbruik leren, HBC-strategie, komend kwartier en advies huisverbruik. De (i) achter elke regel legt hem uit.
-4. **Briefing en plan**: wat er nu in de batterij zit, wat het plan het komende kwartier doet en het verschil met HBC alleen.
-5. **Regels**: de vier regels, elk met een eigen aan/uit-schakelaar.
-6. **Waar Batterijplan bijstuurt**: de blokken waarin het plan iets anders doet dan HBC.
-
-De pagina heeft vier delen:
-1. de knoppenrij;
-2. de statuskaart;
-3. de briefing, in twee kolommen, met de regels rechts;
-4. de grafiek over de volle breedte: HBC alleen en Batterijplan.
+3. **Statuskaart**: Modus, Verbruik leren, HBC-strategie, komend kwartier en advies huisverbruik. De (i) achter elke regel legt hem uit.
+4. **Briefing en plan**: wat er nu in de batterij zit, wat het plan het komende kwartier doet en het kostenverschil met HBC alleen tot middernacht.
+5. **Regels**: de vier regels (*Extra laden van het net*, *Ontladen buiten HBC-uren*, *Vasthouden voor later*, *Terugleveren*), elk met een eigen aan/uit-schakelaar.
+6. **Waar Batterijplan bijstuurt**: de blokken waarin het plan iets anders doet dan HBC, met een kleur per actie en de prijs.
+7. **Kale prijs nu en de stroomkosten tot middernacht**: HBC naast Batterijplan.
+8. **Verwachte besparing** ten opzichte van HBC alleen.
+9. **Batterij**: hoeveel kWh er nu in de batterij zit.
 
 ## De knoppenrij
 

@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 
 from .const import (
-    CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE,
+    CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_COUNTRY, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE,
+    CONF_FEED_IN_FIXED, COUNTRIES,
     CONF_MARGIN, CONF_PRICES, CONF_SENSOR_BATTERY, CONF_SENSOR_EV, CONF_SENSOR_NET, CONF_SENSOR_SOLAR,
     CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW, CONF_STORAGE_FEE, CONF_VAT, DEFAULTS, DOMAIN, PRICES_ALL_IN, PRICES_RAW,
 )
@@ -45,9 +46,12 @@ def _schema(values: dict[str, Any], expert: bool) -> vol.Schema:
     }
     if expert:
         fields.update({
+            vol.Required(CONF_COUNTRY, description=sug(CONF_COUNTRY)): selector.SelectSelector(selector.SelectSelectorConfig(
+                options=COUNTRIES, translation_key=CONF_COUNTRY, mode=selector.SelectSelectorMode.DROPDOWN)),
             vol.Required(CONF_VAT, description=sug(CONF_VAT)): _number(0, 30, 1, "%"),
             vol.Required(CONF_FEED_IN_FEE, description=sug(CONF_FEED_IN_FEE)): _number(-0.5, 0.5, 0.001, "EUR/kWh"),
             vol.Required(CONF_FEED_IN_BONUS, description=sug(CONF_FEED_IN_BONUS)): _number(0, 50, 1, "%"),
+            vol.Required(CONF_FEED_IN_FIXED, description=sug(CONF_FEED_IN_FIXED)): _number(0, 0.5, 0.001, "EUR/kWh"),
             vol.Required(CONF_BONUS_FROM, description=sug(CONF_BONUS_FROM)): _number(0, 23, 1, "h"),
             vol.Required(CONF_BONUS_TO, description=sug(CONF_BONUS_TO)): _number(1, 24, 1, "h"),
         })

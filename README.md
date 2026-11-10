@@ -6,9 +6,11 @@
 
 *Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Version 1.0.0-rc7 · release candidate*
+*Version 1.0.0*
 
 Batterijplan makes your home battery save its charge for the **most expensive** moments of the day. It works together with [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) and does not take HBC over: HBC keeps controlling the battery, Batterijplan only gives it a hint for each quarter of an hour.
+
+It is made for households in the Netherlands, Germany and Belgium (Flanders) with a dynamic energy contract.
 
 > Batterijplan is a separate, unofficial add-on to HBC. It is not made or maintained by the makers of HBC. Ask your questions about Batterijplan here, not at HBC.
 
@@ -30,17 +32,18 @@ Batterijplan makes your home battery save its charge for the **most expensive** 
 - **Shows what it earns.** An honest estimate on top of HBC alone: for surplus discharging, only what really came out of the battery counts.
 - **Starts safely.** First in shadow mode (it calculates along, but steers nothing). Only when you turn on *Live* does it steer HBC.
 
-## New in 1.0.0-rc6 (including rc5)
+## New in 1.0.0
 
+- **Country setting:** Germany (fixed feed-in tariff) and Belgium/Flanders (capacity tariff, uses the HBC import limit), next to the Netherlands.
+- **Calmer plan at nearly equal prices:** a switching cost of 2 ct between holding and selling back, so the plan no longer flips for a fraction of a cent.
+- **Readable in light mode:** darker colours for the plan card and legend in Home Assistant's light theme; the dark theme is unchanged.
+- **Time zone from Home Assistant:** read without a blocking call (review feedback).
 - **Solar forecast for HBC:** the new sensor `sensor.batterijplan_zon_voor_hbc` lets HBC stop grid charging at the level the plan wants. Without a plan, or with Live off, it passes the real forecast on 1:1.
 - **Solcast names:** found automatically in English, Dutch and German, or fill in your own sensors in the *Sensors* window.
 - **Auto-adjust HBC settings:** a switch (off by default) that sets *cheapest hrs*, *expensive hrs* and *Solar reserved for house* to the advice. Your own values come back when you turn it off. The card *Advice for HBC* shows all three settings.
 - **Live charge level:** *In the battery now* follows the battery as it changes, in steps of 0.1 kWh.
 - **Lighter on the database:** the large plan details are no longer written to the recorder.
 - **Chart tooltip:** hover or tap to see time, price, solar, charge and actions per quarter.
-
-## New in 1.0.0-rc3
-
 - **A real Home Assistant integration:** install it with HACS and set it up in a form under *Devices & services*. No YAML package, no files to copy, no dashboard resource.
 - **Built-in dashboard** in the sidebar (`/batterijplan`), in Dutch, English and German.
 - **Four rules, each with its own switch:** charge from the grid, discharge outside HBC hours, hold, feed in. The threshold is HBC's own.
@@ -69,9 +72,9 @@ Details: [01 · Installation](docs/01-installation.md).
 | [04 · Maintenance and updating](docs/04-maintenance.md) | What you do now and then, a new version, removing it |
 | [05 · Troubleshooting](docs/05-troubleshooting.md) | Known messages and what to do about them |
 
-## Release candidate
+## Status
 
-This is a **release candidate** (rc): the last test version before 1.0.0. It runs every day at the maker's home and with a few testers. Start in shadow mode first, watch it for a few days and report what you notice via [Issues](https://github.com/satscan1/hbc-batterijplan/issues) or on Discord. Mention your HBC version and, for an error message, add a screenshot.
+1.0.0 is the first full release. Start in shadow mode first, watch it for a few days and report what you notice via [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Mention your HBC version and, for an error message, add a screenshot.
 
 ## License
 

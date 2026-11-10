@@ -64,8 +64,10 @@ De rest wijzig je later: druk bij de integratie op **Configureren**. Naast de ve
 
 | Veld | Standaard | Betekenis |
 |---|---|---|
+| Land | Nederland | Nederland (NL), Duitsland (DE) of België (Vlaanderen, BE). Zie [03 · Hoe het werkt](03-how-it-works.nl.md#land). |
 | Btw | 21 % | Btw over wat je inkoopt. |
 | Toeslag terugleveren (EUR/kWh) | 0,02 | Wat je bovenop de beursprijs krijgt als je teruglevert. Bij Zonneplan is dit bijvoorbeeld de *terugleververgoeding*. Kijk in je contract. |
+| Vaste terugleververgoeding (EUR/kWh) | 0,077 | Alleen gebruikt in Duitsland. Wat je krijgt voor elke kWh die je teruglevert, ongeacht de beursprijs. De standaardwaarde is het tarief voor nieuwe kleine dakinstallaties tot 10 kWp vanaf augustus 2026. Pas het aan je eigen contract aan. |
 | Dagbonus terugleveren | 10 % | Extra percentage op een positieve terugleverprijs overdag. 0 = geen. |
 | Overdag vanaf / tot (uur) | 8 / 17 | De uren voor die bonus. Elk kwartier met zon telt ook als overdag. |
 

@@ -55,7 +55,9 @@
           "teruglever_toeslag": "Toeslag terugleveren (EUR/kWh)",
           "teruglever_bonus": "Dagbonus terugleveren",
           "bonus_van": "Overdag vanaf (uur)",
-          "bonus_tot": "Overdag tot (uur)"
+          "bonus_tot": "Overdag tot (uur)",
+          "land": "Land",
+          "teruglever_vast": "Vaste terugleververgoeding (EUR/kWh)"
         }
       }
     },
@@ -68,6 +70,13 @@
       "options": {
         "kaal": "Kale beursprijs",
         "all-in": "All-in prijs"
+      }
+    },
+    "land": {
+      "options": {
+        "NL": "Nederland",
+        "DE": "Duitsland",
+        "BE": "België (Vlaanderen)"
       }
     }
   },

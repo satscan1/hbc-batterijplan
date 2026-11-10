@@ -55,7 +55,9 @@
           "teruglever_toeslag": "Einspeise-Aufschlag (EUR/kWh)",
           "teruglever_bonus": "Tages-Einspeisebonus",
           "bonus_van": "Tagsüber ab (Uhr)",
-          "bonus_tot": "Tagsüber bis (Uhr)"
+          "bonus_tot": "Tagsüber bis (Uhr)",
+          "land": "Land",
+          "teruglever_vast": "Feste Einspeisevergütung (EUR/kWh)"
         }
       }
     },
@@ -68,6 +70,13 @@
       "options": {
         "kaal": "Reiner Börsenpreis",
         "all-in": "All-in-Preis"
+      }
+    },
+    "land": {
+      "options": {
+        "NL": "Niederlande",
+        "DE": "Deutschland",
+        "BE": "Belgien (Flandern)"
       }
     }
   },

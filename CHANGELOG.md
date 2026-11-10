@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.0 — first full release
+
+**Added**
+- **Country setting** for Germany (fixed feed-in tariff) and Belgium/Flanders (capacity tariff, uses the HBC import limit), next to the Netherlands.
+
+**Changed**
+- **Calmer plan at nearly equal prices.** A switching cost of 2 ct between holding and selling back, so the plan no longer flips for a fraction of a cent.
+- **Readable in light mode.** Darker colours for the plan card and legend in Home Assistant's light theme. The dark theme is unchanged.
+- **Time zone from Home Assistant.** Read without a blocking call (review feedback).
+
+Everything from rc3 through rc7 is included.
+
 ## 1.0.0-rc7 — HACS review: security and escaping (release candidate)
 
 Audit before the request for the HACS default list. Nothing changes for the plan, the sensors or HBC.

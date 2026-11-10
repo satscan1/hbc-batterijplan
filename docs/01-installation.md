@@ -64,8 +64,10 @@ You change the rest later: on the integration, press **Configure**. Next to the 
 
 | Field | Default | Meaning |
 |---|---|---|
+| Country | Netherlands | Netherlands (NL), Germany (DE) or Belgium (Flanders, BE). See [03 · How it works](03-how-it-works.md#country). |
 | VAT | 21 % | VAT on what you buy. |
 | Feed-in add-on (EUR/kWh) | 0.02 | What you get on top of the exchange price when you feed in. With Zonneplan, for example, this is the *terugleververgoeding*. Check your contract. |
+| Fixed feed-in tariff (EUR/kWh) | 0.077 | Only used in Germany. What you get for every kWh you feed in, whatever the exchange price. The default is the tariff for new small roof installations up to 10 kWp from August 2026. Change it to match your own contract. |
 | Daytime feed-in bonus | 10 % | Extra percentage on a positive feed-in price in the daytime. 0 = none. |
 | Daytime from / until (hour) | 8 / 17 | The hours for that bonus. Every quarter with sun counts as daytime too. |
 

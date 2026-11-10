@@ -6,9 +6,11 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md)*
 
-*Version 1.0.0-rc7 · Release Candidate*
+*Version 1.0.0*
 
 Batterijplan sorgt dafür, dass dein Hausspeicher seine Ladung für die **teuersten** Momente des Tages aufhebt. Es arbeitet mit [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) zusammen und übernimmt HBC nicht: HBC steuert weiter den Speicher, Batterijplan gibt nur pro Viertelstunde einen Hinweis.
+
+Es ist für Haushalte in den Niederlanden, Deutschland und Belgien (Flandern) mit einem dynamischen Stromvertrag gedacht.
 
 > Batterijplan ist eine eigenständige, inoffizielle Ergänzung zu HBC. Es wird nicht von den Machern von HBC entwickelt oder gepflegt. Fragen zu Batterijplan stellst du hier, nicht bei HBC.
 
@@ -30,17 +32,18 @@ Batterijplan sorgt dafür, dass dein Hausspeicher seine Ladung für die **teuers
 - **Zeigt, was es bringt.** Eine ehrliche Schätzung zusätzlich zu HBC allein: Beim Überschuss entladen zählt nur, was wirklich aus dem Speicher kam.
 - **Startet sicher.** Zuerst im Schattenmodus (rechnet mit, steuert nichts). Erst wenn du *Live* einschaltest, steuert es HBC nach.
 
-## Neu in 1.0.0-rc6 (einschließlich rc5)
+## Neu in 1.0.0
 
+- **Ländereinstellung:** Deutschland (feste Einspeisevergütung) und Belgien/Flandern (Kapazitätstarif, nutzt die Importgrenze von HBC), neben den Niederlanden.
+- **Ruhigerer Plan bei fast gleichen Preisen:** Umschaltkosten von 2 ct zwischen Halten und Einspeisen, damit der Plan nicht mehr wegen eines Bruchteils eines Cents umschlägt.
+- **Lesbar im hellen Modus:** dunklere Farben für die Plankarte und die Legende im hellen Home-Assistant-Design; das dunkle Design bleibt unverändert.
+- **Zeitzone aus Home Assistant:** ohne blockierenden Aufruf gelesen (Review-Feedback).
 - **Solarprognose für HBC:** Der neue Sensor `sensor.batterijplan_zon_voor_hbc` lässt HBC das Laden aus dem Netz auf dem Niveau beenden, das der Plan will. Ohne Plan oder bei ausgeschaltetem Live gibt er die echte Prognose 1:1 weiter.
 - **Solcast-Namen:** werden automatisch auf Englisch, Niederländisch und Deutsch gefunden, oder du trägst deine eigenen Sensoren im Fenster *Sensoren* ein.
 - **HBC-Einstellungen automatisch:** ein Schalter (standardmäßig aus), der *cheapest hrs*, *expensive hrs* und *Solar reserved for house* auf die Empfehlung setzt. Deine eigenen Werte kommen zurück, wenn du ihn ausschaltest. Die Karte *Empfehlung HBC* zeigt alle drei Einstellungen.
 - **Live-Ladestand:** *Jetzt in der Batterie* folgt der Batterie, sobald sie sich ändert, in Schritten von 0,1 kWh.
 - **Schonender für die Datenbank:** Die großen Plandetails werden nicht mehr in den Recorder geschrieben.
 - **Tooltip im Diagramm:** Hover oder Tippen zeigt Zeit, Preis, Solar, Ladung und Aktionen pro Viertelstunde.
-
-## Neu in 1.0.0-rc3
-
 - **Eine echte Home-Assistant-Integration:** mit HACS installieren und in einem Formular unter *Geräte & Dienste* einrichten. Kein YAML-Paket, keine Dateien kopieren, keine Dashboard-Ressource.
 - **Eingebautes Dashboard** in der Seitenleiste (`/batterijplan`), auf Niederländisch, Englisch und Deutsch.
 - **Vier Regeln mit eigenem Schalter:** aus dem Netz laden, außerhalb der HBC-Zeiten entladen, halten, einspeisen. Die Schwelle ist die von HBC selbst.
@@ -69,9 +72,9 @@ Details: [01 · Installation](docs/01-installation.de.md).
 | [04 · Pflege und Aktualisieren](docs/04-maintenance.de.md) | Was du ab und zu tust, neue Version, Entfernen |
 | [05 · Probleme lösen](docs/05-troubleshooting.de.md) | Bekannte Meldungen und was du dagegen tust |
 
-## Release Candidate
+## Status
 
-Dies ist ein **Release Candidate** (rc): die letzte Testversion vor 1.0.0. Er läuft täglich beim Macher und bei ein paar Testern. Starte ihn zuerst im Schattenmodus, schau ein paar Tage zu und melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues) oder auf Discord. Nenne deine HBC-Version und, bei einer Fehlermeldung, einen Screenshot.
+1.0.0 ist die erste vollständige Version. Starte sie zuerst im Schattenmodus, schau ein paar Tage zu und melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Nenne deine HBC-Version und, bei einer Fehlermeldung, einen Screenshot.
 
 ## Lizenz
 

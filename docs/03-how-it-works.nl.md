@@ -127,6 +127,16 @@ Hij telt alleen als **Live** aan staat en HBC op **Dynamic** staat. Anders gaat 
 
 **Het is een schatting** ("geschat"). Hij rust op de prijzen en het verbruik die Batterijplan op dat moment verwachtte. Je energierekening is het echte bewijs.
 
+## Land
+
+In de expert-instellingen kies je een land: Nederland (NL), Duitsland (DE) of België (Vlaanderen, BE). Het verandert hoe Batterijplan teruglevering waardeert en of het naar pieken kijkt.
+
+**Nederland (NL).** Zoals op deze pagina beschreven. Terugleveren levert de beursprijs plus je eigen toeslag op.
+
+**Duitsland (DE).** Terugleveren levert de vaste terugleververgoeding uit de expert-instellingen op (standaard 0,077 EUR/kWh), niet de beursprijs. Laden en later terugleveren levert dus niets extra op. Daarom levert Batterijplan geen batterijstroom aan het net terug. Het gebruikt de lading alleen voor je eigen huis. Direktvermarktung en MiSpeL worden niet ondersteund.
+
+**België (BE, alleen Vlaanderen).** In Vlaanderen betaal je een capaciteitstarief: je hoogste kwartierafname van het net per maand telt, gemiddeld over 12 maanden, met een minimum van 2,5 kW. Batterijplan gebruikt hiervoor de importgrens van HBC (HBC *Settings*, *peak shaving import limit*; de entities zijn `input_boolean.house_battery_control_has_power_limit_import` en `input_number.house_battery_control_power_limit_import`). Netladen blijft samen met het verwachte huisverbruik onder die grens, en het plan houdt lading vast zodat HBC pieken kan afvlakken. Staat de grens in HBC uit? Dan doet Batterijplan niets met pieken. Onder 2500 W waarschuwt HBC dat er weinig regelruimte is. Wallonië en Brussel worden niet ondersteund.
+
 ## Wat het (nog) niet doet
 
 - **Een goedkope middag die HBC niet als goedkoop markeert** (door de grens op uren per dag of het minimale prijsverschil in HBC) telt niet als bijladen.

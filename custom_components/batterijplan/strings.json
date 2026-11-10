@@ -55,7 +55,9 @@
           "teruglever_toeslag": "Feed-in add-on (EUR/kWh)",
           "teruglever_bonus": "Daytime feed-in bonus",
           "bonus_van": "Daytime from (hour)",
-          "bonus_tot": "Daytime until (hour)"
+          "bonus_tot": "Daytime until (hour)",
+          "land": "Country",
+          "teruglever_vast": "Fixed feed-in tariff (EUR/kWh)"
         }
       }
     },
@@ -68,6 +70,13 @@
       "options": {
         "kaal": "Raw exchange price",
         "all-in": "All-in price"
+      }
+    },
+    "land": {
+      "options": {
+        "NL": "Netherlands",
+        "DE": "Germany",
+        "BE": "Belgium (Flanders)"
       }
     }
   },

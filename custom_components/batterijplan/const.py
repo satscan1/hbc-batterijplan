@@ -3,7 +3,7 @@ from __future__ import annotations
 
 DOMAIN = "batterijplan"
 NAME = "Batterijplan"
-VERSION = "1.0.0-rc7"
+VERSION = "1.0.0"
 
 # settings (config entry options) and their defaults
 CONF_CAPACITY = "capaciteit"
@@ -14,6 +14,8 @@ CONF_FEED_IN_FEE = "teruglever_toeslag"
 CONF_FEED_IN_BONUS = "teruglever_bonus"
 CONF_BONUS_FROM = "bonus_van"
 CONF_BONUS_TO = "bonus_tot"
+CONF_COUNTRY = "land"
+CONF_FEED_IN_FIXED = "teruglever_vast"
 CONF_PRICES = "hbc_prijzen"
 CONF_CONTRACT_START = "contract_start"
 CONF_SENSOR_NET = "sensor_net"
@@ -22,6 +24,11 @@ CONF_SENSOR_BATTERY = "sensor_batterij"
 CONF_SENSOR_EV = "sensor_ev"
 CONF_SOLAR_TODAY = "sensor_zon_vandaag"
 CONF_SOLAR_TOMORROW = "sensor_zon_morgen"
+
+COUNTRY_NL = "NL"
+COUNTRY_DE = "DE"
+COUNTRY_BE = "BE"  # Flanders
+COUNTRIES = [COUNTRY_NL, COUNTRY_DE, COUNTRY_BE]
 
 PRICES_RAW = "kaal"
 PRICES_ALL_IN = "all-in"
@@ -35,6 +42,8 @@ DEFAULTS: dict[str, object] = {
     CONF_FEED_IN_BONUS: 10.0,
     CONF_BONUS_FROM: 8,
     CONF_BONUS_TO: 17,
+    CONF_COUNTRY: COUNTRY_NL,
+    CONF_FEED_IN_FIXED: 0.077,  # EUR/kWh, only used for Germany
     CONF_PRICES: PRICES_RAW,
     CONF_CONTRACT_START: "",
     CONF_SENSOR_NET: "",
@@ -55,6 +64,9 @@ HBC_RESERVED = "input_number.house_battery_solar_reserved_for_house"
 HBC_MAX_ENERGY = "input_number.house_battery_total_max_available_energy"
 HBC_CHEAPEST_HRS = "input_number.house_battery_strategy_dynamic_cheapest_hrs"
 HBC_EXPENSIVE_HRS = "input_number.house_battery_strategy_dynamic_expensive_hrs"
+# HBC peak shaving (import limit), used for Belgium
+HBC_LIMIT_IMPORT_ON = "input_boolean.house_battery_control_has_power_limit_import"
+HBC_LIMIT_IMPORT_W = "input_number.house_battery_control_power_limit_import"
 # the three HBC settings Batterijplan may advise on / adjust: key -> (helper, difference that counts, unit)
 HBC_SETTINGS = {
     "cheapest": (HBC_CHEAPEST_HRS, 1.0, "h"),

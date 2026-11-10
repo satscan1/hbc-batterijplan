@@ -11,18 +11,17 @@
 
 <p align="center"><img src="images/overview.en.png" width="95%" alt="Batterijplan dashboard"></p>
 
+The amounts in the picture are example figures.
+
 1. **Live**: on = Batterijplan steers HBC. Off = shadow mode: it calculates along, but steers nothing.
 2. **Buttons**: Earnings, Report, Advice HBC, Settings and Sensors. Each button opens a window. The orange dot on **Advice HBC** means that *cheapest hrs*, *expensive hrs* or *Solar reserved for house* differs from the advice (by at least 1 hour or 0.5 kWh); the window also has the switch *Auto-adjust HBC settings*.
 3. **Status card**: mode, learning usage, HBC strategy, next quarter and advice house use. The (i) behind each line explains it.
-4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference with HBC alone.
-5. **Rules**: the four rules, each with its own on/off switch.
-6. **Where Batterijplan steers**: the blocks in which the plan does something different from HBC.
-
-The page has four parts:
-1. the row of buttons;
-2. the status card;
-3. the briefing, in two columns, with the rules on the right;
-4. the chart across the full width: HBC alone and Batterijplan.
+4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference in cost with HBC alone until midnight.
+5. **Rules**: the four rules (*Extra charging from the grid*, *Discharging outside HBC hours*, *Holding for later*, *Feeding in*), each with its own on/off switch.
+6. **Where Batterijplan steers**: the blocks in which the plan does something different from HBC, with a colour for each action and the price.
+7. **Bare price now and the electricity cost until midnight**: HBC next to Batterijplan.
+8. **Expected saving** compared with HBC alone.
+9. **Battery**: how many kWh are in the battery now.
 
 ## The row of buttons
 

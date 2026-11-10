@@ -59,7 +59,7 @@ class BatterijplanPlanCard extends HTMLElement {
     const s = h.states[id];
     const rg = ['laden', 'ontladen', 'vasthouden', 'terugleveren'].map(k => (h.states['switch.batterijplan_regel_' + k] || {}).state).join() + this._lng();
     if (rg !== this._rg) { this._rg = rg; this._sig = null; }
-    const sig = (s ? s.last_updated : '') + '|' + this._liveState().last_updated;
+    const sig = (s ? s.last_updated : '') + '|' + this._liveState().last_updated + '|' + (h.themes && h.themes.darkMode);
     this._s = s;
     if (sig === this._sig) return;
     this._sig = sig;
@@ -116,8 +116,8 @@ class BatterijplanPlanCard extends HTMLElement {
   }
   _briefing(s) {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
-    const GEEL = '#facc15', BG = '#06B6D4';
-    const ACT = { L: '#3b82f6', O: '#22c55e', H: '#f59e0b', V: '#ec4899', Z: '#94a3b8' };
+    const LICHT = !!(this._h && this._h.themes && this._h.themes.darkMode === false); const GEEL = LICHT ? '#b49104' : '#facc15', BG = LICHT ? '#05a1bb' : '#06B6D4', GEELT = LICHT ? '#8c7103' : GEEL, BGT = LICHT ? '#047f94' : BG;
+    const ACT = LICHT ? { L: '#3b82f6', O: '#1dab52', H: '#ca8208', V: '#ec4899', Z: '#8596ae' } : { L: '#3b82f6', O: '#22c55e', H: '#f59e0b', V: '#ec4899', Z: '#94a3b8' };
     const T = k => this._T(k), LOC = BP_PLAN_LOC[this._lng()];
     const NAAM = { L: T('laden van het net'), O: T('ontladen'), H: T('vasthouden'), V: T('terugleveren'), Z: T('alleen zon / niets') };
     const NAAMB = { L: T('extra laden van het net'), O: T('extra ontladen'), H: T('vasthouden voor later'), V: T('terugleveren'), Z: T('niet laden / niet ontladen') };
@@ -133,9 +133,9 @@ class BatterijplanPlanCard extends HTMLElement {
     if (pts.length) {
       const p = pts[0];
       const zelfde = p[5] === p[3];
-      kop = `<b>${dec(this._liveLading(a).toFixed(1))} kWh</b> ${T('in de batterij')}. ${T('Kwartier')} ${tijd(p[0])} (${dec(p[1])} ct): Batterijplan <b style="color:${BG}">${NAAM[p[5]]}</b>`
-        + (zelfde ? ` — ${T('hetzelfde als HBC')}.` : ` — ${T('HBC zou')} <span style="color:${GEEL}">${NAAM[p[3]]}</span>.`)
-        + `<br>${T('Tot')} ${dag(pts[pts.length - 1][0])} ${tijd(pts[pts.length - 1][0] + 900)}: HBC <span style="color:${GEEL}">${eur(a.kosten_hbc)}</span>, Batterijplan <span style="color:${BG}">${eur(a.kosten_plan)}</span>, ${T('verschil')} <b style="color:${opb >= 0 ? '#22c55e' : '#f59e0b'}">${opb >= 0 ? '+' : ''}${eur(opb)}</b>.`;
+      kop = `<b>${dec(this._liveLading(a).toFixed(1))} kWh</b> ${T('in de batterij')}. ${T('Kwartier')} ${tijd(p[0])} (${dec(p[1])} ct): Batterijplan <b style="color:${BGT}">${NAAM[p[5]]}</b>`
+        + (zelfde ? ` — ${T('hetzelfde als HBC')}.` : ` — ${T('HBC zou')} <span style="color:${GEELT}">${NAAM[p[3]]}</span>.`)
+        + `<br>${T('Tot')} ${dag(pts[pts.length - 1][0])} ${tijd(pts[pts.length - 1][0] + 900)}: HBC <span style="color:${GEELT}">${eur(a.kosten_hbc)}</span>, Batterijplan <span style="color:${BGT}">${eur(a.kosten_plan)}</span>, ${T('verschil')} <b style="color:${opb >= 0 ? ACT.O : ACT.H}">${opb >= 0 ? '+' : ''}${eur(opb)}</b>.`;
       const runs = [];
       pts.forEach(q => { const k = q[5] !== q[3] ? q[5] : null; const l = runs[runs.length - 1]; if (l && l.k === k) { l.e = q; l.p.push(q[1]); } else runs.push({ k, b: q, e: q, p: [q[1]] }); });
       const bij = runs.filter(r => r.k).slice(0, 16);
@@ -144,7 +144,7 @@ class BatterijplanPlanCard extends HTMLElement {
         : '<div class="r"><span>' + T('Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.') + '</span></div>';
     }
     const RG = [['laden', T('Extra laden van het net')], ['ontladen', T('Ontladen buiten HBC-uren')], ['vasthouden', T('Vasthouden voor later')], ['terugleveren', T('Terugleveren')]];
-    const regels = RG.map(([k, n]) => { const on = ((this._h && this._h.states['switch.batterijplan_regel_' + k]) || {}).state !== 'off'; return `<div><span style="color:var(--secondary-text-color)">${n}</span> <b style="color:${on ? '#66bb6a' : '#f57c00'}">${on ? T('aan') : T('uit')}</b></div>`; }).join('');
+    const regels = RG.map(([k, n]) => { const on = ((this._h && this._h.states['switch.batterijplan_regel_' + k]) || {}).state !== 'off'; return `<div><span style="color:var(--secondary-text-color)">${n}</span> <b style="color:${on ? ACT.O : ACT.H}">${on ? T('aan') : T('uit')}</b></div>`; }).join('');
     this.shadowRoot.innerHTML = `<style>
       ha-card{padding:12px 16px}
       .t{font-size:16px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px}
@@ -174,13 +174,13 @@ class BatterijplanPlanCard extends HTMLElement {
     if (w === 'samen' && this._solo === 'plan') toonH = false;
     if (!this._uit) { try { this._uit = new Set(JSON.parse(localStorage.getItem('bp_legenda_' + w) || '[]')); } catch (e) { this._uit = new Set(); } }
     const aan = k => !this._uit.has(k);
-    const GEEL = '#facc15', BG = '#06B6D4', ZON = '#8b5cf6';
-    const ACT = { L: '#3b82f6', O: '#22c55e', H: '#f59e0b', V: '#ec4899', Z: '#94a3b8' };
+    const LICHT = !!(this._h && this._h.themes && this._h.themes.darkMode === false); const GEEL = LICHT ? '#b49104' : '#facc15', BG = LICHT ? '#05a1bb' : '#06B6D4', ZON = '#8b5cf6', GEELT = LICHT ? '#8c7103' : GEEL, BGT = LICHT ? '#047f94' : BG;
+    const ACT = LICHT ? { L: '#3b82f6', O: '#1dab52', H: '#ca8208', V: '#ec4899', Z: '#8596ae' } : { L: '#3b82f6', O: '#22c55e', H: '#f59e0b', V: '#ec4899', Z: '#94a3b8' };
     const T = k => this._T(k), LOC = BP_PLAN_LOC[this._lng()];
     const dec = x => (this._lng() === 'en' ? x : String(x).replace('.', ','));
     const NAAM = { L: T('laden van het net'), O: T('ontladen'), H: T('vasthouden'), V: T('terugleveren'), Z: T('niet laden / niet ontladen') };
     const sol = k => `data-solo="${k}" class="solo${this._solo && this._solo !== k ? ' uit' : ''}" title="${T('klik: alleen deze / beide')}"`;
-    const titel = this._c.titel ? bpEsc(this._c.titel) : (w === 'samen' ? `<span ${sol('hbc')} style="color:${GEEL}">HBC</span> + <span ${sol('plan')} style="color:${BG}">Batterijplan</span>` : w === 'plan' ? `<span style="color:${BG}">Batterijplan</span>` : `<span style="color:${GEEL}">${T('HBC origineel')}</span>`);
+    const titel = this._c.titel ? bpEsc(this._c.titel) : (w === 'samen' ? `<span ${sol('hbc')} style="color:${GEELT}">HBC</span> + <span ${sol('plan')} style="color:${BGT}">Batterijplan</span>` : w === 'plan' ? `<span style="color:${BGT}">Batterijplan</span>` : `<span style="color:${GEELT}">${T('HBC origineel')}</span>`);
     let pts = [];
     pts = bpPts(s);
     const a = s ? s.attributes : {};
@@ -209,7 +209,7 @@ class BatterijplanPlanCard extends HTMLElement {
     // prijs (dunne trap)
     let dp = '';
     pts.forEach((p, i) => { const x = L + i * bw; dp += (i ? `L${x},${yP(p[1])}` : `M${x},${yP(p[1])}`) + `L${x + bw},${yP(p[1])}`; });
-    if (aan('prijs')) svg += `<path d="${dp}" fill="none" stroke="rgba(203,213,225,.55)" stroke-width="1.2"/>`;
+    if (aan('prijs')) svg += `<path d="${dp}" fill="none" stroke="${LICHT ? 'rgba(100,116,139,.8)' : 'rgba(203,213,225,.55)'}" stroke-width="1.2"/>`;
     // lading
     const lp = idx => [[x0, yE(a.lading != null ? +a.lading : pts[0] ? pts[0][idx] : 0)]].concat(pts.map((p, i) => [L + (i + 1) * bw, yE(p[idx])]));
     if (toonP && aan('plan')) {
@@ -239,16 +239,16 @@ class BatterijplanPlanCard extends HTMLElement {
     for (let k = 0; k <= pmax; k += 10) svg += `<text x="${L - 6}" y="${yP(k) + 3}" font-size="10" text-anchor="end" fill="var(--secondary-text-color)">${k}</text>`;
     const eur = v => (v == null || isNaN(v) ? '–' : '€ ' + dec((+v).toFixed(2)));
     const opb = s ? parseFloat(s.state) : NaN;
-    const ok = isNaN(opb) ? 'var(--secondary-text-color)' : opb > 0.005 ? '#22c55e' : opb < -0.005 ? '#f59e0b' : 'var(--secondary-text-color)';
-    const kop = w === 'samen' ? `<span style="color:${GEEL}">HBC ${eur(a.kosten_hbc)}</span> · <span style="color:${BG}">Batterijplan ${eur(a.kosten_plan)}</span> · <b style="color:${ok}">${opb >= 0 ? '+' : ''}${eur(opb)}</b>`
+    const ok = isNaN(opb) ? 'var(--secondary-text-color)' : opb > 0.005 ? ACT.O : opb < -0.005 ? ACT.H : 'var(--secondary-text-color)';
+    const kop = w === 'samen' ? `<span style="color:${GEELT}">HBC ${eur(a.kosten_hbc)}</span> · <span style="color:${BGT}">Batterijplan ${eur(a.kosten_plan)}</span> · <b style="color:${ok}">${opb >= 0 ? '+' : ''}${eur(opb)}</b>`
       : w === 'plan' ? `${T('stroomkosten')} ${eur(a.kosten_plan)} · <b style="color:${ok}">${eur(opb)} ${T('t.o.v. HBC')}</b>` : `${T('stroomkosten')} ${eur(a.kosten_hbc)}`;
     const i = (k, t, lijn, id, tk) => `<span${tk ? ` style="color:${tk}"` : ''}${id ? ` data-k="${id}" class="kl${aan(id) ? '' : ' uit'}" title="${T('klik: tonen / verbergen')}"` : ''}><i style="background:${k}${lijn ? ';height:3px;vertical-align:3px' : ''}"></i>${t}</span>`;
-    const legLijn = i('rgba(139,92,246,.7)', T('zon verwachting (kW)'), 0, 'zon') + (toonP ? i(BG, T('lading Batterijplan (kWh)'), 0, 'plan', BG) : '') + (toonH ? i(GEEL, T('lading HBC (kWh)'), 1, 'hbc', GEEL) : '') + i('rgba(203,213,225,.7)', T('prijs (ct)'), 1, 'prijs') + (toonP ? i('linear-gradient(90deg,rgba(59,130,246,.45),rgba(34,197,94,.45),rgba(245,158,11,.45))', T('bijgestuurd kwartier (kleur = actie)'), 0, 'band') : '')
-      + (toonH ? i('rgba(250,204,21,.6)', T('balk HBC'), 0, 'rijH', GEEL) : '') + (toonP ? i('rgba(6,182,212,.8)', T('balk Plan'), 0, 'rijP', BG) : '');
+    const legLijn = i('rgba(139,92,246,.7)', T('zon verwachting (kW)'), 0, 'zon') + (toonP ? i(BG, T('lading Batterijplan (kWh)'), 0, 'plan', BG) : '') + (toonH ? i(GEEL, T('lading HBC (kWh)'), 1, 'hbc', GEEL) : '') + i(LICHT ? 'rgba(100,116,139,.9)' : 'rgba(203,213,225,.7)', T('prijs (ct)'), 1, 'prijs') + (toonP ? i('linear-gradient(90deg,rgba(59,130,246,.45),rgba(34,197,94,.45),rgba(245,158,11,.45))', T('bijgestuurd kwartier (kleur = actie)'), 0, 'band') : '')
+      + (toonH ? i(LICHT ? GEEL : 'rgba(250,204,21,.6)', T('balk HBC'), 0, 'rijH', GEEL) : '') + (toonP ? i(LICHT ? BG : 'rgba(6,182,212,.8)', T('balk Plan'), 0, 'rijP', BG) : '');
     const legAct = ['L', 'O', 'H', 'V', 'Z'].filter(k => toonP || k !== 'Z').map(k => i(ACT[k], NAAM[k])).join('');
     const pNu = pts.length ? pts[0][1] : null;
     const tEind = pts.length ? new Date((pts[pts.length - 1][0] + 900) * 1000).toLocaleString(LOC, { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-    const kop3 = `<div class="top"><div class="kader"><div class="g">${pNu != null ? dec((+pNu).toFixed(1)) : '–'}<small> ct</small></div><div class="o">${T('Kale prijs nu')}</div><div class="f"><span style="color:${GEEL}">HBC ${eur(a.kosten_hbc)}</span> · <span style="color:${BG}">Batterijplan ${eur(a.kosten_plan)}</span><br>${T('stroomkosten tot')} ${tEind}</div></div><div class="mid"><div class="g" style="color:${ok}">${opb >= 0 ? '+' : ''}${eur(opb)}</div><div class="o">${T('Verwachte besparing t.o.v. HBC alleen')}</div></div><div class="re"><div class="g" style="color:${BG}">${a.lading != null ? dec((+a.lading).toFixed(2)) : '–'}<small> kWh</small></div><div class="o">${T('In de batterij nu')}</div></div></div>`;
+    const kop3 = `<div class="top"><div class="kader"><div class="g">${pNu != null ? dec((+pNu).toFixed(1)) : '–'}<small> ct</small></div><div class="o">${T('Kale prijs nu')}</div><div class="f"><span style="color:${GEELT}">HBC ${eur(a.kosten_hbc)}</span> · <span style="color:${BGT}">Batterijplan ${eur(a.kosten_plan)}</span><br>${T('stroomkosten tot')} ${tEind}</div></div><div class="mid"><div class="g" style="color:${ok}">${opb >= 0 ? '+' : ''}${eur(opb)}</div><div class="o">${T('Verwachte besparing t.o.v. HBC alleen')}</div></div><div class="re"><div class="g" style="color:${BGT}">${a.lading != null ? dec((+a.lading).toFixed(2)) : '–'}<small> kWh</small></div><div class="o">${T('In de batterij nu')}</div></div></div>`;
     this.shadowRoot.innerHTML = `<style>
       ha-card{padding:12px 14px}
       .k{display:flex;justify-content:flex-start;align-items:baseline;flex-wrap:wrap;gap:6px 18px}

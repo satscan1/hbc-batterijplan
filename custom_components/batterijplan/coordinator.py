@@ -5,7 +5,7 @@ import logging
 import time
 from collections import deque
 from functools import partial
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, tzinfo
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,12 +16,12 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
-from zoneinfo import ZoneInfo
 
 from . import consumption as profile
 from . import advisor, counter, hbcmarks, plan, solcast, steering
 from .const import (
-    CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE,
+    CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_COUNTRY, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE, CONF_FEED_IN_FIXED,
+    COUNTRY_BE, HBC_LIMIT_IMPORT_ON, HBC_LIMIT_IMPORT_W,
     CONF_MARGIN, CONF_PRICES, CONF_SENSOR_BATTERY, CONF_SENSOR_EV, CONF_SENSOR_NET, CONF_SENSOR_SOLAR,
     CONF_STORAGE_FEE, CONF_VAT, DEFAULTS, DOMAIN, HBC_COUNT, HBC_DELTA, HBC_FORECAST_POINTER, HBC_MAX_ENERGY, HBC_PRICES, HBC_RESERVED, HBC_SETTINGS, HBC_STRATEGY,
     CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW, OWN_SOLAR_SENSOR, PRICES_ALL_IN,
@@ -405,6 +405,16 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         "blok_van": hm(tgt["start"]), "blok_tot": hm(tgt["einde"])})
         return out
 
+    def _limit_w(self) -> float | None:
+        """BE: HBC import limit in W when peak shaving (import) is on; None when off, unknown or another country."""
+        if str(self.settings[CONF_COUNTRY]) != COUNTRY_BE:
+            return None
+        st = self.hass.states.get(HBC_LIMIT_IMPORT_ON)
+        if st is None or st.state != "on":
+            return None
+        w = self._float(HBC_LIMIT_IMPORT_W, -1)
+        return w if w > 0 else None
+
     def _plan_input(self) -> plan.PlanInput:
         s = self.settings
         hbc = self.hass.states.get(HBC_PRICES)
@@ -422,6 +432,9 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             feed_in_bonus=float(s[CONF_FEED_IN_BONUS]),
             bonus_from=int(s[CONF_BONUS_FROM]),
             bonus_to=int(s[CONF_BONUS_TO]),
+            country=str(s[CONF_COUNTRY]),
+            feed_in_fixed=float(s[CONF_FEED_IN_FIXED]),
+            limit_w=self._limit_w(),
             all_in=s[CONF_PRICES] == PRICES_ALL_IN,
             delta=self._float(HBC_DELTA, 6.0),
             prev_l_run=self._prev_l_run(),
@@ -617,8 +630,8 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_recalculate()
 
     # ---- history and advice for the HBC settings (rc6) --------------------------------------
-    def _tz(self) -> ZoneInfo:
-        return ZoneInfo(self.hass.config.time_zone)
+    def _tz(self) -> tzinfo:
+        return dt_util.get_default_time_zone()
 
     def _refresh_hist_days(self) -> None:
         self._hist_days = len(advisor.complete_days(self.hist, dt_util.now().date(), self._tz()))

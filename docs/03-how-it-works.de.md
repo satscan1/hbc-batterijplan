@@ -127,6 +127,16 @@ Er zählt nur, wenn **Live** an ist und HBC auf **Dynamic** steht. Sonst geht di
 
 **Es ist eine Schätzung** ("geschat"). Sie beruht auf den Preisen und dem Verbrauch, die Batterijplan zu diesem Zeitpunkt erwartete. Deine Energierechnung ist der echte Beweis.
 
+## Land
+
+In den Experten-Einstellungen wählst du ein Land: Niederlande (NL), Deutschland (DE) oder Belgien (Flandern, BE). Es ändert, wie Batterijplan das Einspeisen bewertet und ob es auf Lastspitzen achtet.
+
+**Niederlande (NL).** Wie auf dieser Seite beschrieben. Einspeisen bringt den Börsenpreis plus deinen eigenen Aufschlag.
+
+**Deutschland (DE).** Einspeisen bringt die feste Einspeisevergütung aus den Experten-Einstellungen (Standard 0,077 EUR/kWh), nicht den Börsenpreis. Laden und später Einspeisen bringt also nichts extra. Deshalb speist Batterijplan keinen Batteriestrom ins Netz ein. Es nutzt die Ladung nur für dein eigenes Haus. Direktvermarktung und MiSpeL werden nicht unterstützt.
+
+**Belgien (BE, nur Flandern).** In Flandern zahlst du einen Kapazitätstarif: Dein höchster Viertelstunden-Netzbezug pro Monat zählt, gemittelt über 12 Monate, mindestens 2,5 kW. Batterijplan nutzt dafür die Importgrenze von HBC (HBC *Settings*, *peak shaving import limit*; die Entitäten sind `input_boolean.house_battery_control_has_power_limit_import` und `input_number.house_battery_control_power_limit_import`). Das Laden aus dem Netz bleibt zusammen mit dem erwarteten Hausverbrauch unter dieser Grenze, und der Plan hält Ladung zurück, damit HBC Spitzen glätten kann. Ist die Grenze in HBC ausgeschaltet? Dann tut Batterijplan nichts gegen Spitzen. Unter 2500 W warnt HBC vor wenig Regelspielraum. Wallonien und Brüssel werden nicht unterstützt.
+
 ## Was es (noch) nicht tut
 
 - **Ein günstiger Nachmittag, den HBC nicht als günstig markiert** (wegen der Grenze für Stunden pro Tag oder des Mindestpreisunterschieds in HBC), zählt nicht als Nachladen.

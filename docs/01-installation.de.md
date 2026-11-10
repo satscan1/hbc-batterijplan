@@ -64,8 +64,10 @@ Den Rest änderst du später: Drücke bei der Integration auf **Konfigurieren**.
 
 | Feld | Standard | Bedeutung |
 |---|---|---|
+| Land | Niederlande | Niederlande (NL), Deutschland (DE) oder Belgien (Flandern, BE). Siehe [03 · So funktioniert es](03-how-it-works.de.md#land). |
 | MwSt. | 21 % | MwSt. auf das, was du einkaufst. |
 | Einspeise-Aufschlag (EUR/kWh) | 0,02 | Was du beim Einspeisen zusätzlich zum Börsenpreis bekommst. Bei Zonneplan ist das zum Beispiel die *Terugleververgoeding*. Schau in deinen Vertrag. |
+| Feste Einspeisevergütung (EUR/kWh) | 0,077 | Wird nur in Deutschland benutzt. Was du für jede eingespeiste kWh bekommst, unabhängig vom Börsenpreis. Der Standardwert ist der Satz für neue kleine Dachanlagen bis 10 kWp ab August 2026. Passe ihn an deinen eigenen Vertrag an. |
 | Tages-Einspeisebonus | 10 % | Zusätzlicher Prozentsatz auf einen positiven Einspeisepreis tagsüber. 0 = keiner. |
 | Tagsüber ab / bis (Uhr) | 8 / 17 | Die Stunden für diesen Bonus. Jede Viertelstunde mit Sonne zählt ebenfalls als Tag. |
 

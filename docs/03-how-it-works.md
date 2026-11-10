@@ -127,6 +127,16 @@ It only counts when **Live** is on and HBC is on **Dynamic**. Otherwise the quar
 
 **It is an estimate** ("geschat"). It rests on the prices and the usage that Batterijplan expected at that time. Your energy bill is the real proof.
 
+## Country
+
+In the expert settings you choose a country: Netherlands (NL), Germany (DE) or Belgium (Flanders, BE). It changes how Batterijplan values feeding in and whether it looks at peaks.
+
+**Netherlands (NL).** As described on this page. Feeding in earns the exchange price plus your own add-on.
+
+**Germany (DE).** Feeding in earns the fixed feed-in tariff from the expert settings (default 0.077 EUR/kWh), not the exchange price. So charging the battery and feeding in later earns nothing extra. For that reason Batterijplan does not feed battery power back to the grid. It only uses the charge for your own house. Direktvermarktung and MiSpeL are not supported.
+
+**Belgium (BE, Flanders only).** In Flanders you pay a capacity tariff: your highest quarter-hour of grid use in a month counts, averaged over 12 months, with a minimum of 2.5 kW. Batterijplan uses the import limit of HBC for this (HBC *Settings*, *peak shaving import limit*; the entities are `input_boolean.house_battery_control_has_power_limit_import` and `input_number.house_battery_control_power_limit_import`). Grid charging, together with the expected house use, stays under that limit, and the plan keeps charge in the battery so HBC can flatten peaks. Is the limit in HBC switched off? Then Batterijplan does nothing with peaks. Below 2500 W HBC warns that there is little room to regulate. Wallonia and Brussels are not supported.
+
 ## What it does not do (yet)
 
 - **A cheap afternoon that HBC does not mark as cheap** (because of the limit on hours per day or the minimum price difference in HBC) does not count as topping up.

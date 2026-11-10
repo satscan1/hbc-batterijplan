@@ -11,18 +11,17 @@
 
 <p align="center"><img src="images/overview.de.png" width="95%" alt="Batterijplan-Dashboard"></p>
 
+Die Beträge im Bild sind Beispielzahlen.
+
 1. **Live**: an = Batterijplan steuert HBC. Aus = Schattenmodus: es rechnet mit, steuert aber nichts.
 2. **Knöpfe**: Ertrag, Bericht, Empfehlung HBC, Einstellungen und Sensoren. Jeder Knopf öffnet ein Fenster. Der orange Punkt auf **Empfehlung HBC** bedeutet, dass *cheapest hrs*, *expensive hrs* oder *Solar reserved for house* von der Empfehlung abweicht (um mindestens 1 Stunde oder 0,5 kWh); im Fenster steht auch der Schalter *HBC-Einstellungen automatisch anpassen*.
 3. **Statuskarte**: Modus, Verbrauch lernen, HBC-Strategie, nächste Viertelstunde und Empfehlung Hausverbrauch. Das (i) hinter jeder Zeile erklärt sie.
-4. **Briefing und Plan**: was jetzt in der Batterie ist, was der Plan in der nächsten Viertelstunde tut, und der Unterschied zu HBC allein.
-5. **Regeln**: die vier Regeln, jede mit eigenem Ein/Aus-Schalter.
-6. **Wo Batterijplan nachsteuert**: die Blöcke, in denen der Plan etwas anderes tut als HBC.
-
-Die Seite hat vier Teile:
-1. die Knopfleiste;
-2. die Statuskarte;
-3. das Briefing, in zwei Spalten, mit den Regeln rechts;
-4. die Grafik über die volle Breite: HBC allein und Batterijplan.
+4. **Briefing und Plan**: was jetzt in der Batterie ist, was der Plan in der nächsten Viertelstunde tut, und der Kostenunterschied zu HBC allein bis Mitternacht.
+5. **Regeln**: die vier Regeln (*Zusätzliches Laden aus dem Netz*, *Entladen außerhalb der HBC-Zeiten*, *Halten für später*, *Einspeisen*), jede mit eigenem Ein/Aus-Schalter.
+6. **Wo Batterijplan nachsteuert**: die Blöcke, in denen der Plan etwas anderes tut als HBC, mit einer Farbe pro Aktion und dem Preis.
+7. **Reiner Preis jetzt und die Stromkosten bis Mitternacht**: HBC neben Batterijplan.
+8. **Erwartete Ersparnis** gegenüber HBC allein.
+9. **Batterie**: wie viele kWh jetzt in der Batterie sind.
 
 ## Die Knopfleiste
 

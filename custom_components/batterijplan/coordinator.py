@@ -407,7 +407,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _limit_w(self) -> float | None:
         """BE: HBC import limit in W when peak shaving (import) is on; None when off, unknown or another country."""
-        if str(self.settings[CONF_COUNTRY]) != COUNTRY_BE:
+        if str(self.settings[CONF_COUNTRY]).lower() != COUNTRY_BE:  # .lower(): stored "BE" keeps working
             return None
         st = self.hass.states.get(HBC_LIMIT_IMPORT_ON)
         if st is None or st.state != "on":
@@ -432,7 +432,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             feed_in_bonus=float(s[CONF_FEED_IN_BONUS]),
             bonus_from=int(s[CONF_BONUS_FROM]),
             bonus_to=int(s[CONF_BONUS_TO]),
-            country=str(s[CONF_COUNTRY]),
+            country=str(s[CONF_COUNTRY]).lower(),
             feed_in_fixed=float(s[CONF_FEED_IN_FIXED]),
             limit_w=self._limit_w(),
             all_in=s[CONF_PRICES] == PRICES_ALL_IN,

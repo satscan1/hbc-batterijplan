@@ -9,7 +9,7 @@
 - Every custom card has an **(i)** next to its title, and on the status card and in the settings every line has one too. Click it for the *How to read this?* window. Hover over a number with a dotted underline for a short note.
 - The colours are the same everywhere. The legend of the chart explains them.
 
-<p align="center"><img src="images/overview.en.png" width="95%" alt="Batterijplan dashboard"></p>
+<p align="center"><img src="images/dashboard-overview-en.png" width="95%" alt="Batterijplan dashboard"></p>
 
 The amounts in the picture are example figures.
 

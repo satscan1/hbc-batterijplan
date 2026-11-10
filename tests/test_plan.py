@@ -203,7 +203,7 @@ def test_hbc_alone_step_matches_simulation():
 # ---- country (09-11-2026): NL unchanged, DE fixed feed-in tariff, BE capacity limit ----------------
 def test_country_defaults_are_nl():
     inp = _inp()
-    assert inp.country == "NL" and inp.feed_in_fixed == 0.077 and inp.limit_w is None
+    assert inp.country == "nl" and inp.feed_in_fixed == 0.077 and inp.limit_w is None
     assert all(x["lim"] is None and x["lq"] == plan._prepare(inp)["laadq"] for x in plan._prepare(inp)["Q"])
 
 
@@ -227,18 +227,18 @@ def test_de_fixed_tariff_and_no_feed_in_action():
     prices = [10, 10, 60, 60, 10, 60, 60, 10]
     marks = {2: "high", 3: "high", 5: "high", 6: "high"}
     kw = dict(marks=_marks(prices, marks), soc=[100], pv={}, pv10={}, discharge_w=[5000])
-    de = _inp(country="DE", feed_in_fixed=0.077, **kw)
+    de = _inp(country="de", feed_in_fixed=0.077, **kw)
     P = plan._prepare(de)
     assert all(x["e"] == 0.077 for x in P["Q"])  # fixed, not the market price, no daytime bonus
     assert plan.allowed_actions("high", de) == ["O", "H"]
     for eng in ("dp", "heuristiek"):
-        r = plan.compute(_inp(country="DE", engine=eng, **kw))
+        r = plan.compute(_inp(country="de", engine=eng, **kw))
         assert all(pt[5] != "V" for pt in r["punten"]), eng
     # the same day in NL does sell from the battery (the test would prove nothing otherwise)
-    assert any(pt[5] == "V" for pt in plan.compute(_inp(country="NL", **kw))["punten"])
+    assert any(pt[5] == "V" for pt in plan.compute(_inp(country="nl", **kw))["punten"])
     # solar surplus is paid at the fixed tariff
     pv = {(T0 + 90) // 1800 * 1800: 4.0}
-    q = plan._prepare(_inp(country="DE", feed_in_fixed=0.05, marks=_marks([30] * 2), pv=pv, pv10=pv))["Q"][0]
+    q = plan._prepare(_inp(country="de", feed_in_fixed=0.05, marks=_marks([30] * 2), pv=pv, pv10=pv))["Q"][0]
     assert q["e"] == 0.05 and q["need"] < 0
 
 
@@ -246,15 +246,15 @@ def test_be_limit_caps_charge_power_per_quarter():
     base = dict(charge_w=[5000], discharge_w=[2500], marks=_marks([5] * 4, {0: "low", 1: "low", 2: "low", 3: "low"}))
     nl = plan._prepare(_inp(**base))
     assert nl["laadq"] == 1.25
-    be = plan._prepare(_inp(country="BE", limit_w=2500, **base))
+    be = plan._prepare(_inp(country="be", limit_w=2500, **base))
     assert all(abs(x["lq"] - (2500 - 400) / 1000 * 0.25) < 1e-9 for x in be["Q"])  # limit minus house use (400 W)
     assert all(abs(x["lim"] - 0.625) < 1e-9 for x in be["Q"])
     assert be["laadq"] == 1.25  # HBC-alone keeps its own charge power
-    hi = plan._prepare(_inp(country="BE", limit_w=2500, profile=[3000] * 24, **base))
+    hi = plan._prepare(_inp(country="be", limit_w=2500, profile=[3000] * 24, **base))
     assert all(x["lq"] == 0.0 for x in hi["Q"])  # house use above the limit: no grid charging
-    off = plan._prepare(_inp(country="BE", limit_w=None, **base))  # peak shaving off
+    off = plan._prepare(_inp(country="be", limit_w=None, **base))  # peak shaving off
     assert all(x["lq"] == 1.25 and x["lim"] is None for x in off["Q"])
-    assert all(x["lq"] == 1.25 and x["lim"] is None for x in plan._prepare(_inp(country="NL", limit_w=2500, **base))["Q"])  # limit only counts for BE
+    assert all(x["lq"] == 1.25 and x["lim"] is None for x in plan._prepare(_inp(country="nl", limit_w=2500, **base))["Q"])  # limit only counts for BE
 
 
 def test_be_penalty_above_limit_and_plan_stays_under_it():
@@ -264,7 +264,7 @@ def test_be_penalty_above_limit_and_plan_stays_under_it():
     assert plan._cap_pen({"lim": None}, 5.0) == 0.0
     base = dict(charge_w=[5000], discharge_w=[2500], soc=[10], marks=_marks([5] * 4 + [40] * 4, {i: ("low" if i < 4 else "high") for i in range(8)}))
     nl_acts = [p[5] for p in plan.compute(_inp(**base))["punten"]]
-    be_inp = _inp(country="BE", limit_w=2500, **base)
+    be_inp = _inp(country="be", limit_w=2500, **base)
     be_acts = [p[5] for p in plan.compute(be_inp)["punten"]]
     assert plan.evaluate_actions(be_inp, nl_acts)["cap"] > 0  # the NL plan would exceed the limit
     assert plan.evaluate_actions(be_inp, be_acts)["cap"] < 1e-9  # the BE plan does not (float rest only)
@@ -273,7 +273,14 @@ def test_be_penalty_above_limit_and_plan_stays_under_it():
 def test_be_penalty_makes_dp_discharge_to_flatten_peak():
     base = dict(marks=_marks([20] * 4), soc=[100], profile=[6000] * 24, charge_w=[2500], discharge_w=[2500])
     nl = plan.compute(_inp(**base))
-    be = plan.compute(_inp(country="BE", limit_w=2500, **base))
+    be = plan.compute(_inp(country="be", limit_w=2500, **base))
     assert all(p[5] != "O" for p in nl["punten"])  # flat prices: discharging only costs wear
     assert all(p[5] == "O" for p in be["punten"])  # the capacity penalty is worth more than the wear
     assert be["kosten_hbc"] == nl["kosten_hbc"]  # HBC-alone simulation untouched
+
+
+def test_country_uppercase_stored_value_still_works():
+    """A stored "DE"/"BE"/"NL" (before the lowercase option keys) must behave like "de"/"be"/"nl"."""
+    base = dict(marks=_marks([30] * 8))
+    assert plan._prepare(_inp(country="BE", limit_w=2500, **base))["Q"] == plan._prepare(_inp(country="be", limit_w=2500, **base))["Q"]
+    assert plan.compute(_inp(country="DE", **base)) == plan.compute(_inp(country="de", **base))

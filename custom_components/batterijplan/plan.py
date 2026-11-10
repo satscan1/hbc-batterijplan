@@ -69,9 +69,9 @@ class PlanInput:
     solar_q: dict[int, float] | None = None  # quarter start ts -> measured solar kW (replaces pv10 / pv)
     horizon: int = 0  # seconds of price quarters to plan (0 = MAX_HORIZON)
     grid_step: float = 0.05  # kWh step of the dp level grid (coarser = faster, used by the replay)
-    country: str = "NL"  # "NL" (default), "DE" (fixed feed-in tariff, no selling from the battery) or "BE" (Flanders)
-    feed_in_fixed: float = 0.077  # EUR/kWh fixed feed-in tariff, only used for "DE"
-    limit_w: float | None = None  # W grid import limit (HBC peak shaving), only used for "BE"; None = off
+    country: str = "nl"  # "nl" (default), "de" (fixed feed-in tariff, no selling from the battery) or "be" (Flanders); compared case-insensitively
+    feed_in_fixed: float = 0.077  # EUR/kWh fixed feed-in tariff, only used for "de"
+    limit_w: float | None = None  # W grid import limit (HBC peak shaving), only used for "be"; None = off
 
 
 def stored_energy(soc: list[float], cutoff: list[float], nbat: int, cap: float) -> float:
@@ -120,7 +120,7 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
     ow = sum(inp.discharge_w[:nbat])
     ontlq = (ow / 1000 * 0.25) if ow > 0 else laadq
 
-    be_limit = inp.limit_w is not None and inp.country == "BE"
+    be_limit = inp.limit_w is not None and inp.country.lower() == "be"
     lim_kwh = inp.limit_w / 1000 * 0.25 if be_limit else None  # kWh per quarter at the limit
     # --- quarter list ---
     dph = inp.datapoints_per_hour
@@ -150,7 +150,7 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
                 dag = pv > 0 or (inp.bonus_from <= h < inp.bonus_to)
                 ex = p * 0.01 + inp.feed_in_fee
                 ex = ex * bonus if (dag and ex > 0) else ex
-                if inp.country == "DE":
+                if inp.country.lower() == "de":
                     ex = inp.feed_in_fixed  # fixed tariff: not the market price, no daytime bonus
                 lq = max(0.0, min(laadq, (inp.limit_w - w) / 1000 * 0.25)) if be_limit else laadq  # BE: charge power left under the limit
                 Qraw.append(
@@ -334,7 +334,7 @@ def _heuristic(P: dict[str, Any], inp: PlanInput, hbc_only: bool = False):
             elif a == "Z" and x["m"] == "high":
                 a = "O"  # same movement (solar surplus charges); the HBC mode for an expensive quarter
         # feed in: keep reserve for own use, only what is certainly surplus
-        if inp.rule_feed_in and inp.country != "DE" and a in ("O", "Z", "H") and s2 > 0.05 and x["e"] > 0 and (not hbc_only or x["m"] == "high"):
+        if inp.rule_feed_in and inp.country.lower() != "de" and a in ("O", "Z", "H") and s2 > 0.05 and x["e"] > 0 and (not hbc_only or x["m"] == "high"):
             rs = s2
             rlaag = s2
             stop = False
@@ -382,7 +382,7 @@ def allowed_actions(mark: Any, inp: PlanInput) -> list[str]:
             acts.remove("O")
     if not inp.rule_hold and "H" in acts:
         acts.remove("H")
-    if (not inp.rule_feed_in or inp.country == "DE") and "V" in acts:  # DE: fixed tariff, selling from the battery earns nothing extra
+    if (not inp.rule_feed_in or inp.country.lower() == "de") and "V" in acts:  # DE: fixed tariff, selling from the battery earns nothing extra
         acts.remove("V")
     return acts
 

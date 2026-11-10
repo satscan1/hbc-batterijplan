@@ -28,6 +28,8 @@ def _schema(values: dict[str, Any], expert: bool) -> vol.Schema:
     """The form. Optional text fields use ``suggested_value`` so an empty field stays empty."""
     def sug(key: str) -> dict[str, Any]:
         v = values.get(key, DEFAULTS[key])
+        if key == CONF_COUNTRY and v:
+            v = str(v).lower()  # stored "NL"/"DE"/"BE" -> selector option
         return {"suggested_value": v} if v not in (None, "") else {}
 
     fields: dict[Any, Any] = {

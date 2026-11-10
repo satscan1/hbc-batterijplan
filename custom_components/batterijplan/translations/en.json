@@ -74,9 +74,9 @@
     },
     "land": {
       "options": {
-        "NL": "Netherlands",
-        "DE": "Germany",
-        "BE": "Belgium (Flanders)"
+        "nl": "Netherlands",
+        "de": "Germany",
+        "be": "Belgium (Flanders)"
       }
     }
   },

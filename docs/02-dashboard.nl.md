@@ -9,7 +9,7 @@
 - Elke eigen kaart heeft een **(i)** naast de titel, en op de statuskaart en in de instellingen heeft ook elke regel er een. Klik erop voor het venster *Hoe lees je dit?* Ga met de muis over een cijfer met een stippellijn voor een korte toelichting.
 - De kleuren zijn overal gelijk. De legenda van de grafiek legt ze uit.
 
-<p align="center"><img src="images/overview.nl.png" width="95%" alt="Batterijplan-dashboard"></p>
+<p align="center"><img src="images/dashboard-overview-nl.png" width="95%" alt="Batterijplan-dashboard"></p>
 
 De bedragen in het plaatje zijn voorbeeldcijfers.
 

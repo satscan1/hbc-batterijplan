@@ -25,9 +25,9 @@ CONF_SENSOR_EV = "sensor_ev"
 CONF_SOLAR_TODAY = "sensor_zon_vandaag"
 CONF_SOLAR_TOMORROW = "sensor_zon_morgen"
 
-COUNTRY_NL = "NL"
-COUNTRY_DE = "DE"
-COUNTRY_BE = "BE"  # Flanders
+COUNTRY_NL = "nl"
+COUNTRY_DE = "de"
+COUNTRY_BE = "be"  # Flanders
 COUNTRIES = [COUNTRY_NL, COUNTRY_DE, COUNTRY_BE]
 
 PRICES_RAW = "kaal"

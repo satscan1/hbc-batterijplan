@@ -14,21 +14,26 @@ It is made for households in the Netherlands, Germany and Belgium (Flanders) wit
 
 > Batterijplan is a separate, unofficial add-on to HBC. It is not made or maintained by the makers of HBC. Ask your questions about Batterijplan here, not at HBC.
 
-<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/overview.en.png" width="95%" alt="Batterijplan dashboard"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/dashboard-overview-en.png" width="95%" alt="Batterijplan dashboard"></p>
+
+The amounts in the picture are example figures.
 
 1. **Live**: on = Batterijplan steers HBC. Off = shadow mode: it calculates along, but steers nothing.
-2. **Buttons**: Earnings, Report, Advice HBC, Settings and Sensors. Each button opens a window.
+2. **Buttons**: Earnings, Report, Advice HBC, Settings and Sensors. Each button opens a window. The orange dot on **Advice HBC** means that *cheapest hrs*, *expensive hrs* or *Solar reserved for house* differs from the advice (by at least 1 hour or 0.5 kWh); the window also has the switch *Auto-adjust HBC settings*.
 3. **Status card**: mode, learning usage, HBC strategy, next quarter and advice house use. The (i) behind each line explains it.
-4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference with HBC alone.
-5. **Rules**: the four rules, each with its own on/off switch.
-6. **Where Batterijplan steers**: the blocks in which the plan does something different from HBC.
+4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference in cost with HBC alone until midnight.
+5. **Rules**: the four rules (*Extra charging from the grid*, *Discharging outside HBC hours*, *Holding for later*, *Feeding in*), each with its own on/off switch.
+6. **Where Batterijplan steers**: the blocks in which the plan does something different from HBC, with a colour for each action and the price.
+7. **Bare price now and the electricity cost until midnight**: HBC next to Batterijplan.
+8. **Expected saving** compared with HBC alone.
+9. **Battery**: how many kWh are in the battery now.
 
 ## What Batterijplan does
 
 - **Saves charge for the most expensive quarters.** HBC (strategy Dynamic) discharges in every expensive quarter in turn, even when an even more expensive moment comes an hour later. Batterijplan looks ahead to the next cheap moment and gives the charge to the most expensive quarters first. In the other expensive quarters the battery holds on to its charge.
 - **Uses surplus wisely.** Is there more in the battery than you need until the next cheap moment? Then Batterijplan already delivers that surplus to the house in the most expensive regular quarters, instead of starting to charge with a full battery.
 - **Learns your usage.** Per hour of the day, in 7 days, and after that it keeps moving along with the seasons. With the solar forecast from Solcast added in.
-- **Gives advice for HBC.** How much solar energy your house uses itself (the HBC setting *Solar reserved for house*), based on the last 7 days. Since rc6 it also advises on *cheapest hrs* and *expensive hrs*. Only when you turn on the switch *Auto-adjust HBC settings* (off by default) does it set these three HBC settings itself; your own values come back when you switch it off. It never touches HBC's flows or code.
+- **Gives advice for HBC.** How much solar energy your house uses itself (the HBC setting *Solar reserved for house*), based on the last 7 days. It also advises on *cheapest hrs* and *expensive hrs*. Only when you turn on the switch *Auto-adjust HBC settings* (off by default) does it set these three HBC settings itself; your own values come back when you switch it off. It never touches HBC's flows or code.
 - **Shows what it earns.** An honest estimate on top of HBC alone: for surplus discharging, only what really came out of the battery counts.
 - **Starts safely.** First in shadow mode (it calculates along, but steers nothing). Only when you turn on *Live* does it steer HBC.
 

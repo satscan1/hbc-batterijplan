@@ -8,7 +8,7 @@ const BP_PLAN_TX = {
     'laden van het net': 'charge from the grid', 'ontladen': 'discharge', 'vasthouden': 'hold', 'terugleveren': 'feed in', 'niet laden / niet ontladen': 'no charge / no discharge', 'alleen zon / niets': 'solar only / nothing',
     'extra laden van het net': 'extra charge from the grid', 'extra ontladen': 'extra discharge', 'vasthouden voor later': 'hold for later',
     'Briefing en plan': 'Briefing and plan', 'HBC origineel': 'HBC original', 'klik: alleen deze / beide': 'click: only this / both', 'klik: tonen / verbergen': 'click: show / hide',
-    'Nog geen berekening.': 'No calculation yet.', 'in de batterij': 'in the battery', 'Kwartier': 'Quarter', 'hetzelfde als HBC': 'same as HBC', 'HBC zou': 'HBC would', 'Tot': 'Until', 'verschil': 'difference',
+    'Nog geen berekening.': 'No calculation yet.', 'in de batterij': 'in the battery', 'Kwartier': 'Quarter', 'hetzelfde als HBC': 'same as HBC', 'HBC zou': 'HBC would', 'Tot': 'Until', 'einde': 'end of', 'verschil': 'difference',
     'Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.': 'No steering needed: Batterijplan does the same as HBC.',
     'Extra laden van het net': 'Extra charging from the grid', 'Ontladen buiten HBC-uren': 'Discharging outside HBC hours', 'Vasthouden voor later': 'Holding for later', 'Terugleveren': 'Feeding in', 'aan': 'on', 'uit': 'off',
     'Waar Batterijplan bijstuurt': 'Where Batterijplan steers', 'Regels': 'Rules',
@@ -21,7 +21,7 @@ const BP_PLAN_TX = {
     'laden van het net': 'aus dem Netz laden', 'ontladen': 'entladen', 'vasthouden': 'halten', 'terugleveren': 'einspeisen', 'niet laden / niet ontladen': 'nicht laden / nicht entladen', 'alleen zon / niets': 'nur Sonne / nichts',
     'extra laden van het net': 'zusätzlich aus dem Netz laden', 'extra ontladen': 'zusätzlich entladen', 'vasthouden voor later': 'für später halten',
     'Briefing en plan': 'Briefing und Plan', 'HBC origineel': 'HBC Original', 'klik: alleen deze / beide': 'Klick: nur diese / beide', 'klik: tonen / verbergen': 'Klick: anzeigen / ausblenden',
-    'Nog geen berekening.': 'Noch keine Berechnung.', 'in de batterij': 'in der Batterie', 'Kwartier': 'Viertelstunde', 'hetzelfde als HBC': 'dasselbe wie HBC', 'HBC zou': 'HBC würde', 'Tot': 'Bis', 'verschil': 'Differenz',
+    'Nog geen berekening.': 'Noch keine Berechnung.', 'in de batterij': 'in der Batterie', 'Kwartier': 'Viertelstunde', 'hetzelfde als HBC': 'dasselbe wie HBC', 'HBC zou': 'HBC würde', 'Tot': 'Bis', 'einde': 'Ende', 'verschil': 'Differenz',
     'Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.': 'Kein Nachsteuern nötig: Batterijplan tut dasselbe wie HBC.',
     'Extra laden van het net': 'Zusätzliches Laden aus dem Netz', 'Ontladen buiten HBC-uren': 'Entladen außerhalb der HBC-Zeiten', 'Vasthouden voor later': 'Halten für später', 'Terugleveren': 'Einspeisen', 'aan': 'an', 'uit': 'aus',
     'Waar Batterijplan bijstuurt': 'Wo Batterijplan nachsteuert', 'Regels': 'Regeln',
@@ -52,6 +52,7 @@ class BatterijplanPlanCard extends HTMLElement {
     return l === 'nl' || l === 'de' ? l : 'en';
   }
   _T(k) { const d = BP_PLAN_TX[this._lng()]; return (d && d[k]) || k; }
+  _eind(ts) { const L = BP_PLAN_LOC[this._lng()]; const d = new Date((ts + 900) * 1000); if (d.getHours() === 0 && d.getMinutes() === 0) return this._T('einde') + ' ' + new Date(ts * 1000).toLocaleDateString(L, { weekday: 'long' }) + ' (24:00)'; return d.toLocaleString(L, { weekday: 'short', hour: '2-digit', minute: '2-digit' }); }
   set hass(h) {
     this._h = h;
     // like the status card: with a second Batterijplan (sensor.batterijplan_2) the _2 one is the live one
@@ -135,7 +136,7 @@ class BatterijplanPlanCard extends HTMLElement {
       const zelfde = p[5] === p[3];
       kop = `<b>${dec(this._liveLading(a).toFixed(1))} kWh</b> ${T('in de batterij')}. ${T('Kwartier')} ${tijd(p[0])} (${dec(p[1])} ct): Batterijplan <b style="color:${BGT}">${NAAM[p[5]]}</b>`
         + (zelfde ? ` — ${T('hetzelfde als HBC')}.` : ` — ${T('HBC zou')} <span style="color:${GEELT}">${NAAM[p[3]]}</span>.`)
-        + `<br>${T('Tot')} ${dag(pts[pts.length - 1][0])} ${tijd(pts[pts.length - 1][0] + 900)}: HBC <span style="color:${GEELT}">${eur(a.kosten_hbc)}</span>, Batterijplan <span style="color:${BGT}">${eur(a.kosten_plan)}</span>, ${T('verschil')} <b style="color:${opb >= 0 ? ACT.O : ACT.H}">${opb >= 0 ? '+' : ''}${eur(opb)}</b>.`;
+        + `<br>${T('Tot')} ${this._eind(pts[pts.length - 1][0])}: HBC <span style="color:${GEELT}">${eur(a.kosten_hbc)}</span>, Batterijplan <span style="color:${BGT}">${eur(a.kosten_plan)}</span>, ${T('verschil')} <b style="color:${opb >= 0 ? ACT.O : ACT.H}">${opb >= 0 ? '+' : ''}${eur(opb)}</b>.`;
       const runs = [];
       pts.forEach(q => { const k = q[5] !== q[3] ? q[5] : null; const l = runs[runs.length - 1]; if (l && l.k === k) { l.e = q; l.p.push(q[1]); } else runs.push({ k, b: q, e: q, p: [q[1]] }); });
       const bij = runs.filter(r => r.k).slice(0, 16);
@@ -247,7 +248,7 @@ class BatterijplanPlanCard extends HTMLElement {
       + (toonH ? i(LICHT ? GEEL : 'rgba(250,204,21,.6)', T('balk HBC'), 0, 'rijH', GEEL) : '') + (toonP ? i(LICHT ? BG : 'rgba(6,182,212,.8)', T('balk Plan'), 0, 'rijP', BG) : '');
     const legAct = ['L', 'O', 'H', 'V', 'Z'].filter(k => toonP || k !== 'Z').map(k => i(ACT[k], NAAM[k])).join('');
     const pNu = pts.length ? pts[0][1] : null;
-    const tEind = pts.length ? new Date((pts[pts.length - 1][0] + 900) * 1000).toLocaleString(LOC, { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    const tEind = pts.length ? this._eind(pts[pts.length - 1][0]) : '';
     const kop3 = `<div class="top"><div class="kader"><div class="g">${pNu != null ? dec((+pNu).toFixed(1)) : '–'}<small> ct</small></div><div class="o">${T('Kale prijs nu')}</div><div class="f"><span style="color:${GEELT}">HBC ${eur(a.kosten_hbc)}</span> · <span style="color:${BGT}">Batterijplan ${eur(a.kosten_plan)}</span><br>${T('stroomkosten tot')} ${tEind}</div></div><div class="mid"><div class="g" style="color:${ok}">${opb >= 0 ? '+' : ''}${eur(opb)}</div><div class="o">${T('Verwachte besparing t.o.v. HBC alleen')}</div></div><div class="re"><div class="g" style="color:${BGT}">${a.lading != null ? dec((+a.lading).toFixed(2)) : '–'}<small> kWh</small></div><div class="o">${T('In de batterij nu')}</div></div></div>`;
     this.shadowRoot.innerHTML = `<style>
       ha-card{padding:12px 14px}

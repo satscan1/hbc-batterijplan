@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 — clearer end time of the plan
+
+**Fixed**
+- **End time of the plan.** The briefing showed the end of the plan one day too early ("Until Fri 00:00" while the plan ran to the end of Friday), and the chart header wrote the same moment in another way. Both now say "until end of Friday (24:00)", in Dutch, English and German.
+
+Nothing changes for the plan, the sensors or HBC.
+
 ## 1.0.0 — first full release
 
 **Added**

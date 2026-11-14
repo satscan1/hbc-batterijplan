@@ -20,6 +20,12 @@ views:
           title: Was bringt es
           icon: batterijplan:euro
           perioden: true
+      - naam: Heute
+        breed: 820
+        kaarten:
+        - type: custom:batterijplan-dag-card
+        - type: custom:batterijplan-spaarlijn-card
+        - type: custom:batterijplan-dagen-card
       - naam: Bericht
         kaarten:
         - type: custom:batterijplan-rapport
@@ -144,6 +150,12 @@ views:
                 **An:** Batterijplan stellt *cheapest hrs*, *expensive hrs* und *Solar reserved for house* in HBC selbst auf die Empfehlung ein, nur wenn der Unterschied mindestens 1 Stunde oder 0,5 kWh beträgt. Deine eigenen Werte werden zuerst gemerkt und kommen beim Ausschalten genau zurück. Jede Änderung steht im Logbuch.
 
                 Die erste Empfehlung kommt nach 7 vollen Messtagen.
+            - entity: switch.batterijplan_experiment_capaciteit
+              name: Experiment Kapazität
+              info: |-
+                **An:** jede Nacht wird der Vortag gemessen: was die teuren Viertelstunden brauchten und was eine andere Kapazität gebracht hätte. Die Schaltfläche Kapazität steht dann rechts in der Reihe.
+
+                **Aus:** es werden keine neuen Tage gemessen und die Schaltfläche verschwindet. Alles bereits Gemessene bleibt gespeichert (bis zu 5 Jahre) und ist wieder da, sobald du es einschaltest.
       - naam: Sensoren
         melding: sensoren
         kaarten:
@@ -235,6 +247,12 @@ views:
           - entity: sensor.batterijplan_huisverbruik
             name: Hausverbrauch jetzt
             info: Netzleistung + Solarleistung + Batterieleistung − Wallbox. Sollte ungefähr stimmen mit dem, was dein Haus wirklich verbraucht, und ist nie negativ.
+      - naam: Kapazität
+        experiment: true
+        toon: switch.batterijplan_experiment_capaciteit
+        breed: 820
+        kaarten:
+        - type: custom:batterijplan-capaciteit
   - type: grid
     cards:
     - type: custom:batterijplan-status

@@ -20,6 +20,12 @@ views:
           title: What does it earn
           icon: batterijplan:euro
           perioden: true
+      - naam: Today
+        breed: 820
+        kaarten:
+        - type: custom:batterijplan-dag-card
+        - type: custom:batterijplan-spaarlijn-card
+        - type: custom:batterijplan-dagen-card
       - naam: Report
         kaarten:
         - type: custom:batterijplan-rapport
@@ -144,6 +150,12 @@ views:
                 **On:** Batterijplan sets *cheapest hrs*, *expensive hrs* and *Solar reserved for house* in HBC to the advice itself, only when the difference is at least 1 hour or 0.5 kWh. Your own values are remembered first and come back exactly when you switch this off again. Every change is in the logbook.
 
                 The first advice comes after 7 full days of measuring.
+            - entity: switch.batterijplan_experiment_capaciteit
+              name: Capacity experiment
+              info: |-
+                **On:** every night the previous day is measured: what the expensive quarters needed and what another capacity would have earned. The Capacity button then sits on the right of the row.
+
+                **Off:** no new days are measured and the button disappears. Everything already measured is kept (up to 5 years) and comes back as soon as you switch it on again.
       - naam: Sensors
         melding: sensoren
         kaarten:
@@ -233,6 +245,12 @@ views:
           - entity: sensor.batterijplan_huisverbruik
             name: House use now
             info: Grid power + solar power + battery power - charger. Should roughly match what your house really uses, and is never negative.
+      - naam: Capacity
+        experiment: true
+        toon: switch.batterijplan_experiment_capaciteit
+        breed: 820
+        kaarten:
+        - type: custom:batterijplan-capaciteit
   - type: grid
     cards:
     - type: custom:batterijplan-status

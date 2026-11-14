@@ -337,7 +337,7 @@
 "Totalen": "Totals",
 "geteld sinds": "counting since",
 "Opgeleverd": "Earned",
-"Live (echt gestuurd)": "Live (really steered)",
+"Live (echt gestuurd)": "Live (really steered)", "Capaciteit (experiment)": "Capacity (experiment)", "Extra besparing als je de optimale capaciteit had gehad. Alleen echte dagbedragen, niets doorgerekend.": "Extra savings had you had the optimal capacity. Only real day amounts, nothing extrapolated.", "Per jaar": "Per year", "Maanden dit jaar": "Months this year", "Periode": "Period", "Trend": "Trend", "Extra besparing": "Extra savings", "Optimaal": "Optimal", "Maand": "Month", "K": "Q",
 "Schaduw (zou opleveren)": "Shadow (would earn)",
 "Balk: groen = live, grijs = schaduw (totaal sinds de start).": "Bar: green = live, grey = shadow (total since the start).",
 "Kwartieren ontladen / vastgehouden / overschot:": "Quarters discharged / held / surplus:",
@@ -450,7 +450,7 @@
     "Kwartieren ontladen / vastgehouden / teruggeleverd:": "Quarters discharged / held / fed in:",
     "Kosten HBC alleen": "Cost HBC alone",
     "Kosten met Batterijplan": "Cost with Batterijplan",
-    "Verwachte besparing t.o.v. HBC alleen": "Expected saving versus HBC alone",
+    "Verwachte besparing t.o.v. HBC alleen": "Expected saving versus HBC alone", "Nog te besparen tot": "Still to save until", "einde": "end of", "vandaag": "today",
     "Kwartieren in het plan": "Quarters in the plan",
     "Acties in het plan": "Actions in the plan",
     "Bij terugleveren telt wat je ontvangt, minus wat het kost om die lading later weer goedkoop in te kopen.": "When feeding in, what counts is what you receive, minus what it costs to buy that charge back cheaply later.",
@@ -767,7 +767,7 @@
 "Totalen": "Summen",
 "geteld sinds": "gezählt seit",
 "Opgeleverd": "Eingebracht",
-"Live (echt gestuurd)": "Live (wirklich gesteuert)",
+"Live (echt gestuurd)": "Live (wirklich gesteuert)", "Capaciteit (experiment)": "Kapazität (Experiment)", "Extra besparing als je de optimale capaciteit had gehad. Alleen echte dagbedragen, niets doorgerekend.": "Zusätzliche Ersparnis mit der optimalen Kapazität. Nur echte Tagesbeträge, nichts hochgerechnet.", "Per jaar": "Pro Jahr", "Maanden dit jaar": "Monate dieses Jahr", "Periode": "Zeitraum", "Trend": "Trend", "Extra besparing": "Zusätzliche Ersparnis", "Optimaal": "Optimal", "Maand": "Monat", "K": "Q",
 "Schaduw (zou opleveren)": "Schatten (würde einbringen)",
 "Balk: groen = live, grijs = schaduw (totaal sinds de start).": "Balken: grün = live, grau = Schatten (gesamt seit dem Start).",
 "Kwartieren ontladen / vastgehouden / overschot:": "Viertelstunden entladen / gehalten / Überschuss:",
@@ -880,7 +880,7 @@
     "Kwartieren ontladen / vastgehouden / teruggeleverd:": "Viertelstunden entladen / gehalten / eingespeist:",
     "Kosten HBC alleen": "Kosten nur HBC",
     "Kosten met Batterijplan": "Kosten mit Batterijplan",
-    "Verwachte besparing t.o.v. HBC alleen": "Erwartete Ersparnis gegenüber HBC allein",
+    "Verwachte besparing t.o.v. HBC alleen": "Erwartete Ersparnis gegenüber HBC allein", "Nog te besparen tot": "Noch zu sparen bis", "einde": "Ende", "vandaag": "heute",
     "Kwartieren in het plan": "Viertelstunden im Plan",
     "Acties in het plan": "Aktionen im Plan",
     "Bij terugleveren telt wat je ontvangt, minus wat het kost om die lading later weer goedkoop in te kopen.": "Beim Einspeisen zählt, was du erhältst, abzüglich der Kosten, diese Ladung später wieder günstig einzukaufen.",
@@ -1078,9 +1078,9 @@
       const totalen = "<div class='tot'><div class='k'>" + esc(t("Totalen") + " · " + scope + (sinds ? " · " + t("geteld sinds") + " " + sinds.toLocaleDateString(loc) : "")) + "</div><div class='bxs'>" +
         bx(t("Opgeleverd"), eurK(tot)) + bx(t("Gemiddeld per dag"), eurK(inScope.length ? tot / inScope.length : 0)) +
         bx(t("Beste dag"), beste.d ? eurK(beste.v) + "<div class='vt'>" + esc((DG[beste.d.getDay()] || "") + " " + beste.d.getDate() + " " + MN[beste.d.getMonth()]) + "</div>" : "–") +
-        bx(t("Live (echt gestuurd)"), eurK(live)) + ((this._hass.states["switch.batterijplan_live"] || {}).state === "on" ? "" : bx(t("Schaduw (zou opleveren)"), eurK(schaduw), "var(--secondary-text-color)")) +  // schaduw alleen tonen als Live uit staat
+        ((this._hass.states["switch.batterijplan_live"] || {}).state === "on" ? "" : bx(t("Schaduw (zou opleveren)"), eurK(schaduw), "var(--secondary-text-color)")) +  // schaduw alleen tonen als Live uit staat
         
-        bx(t("Dit contractjaar"), pk.state && !["unknown", "unavailable"].includes(pk.state) ? eurK(Number(pk.state) || 0) + (pk.attributes && pk.attributes.periode_start ? "<div class='vt'>" + esc(t("sinds") + " " + pk.attributes.periode_start) + "</div>" : "") : "–") + "</div>" +
+        bx(t("Dit contractjaar"), pk.state && !["unknown", "unavailable"].includes(pk.state) ? eurK(Number(pk.state) || 0) + (pk.attributes && pk.attributes.periode_start ? "<div class='vt'>" + esc(t("sinds") + " " + String(pk.attributes.periode_start).split("-").reverse().join("-")) + "</div>" : "") : "–") + "</div>" +
         ((this._hass.states["switch.batterijplan_live"] || {}).state === "on" ? "" : "<div class='lb'><i style='width:" + (totaal ? Math.abs(live) / totaal * 100 : 0) + "%;background:#66bb6a'></i><i style='flex:1;background:#94a3b8'></i></div>") +
         "<div class='vt'>" + esc(((this._hass.states["switch.batterijplan_live"] || {}).state === "on" ? "" : t("Balk: groen = live, grijs = schaduw (totaal sinds de start).") + " ") + t("Kwartieren ontladen / vastgehouden / teruggeleverd:") + " " + (a.kwartieren_ontladen || 0) + " / " + (a.kwartieren_vastgehouden || 0) + " / " + (a.kwartieren_teruggeleverd || 0)) + "</div></div>";
       const voet = "<div class='vt' style='margin-top:8px'>" + esc(t("▲ meer opgeleverd dan de periode ervoor · ▼ minder · = ongeveer gelijk. Balk: opbrengst vergeleken met de beste getoonde periode.")) + "</div>";
@@ -1114,8 +1114,7 @@
       const rij = (l, w, vet) => "<tr><td style='padding:6px 12px 6px 0;border-top:1px solid var(--divider-color)'>" + l + "</td><td style='padding:6px 0;border-top:1px solid var(--divider-color);text-align:right;white-space:nowrap'>" + (vet ? "<b>" + w + "</b>" : w) + "</td></tr>";
       this._body.innerHTML = "<table style='width:100%;margin-top:4px'>" +
         rij(t("Totaal sinds") + " " + esc(a.sinds || t("start")), eur(m.state), true) +
-        rij(t("waarvan schaduw (zou opleveren)"), eur(a.eur_schaduw)) +
-        rij(t("waarvan live (echt gestuurd)"), eur(a.eur_live)) +
+        rij(t("Schaduw (zou opleveren)"), eur(a.eur_schaduw)) +
         rij(t("Kwartieren ontladen / vastgehouden / teruggeleverd"), esc((a.kwartieren_ontladen || 0) + " / " + (a.kwartieren_vastgehouden || 0) + " / " + (a.kwartieren_teruggeleverd || 0))) +
         rij(t("Dit contractjaar"), eur((this._hass.states[(this._hass.states["sensor.batterijplan_meerwaarde_periode_2"] ? "sensor.batterijplan_meerwaarde_periode_2" : "sensor.batterijplan_meerwaarde_periode")] || {}).state)) + "</table>";
     }
@@ -1158,7 +1157,7 @@
         this.shadowRoot.innerHTML = "<style>:host{display:block}" +
           ".rij{display:flex;align-items:center;gap:12px;padding:10px 14px;flex-wrap:wrap}.streep{width:1px;align-self:stretch;background:var(--divider-color)}.pillen{flex:1;display:flex;flex-wrap:wrap;gap:6px}" +
           ".pil{position:relative;font-size:13px;padding:3px 13px;border:1px solid var(--divider-color);border-radius:14px;color:var(--secondary-text-color);cursor:pointer;user-select:none}" +
-          ".pil:hover,.pil.aan{color:var(--primary-text-color);border-color:var(--secondary-text-color);background:rgba(138,180,248,0.08)}" +
+          ".pil:hover,.pil.aan{color:var(--primary-text-color);border-color:var(--secondary-text-color);background:rgba(138,180,248,0.08)}.pil.exp{border-color:#3B82F6}.pil.exp:hover,.pil.exp.aan{border-color:#60A5FA}" +
           ".pil .stip{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#ff9800;border:2px solid var(--card-background-color)}" +
           ".live{display:flex;align-items:center;gap:10px;font:inherit;font-size:13px;color:var(--primary-text-color);cursor:pointer;padding:4px 14px 4px 5px;border-radius:999px;border:1px solid var(--divider-color);background:var(--secondary-background-color,#262932);transition:background .2s}.live.aan{background:rgba(102,187,106,0.15);border-color:#66bb6a}.live.aan .s{color:#66bb6a}.live .s{font-size:11px;color:var(--secondary-text-color)}.sw{width:42px;height:24px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid var(--divider-color);position:relative;flex:none}.sw::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--secondary-text-color);transition:left .2s}.live.aan .sw::after{left:20px;background:#66bb6a}" +
           ".scherm{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}" +
@@ -1174,7 +1173,8 @@
         this._pillen.addEventListener("click", (e) => { const p = e.target.closest(".pil"); if (p) this._openen(Number(p.dataset.i)); });
         this._esc = (e) => { if (e.key === "Escape" && this._open != null) this._openen(null); };
       }
-      const pilHtml = (c.knoppen || []).map((k, i) => "<span class='pil" + (this._open === i ? " aan" : "") + "' data-i='" + i + "'>" + esc(t(k.naam || "")) +
+      const verborgen = (k) => !!k.toon && !(this._hass.states[k.toon] && this._hass.states[k.toon].state === "on");
+      const pilHtml = (c.knoppen || []).map((k, i) => verborgen(k) ? "" : "<span class='pil" + (k.experiment ? " exp" : "") + (this._open === i ? " aan" : "") + "' data-i='" + i + "'>" + esc(t(k.naam || "")) +
         (k.melding && this._melding(k.melding) ? "<span class='stip' title='" + esc(t("Hier is iets te doen")) + "'></span>" : "") + "</span>").join("");
       // only rebuild the pills when they really change, so a click is never lost halfway
       if (pilHtml !== this._pilHtml) { this._pilHtml = pilHtml; this._pillen.innerHTML = pilHtml; }
@@ -1287,6 +1287,30 @@
   // plan points: [t, price_ct, kind, action_hbc, charge_hbc, action_plan, charge_plan, solar_kw, solar_kw_cautious]
   const planPunten = (pa) => { const v = arr(pa.punten); return Array.isArray(v) ? v : []; };
   const telActies = (pts, i) => { const tel = {}; pts.forEach((x) => { tel[x[i]] = (tel[x[i]] || 0) + 1; }); return tel; };
+  // 14-11-2026 (Adrie): the expected saving runs from now to the end of the plan; name that end (same as the plan card)
+  function bpNogTot(pa) {
+    const p = (pa && pa.punten) || [];
+    if (!p.length) return t("Nog te besparen tot");
+    const ls = p[p.length - 1][0], e = new Date((ls + 900) * 1000), d = new Date(ls * 1000), loc = LOC[LANG] || "nl-NL";
+    if (e.getHours() !== 0 || e.getMinutes() !== 0) return t("Nog te besparen tot") + " " + e.toLocaleString(loc, { weekday: "short", hour: "2-digit", minute: "2-digit" });
+    return t("Nog te besparen tot") + " " + t("einde") + " " + (d.toDateString() === new Date().toDateString() ? t("vandaag") : d.toLocaleDateString(loc, { weekday: "long" })) + " (24:00)";
+  }
+  // 14-11-2026 (Adrie): capacity experiment in the report — years (5), quarters as a year x Q1-Q4 grid (3 years), months of the running year
+  function bpCapRap(S) {
+    const sw = S["switch.batterijplan_experiment_capaciteit"], c = S["sensor.batterijplan_capaciteitsadvies"];
+    if (!sw || sw.state !== "on" || !c || !c.attributes.perioden) return null;
+    const p = c.attributes.perioden, loc = LOC[LANG] || "nl-NL";
+    const eur = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + "€ " + Math.abs(v).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const trend = (r, i) => { const o = r[i + 1]; if (!o || !r[i][1] || !o[1]) return "–"; const x = r[i][6] / r[i][1], y = o[6] / o[1]; return x > y + 0.005 ? "▲" : (x < y - 0.005 ? "▼" : "="); };
+    const rij = (r, i, naam) => ({ naam: naam, trend: trend(r, i), eur: eur(r[i][6]), opt: r[i][3] + " kWh", dagen: r[i][1] + "/" + r[i][2] });
+    const maandNaam = (pk) => new Date(+pk.slice(0, 4), +pk.slice(5, 7) - 1, 1).toLocaleDateString(loc, { month: "long", year: "numeric" });
+    const jaren = (p.jaar || []).map((x, i, r) => rij(r, i, x[0]));
+    const maanden = (p.maand || []).map((x, i, r) => rij(r, i, maandNaam(x[0])));
+    const kw = {};
+    (p.kwartaal || []).forEach((x) => { const y = x[0].slice(0, 4), q = +x[0].slice(-1); (kw[y] = kw[y] || {})[q] = { eur: eur(x[6]), sub: x[3] + " kWh · " + x[1] + "/" + x[2] }; });
+    const kwJaren = Object.keys(kw).sort().reverse().slice(0, 3).map((y) => ({ jaar: y, q: [1, 2, 3, 4].map((q) => kw[y][q] || null) }));
+    return { jaren: jaren, maanden: maanden, kwJaren: kwJaren };
+  }
   async function bpRapport(hass, cfg) {
     zetTaal(hass, cfg);
     const S = hass.states, nu = new Date(), r = [], pa = (S[IDS.plan] || {}).attributes || {}, pts = planPunten(pa);
@@ -1294,7 +1318,7 @@
       (v && typeof v === "object") ? JSON.stringify(v).slice(0, 200) : String(v);
     const regel = (id) => { const x = S[id]; if (!x) return "- " + id + ": **" + t("niet gevonden") + "**"; const u = x.attributes.unit_of_measurement; return "- " + id + ": " + x.state + (u ? " " + u : "") + " _(" + t("sinds") + " " + new Date(x.last_changed).toLocaleString(LOC[LANG] || "nl-NL") + ")_"; };
     const attrs = (id, max) => { const a = (S[id] || {}).attributes || {}; return Object.keys(a).filter((k) => !["friendly_name", "icon", "unit_of_measurement", "device_class", "state_class"].includes(k)).sort().slice(0, max || 80).map((k) => "  - " + k + ": " + kort(a[k])); };
-    const eigen = Object.keys(S).filter((k) => k.includes("batterijplan")).sort();
+    const eigen = Object.keys(S).filter((k) => k.includes("batterijplan") && k !== "sensor.batterijplan_voorspelling_kleur").sort();
     r.push("# Batterijplan report", "", "_" + t("Gemaakt op") + " " + nu.toLocaleString(LOC[LANG] || "nl-NL") + " · " + t("Er staan geen namen of adressen in. Lees het na voordat je het deelt.") + "_", "");
     r.push("## Versions", "- Batterijplan: " + (pa.versie || "?"), "- Home Assistant: " + ((hass.config && hass.config.version) || "?"),
       "- " + t("Taal") + ": " + LANG + " · " + t("tijdzone") + ": " + ((hass.config && hass.config.time_zone) || "?"), "");
@@ -1309,6 +1333,15 @@
       r.push("- " + t("prijzen") + ": " + marks.length + " · datapoints_per_hour " + (mk.datapoints_per_hour || "?") + " · " + new Date(st[0]).toLocaleString(LOC[LANG] || "nl-NL") + " → " + new Date(st[st.length - 1]).toLocaleString(LOC[LANG] || "nl-NL") +
         " · low " + marks.filter((m) => m.mark === "low").length + " · high " + marks.filter((m) => m.mark === "high").length); }
     r.push("");
+    const cap = bpCapRap(S);
+    if (cap) {
+      const kop = "| " + [t("Periode"), t("Trend"), t("Extra besparing"), t("Optimaal"), t("Dagen")].join(" | ") + " |", lijn = "|---|---|---|---|---|";
+      const md = (rows) => rows.map((x) => "| " + [x.naam, x.trend, x.eur, x.opt, x.dagen].join(" | ") + " |");
+      r.push("## " + t("Capaciteit (experiment)"), t("Extra besparing als je de optimale capaciteit had gehad. Alleen echte dagbedragen, niets doorgerekend."), "");
+      if (cap.jaren.length) r.push("### " + t("Per jaar"), kop, lijn, ...md(cap.jaren), "");
+      if (cap.kwJaren.length) r.push("### " + t("Kwartalen"), "| | " + [1, 2, 3, 4].map((q) => t("K") + q).join(" | ") + " |", "|---|---|---|---|---|", ...cap.kwJaren.map((y) => "| " + y.jaar + " | " + y.q.map((c) => c ? c.eur + " (" + c.sub + ")" : "–").join(" | ") + " |"), "");
+      if (cap.maanden.length) r.push("### " + t("Maanden dit jaar"), kop, lijn, ...md(cap.maanden), "");
+    }
     r.push("## " + t("Plan") + " (sensor.batterijplan)"); attrs(IDS.plan, 120).forEach((x) => r.push(x)); r.push("");
     if (pts.length) {
       const fmt = (tel) => Object.keys(tel).sort().map((k) => k + ": " + tel[k]).join(", ");
@@ -1350,14 +1383,21 @@
     const S = hass.states, pa = (S[IDS.plan] || {}).attributes || {}, loc = LOC[LANG] || "nl-NL", nu = new Date(), pts = planPunten(pa);
     const st = (id) => (S[id] ? S[id].state : null), at = (id) => ((S[id] || {}).attributes || {});
     const naam = (id) => esc(at(id).friendly_name || id);
-    const val = (id) => { const x = S[id]; if (!x) return "<span class='warn'>" + esc(t("niet gevonden")) + "</span>"; const u = x.attributes.unit_of_measurement; return esc(x.state + (u ? " " + u : "")); };
+    const val = (id) => { const x = S[id]; if (!x) return "<span class='warn'>" + esc(t("niet gevonden")) + "</span>"; const u = x.attributes.unit_of_measurement, n = Number(x.state); const sv = (x.state !== "" && isFinite(n)) ? n.toLocaleString(loc, { maximumFractionDigits: 1 }) : x.state; return esc(sv + (u ? " " + u : "")); };
     const tijd = (v) => (v ? new Date(v).toLocaleString(loc) : "–");
     const kaart = (l, b, sub, cls) => "<div class='kpi'><div class='kl'>" + esc(l) + "</div><div class='kb " + (cls || "") + "'>" + b + "</div><div class='ks'>" + (sub || "") + "</div></div>";
     const kv = (rijen) => "<div class='panel'>" + rijen.map((p) => "<div class='kvr'><span>" + esc(p[0]) + "</span><b>" + p[1] + "</b></div>").join("") + "</div>";
     const kort = (v) => Array.isArray(v) ? (v.length ? v.length + " × " + esc(JSON.stringify(v.slice(0, 4)).slice(0, 140)) + (v.length > 4 ? " …" : "") : "–") : (v && typeof v === "object") ? esc(JSON.stringify(v).slice(0, 200)) : esc(String(v));
     const geldH = (v) => { const g = geld(v); return "<span style='color:" + g.kleur + "'>" + esc(g.txt) + "</span>"; };
     const tabel = (koppen, rijen, leeg) => "<div class='box'><table><tr>" + koppen.map((k) => "<th>" + esc(k) + "</th>").join("") + "</tr>" + (rijen.length ? rijen.join("") : "<tr><td colspan='" + koppen.length + "' class='mut'>" + esc(leeg || "–") + "</td></tr>") + "</table></div>";
-    const eigen = Object.keys(S).filter((k) => k.includes("batterijplan")).sort();
+    const capR = bpCapRap(S);
+    const capRij = (x) => "<tr><td>" + esc(x.naam) + "</td><td>" + x.trend + "</td><td>" + esc(x.eur) + "</td><td>" + esc(x.opt) + "</td><td>" + esc(x.dagen) + "</td></tr>";
+    const capH = !capR ? "" : "<p class='mut'>" + esc(t("Extra besparing als je de optimale capaciteit had gehad. Alleen echte dagbedragen, niets doorgerekend.")) + "</p>" +
+      (capR.jaren.length ? "<h3>" + esc(t("Per jaar")) + "</h3>" + tabel([t("Jaar"), t("Trend"), t("Extra besparing"), t("Optimaal"), t("Dagen")], capR.jaren.map(capRij)) : "") +
+      (capR.kwJaren.length ? "<h3>" + esc(t("Kwartalen")) + "</h3>" + tabel(["", t("K") + "1", t("K") + "2", t("K") + "3", t("K") + "4"], capR.kwJaren.map((y) => "<tr><td>" + esc(y.jaar) + "</td>" +
+        y.q.map((c) => "<td>" + (c ? esc(c.eur) + "<br><span class='mut'>" + esc(c.sub) + "</span>" : "<span class='mut'>–</span>") + "</td>").join("") + "</tr>")) : "") +
+      (capR.maanden.length ? "<h3>" + esc(t("Maanden dit jaar")) + "</h3>" + tabel([t("Maand"), t("Trend"), t("Extra besparing"), t("Optimaal"), t("Dagen")], capR.maanden.map(capRij)) : "");
+    const eigen = Object.keys(S).filter((k) => k.includes("batterijplan") && k !== "sensor.batterijplan_voorspelling_kleur").sort();
     const live = st("switch.batterijplan_live") === "on", strat = st("input_select.house_battery_strategy"), mw = at("sensor.batterijplan_meerwaarde");
     const zon = zonIds(S), mist = RAPPORT_HBC.concat([zon.vandaag, zon.morgen].filter(Boolean)).filter((k) => !S[k]).concat(S[IDS.plan] ? [] : [IDS.plan]),
       zonMist = !zon.vandaag || !zon.morgen;
@@ -1369,7 +1409,7 @@
     const samen = "<div class='box lead'>" +
       "<p>" + (live ? esc(t("Batterijplan staat op Live en stuurt HBC.")) : "<span class='or'>" + esc(t("Batterijplan staat in schaduw: het rekent mee maar stuurt niets.")) + "</span>") + " " +
       (strat === "Dynamic" ? esc(t("HBC staat op Dynamic.")) : "<span class='warn'>" + esc(t("HBC staat niet op Dynamic; Batterijplan wacht.")) + "</span>") + "</p>" +
-      "<p>" + esc(t("Komend kwartier:")) + " <b>" + kwTxt + "</b> · " + esc(t("Verbruik leren:")) + " <b>" + esc(st("sensor.batterijplan_voorspelling") || "–") + "</b></p>" +
+      "<p>" + esc(t("Komend kwartier:")) + " <b>" + kwTxt + "</b> · " + esc(t("Verbruik leren:")) + " <b>" + esc(t(st("sensor.batterijplan_voorspelling") || "–")) + "</b></p>" +
       "<p>" + esc(t("Opgeleverd sinds")) + " " + esc(mw.sinds || "–") + ": <b>" + geldH(st("sensor.batterijplan_meerwaarde")) + "</b></p>" +
       "<p>" + (mist.length ? "<span class='warn'>" + esc(t("Ontbreekt:")) + " " + mist.map(esc).join(", ") + "</span>" : "<span class='ok'>✓ " + esc(t("Alle sensoren en HBC-instellingen gevonden.")) + "</span>") + (zonMist ? "<br><span class='warn'>" + esc(t(ZON_TIP)) + "</span>" : "") + "</p></div>";
     const status = "<div class='kpis'>" +
@@ -1378,12 +1418,12 @@
       kaart(t("In de batterij nu"), esc(nl(Number(Number.isFinite(parseFloat((S["sensor.batterijplan_lading_2"] || S["sensor.batterijplan_lading"] || {}).state)) ? parseFloat((S["sensor.batterijplan_lading_2"] || S["sensor.batterijplan_lading"]).state) : pa.lading), 1)) + " kWh", "") +
       kaart(t("Prijs nu"), val("sensor.batterijplan_prijs"), "") +
       kaart(t("Huisverbruik nu"), val("sensor.batterijplan_huisverbruik"), "") +
-      kaart(t("Voorspelling"), esc(st("sensor.batterijplan_voorspelling") || "–"), esc(t("Verbruik leren"))) + "</div>";
+      kaart(t("Voorspelling"), esc(t(st("sensor.batterijplan_voorspelling") || "–")), esc(t("Verbruik leren"))) + "</div>";
     const eindT = pts.length ? new Date((pts[pts.length - 1][0] + 900) * 1000).toLocaleString(loc) : "–";
     const plan = kv([[t("Plan tot"), esc(eindT)], [t("Kosten HBC alleen"), esc("€ " + nl(Number(pa.kosten_hbc), 2))], [t("Kosten met Batterijplan"), esc("€ " + nl(Number(pa.kosten_plan), 2))],
-      [t("Verwachte besparing t.o.v. HBC alleen"), geldH(st(IDS.plan))], [t("Modus"), esc(pa.modus || "–")], [t("HBC-strategie"), esc(pa.hbc_strategie || "–")], [t("Kwartieren in het plan"), esc(pts.length)]]
+      [bpNogTot(pa), geldH(st(IDS.plan))], [t("Modus"), esc(pa.modus || "–")], [t("HBC-strategie"), esc(pa.hbc_strategie || "–")], [t("Kwartieren in het plan"), esc(pts.length)]]
       .concat(REGELS.map((x) => [t("Regel") + ": " + t(x[1]), esc(t(st("switch.batterijplan_regel_" + x[0]) === "off" ? "uit" : "aan"))])));
-    const opbr = "<div class='kpis'>" + kaart(t("Totaal"), geldH(st("sensor.batterijplan_meerwaarde")), esc(t("sinds") + " " + (mw.sinds || "–"))) + kaart(t("Live (echt gestuurd)"), geldH(mw.eur_live), "") +
+    const opbr = "<div class='kpis'>" + kaart(t("Totaal"), geldH(st("sensor.batterijplan_meerwaarde")), esc(t("sinds") + " " + (mw.sinds || "–"))) +
       kaart(t("Schaduw (zou opleveren)"), geldH(mw.eur_schaduw), "") + kaart(t("Dit contractjaar"), geldH(st("sensor.batterijplan_meerwaarde_periode")), esc(at("sensor.batterijplan_meerwaarde_periode").periode_start || "")) +
       kaart(t("Kwartieren ontladen / vastgehouden / teruggeleverd"), esc((mw.kwartieren_ontladen || 0) + " / " + (mw.kwartieren_vastgehouden || 0) + " / " + (mw.kwartieren_teruggeleverd || 0)), "") + "</div>";
     const rij = (id) => "<tr><td>" + naam(id) + "<div class='mut'><code>" + esc(id) + "</code></div></td><td>" + val(id) + "</td><td class='mut'>" + (S[id] ? esc(tijd(S[id].last_changed)) : "–") + "</td></tr>";
@@ -1404,6 +1444,7 @@
       "<section id='status'><h2>" + esc(t("Status")) + "</h2>" + status + "</section>" +
       "<section id='plan'><h2>" + esc(t("Plan")) + "</h2>" + plan + "</section>" +
       "<section id='opbrengst'><h2>" + esc(t("Opbrengst")) + "</h2>" + opbr + "</section>" +
+      (capH ? "<section id='capaciteit'><h2>" + esc(t("Capaciteit (experiment)")) + "</h2>" + capH + "</section>" : "") +
       "<section id='instellingen'><h2>" + esc(t("Instellingen")) + " (Batterijplan)</h2>" + inst + "</section>" +
       "<section id='hbc'><h2>HBC</h2>" + hbc + "</section>" +
       "<section id='dag'><h2>" + esc(t("Acties in het plan")) + "</h2>" + dag + "</section>" +
@@ -1429,7 +1470,7 @@
       const vak = (l, w, sub, kl) => "<div style='flex:1;min-width:140px;border:1px solid var(--divider-color);border-radius:12px;padding:10px 12px'><div style='font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--secondary-text-color)'>" + esc(l) + "</div>" +
         "<div style='font-size:18px;font-weight:650;margin-top:2px" + (kl ? ";color:" + kl : "") + "'>" + esc(w) + "</div><div style='font-size:12px;color:var(--secondary-text-color)'>" + esc(sub || "") + "</div></div>";
       const kaarten = vak(t("Modus"), live ? "live" : t("schaduw"), live ? t("stuurt HBC") : "", live ? "#66bb6a" : "#ff9800") + vak(t("Komend kwartier"), kw, "") +
-        vak(t("Verwachte besparing t.o.v. HBC alleen"), geld((S[IDS.plan] || {}).state).txt, "", geld((S[IDS.plan] || {}).state).kleur) + vak(t("Opgeleverd"), g.txt, t("sinds") + " " + ((mw.attributes || {}).sinds || "–"), g.kleur);
+        vak(bpNogTot((S[IDS.plan] || {}).attributes), geld((S[IDS.plan] || {}).state).txt, "", geld((S[IDS.plan] || {}).state).kleur) + vak(t("Opgeleverd"), g.txt, t("sinds") + " " + ((mw.attributes || {}).sinds || "–"), g.kleur);
       const k = "font:inherit;font-size:13px;border-radius:999px;border:1.5px solid var(--primary-color);background:none;color:var(--primary-text-color);padding:7px 16px;cursor:pointer";
       if (!this._knoppen) {
         this._body.innerHTML = "<div class='rk' style='display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px'></div>" +

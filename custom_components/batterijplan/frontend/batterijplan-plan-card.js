@@ -8,27 +8,27 @@ const BP_PLAN_TX = {
     'laden van het net': 'charge from the grid', 'ontladen': 'discharge', 'vasthouden': 'hold', 'terugleveren': 'feed in', 'niet laden / niet ontladen': 'no charge / no discharge', 'alleen zon / niets': 'solar only / nothing',
     'extra laden van het net': 'extra charge from the grid', 'extra ontladen': 'extra discharge', 'vasthouden voor later': 'hold for later',
     'Briefing en plan': 'Briefing and plan', 'HBC origineel': 'HBC original', 'klik: alleen deze / beide': 'click: only this / both', 'klik: tonen / verbergen': 'click: show / hide',
-    'Nog geen berekening.': 'No calculation yet.', 'in de batterij': 'in the battery', 'Kwartier': 'Quarter', 'hetzelfde als HBC': 'same as HBC', 'HBC zou': 'HBC would', 'Tot': 'Until', 'einde': 'end of', 'verschil': 'difference',
+    'Nog geen berekening.': 'No calculation yet.', 'in de batterij': 'in the battery', 'Kwartier': 'Quarter', 'hetzelfde als HBC': 'same as HBC', 'HBC zou': 'HBC would', 'Tot': 'Until', 'einde': 'end of', 'verwacht': 'expected', 'verschil': 'difference',
     'Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.': 'No steering needed: Batterijplan does the same as HBC.',
     'Extra laden van het net': 'Extra charging from the grid', 'Ontladen buiten HBC-uren': 'Discharging outside HBC hours', 'Vasthouden voor later': 'Holding for later', 'Terugleveren': 'Feeding in', 'aan': 'on', 'uit': 'off',
     'Waar Batterijplan bijstuurt': 'Where Batterijplan steers', 'Regels': 'Rules',
     'zon verwachting (kW)': 'solar forecast (kW)', 'lading Batterijplan (kWh)': 'charge Batterijplan (kWh)', 'lading HBC (kWh)': 'charge HBC (kWh)', 'prijs (ct)': 'price (ct)',
     'bijgestuurd kwartier (kleur = actie)': 'steered quarter (colour = action)', 'balk HBC': 'HBC bar', 'balk Plan': 'Plan bar', 'Nu': 'Now', 'Plan': 'Plan',
     'Kale prijs': 'Bare price', 'Zon verwacht': 'Solar expected', 'Zon voorzichtig': 'Solar cautious', 'Lading HBC': 'Charge HBC', 'Lading Batterijplan': 'Charge Batterijplan', 'Actie HBC': 'Action HBC', 'Actie Batterijplan': 'Action Batterijplan',
-    'stroomkosten': 'electricity cost', 't.o.v. HBC': 'vs HBC', 'stroomkosten tot': 'electricity cost until', 'Kale prijs nu': 'Bare price now', 'Verwachte besparing t.o.v. HBC alleen': 'Expected saving versus HBC alone', 'In de batterij nu': 'In the battery now',
+    'stroomkosten': 'electricity cost', 't.o.v. HBC': 'vs HBC', 'stroomkosten tot': 'electricity cost until', 'Kale prijs nu': 'Bare price now', 'Verwachte besparing t.o.v. HBC alleen': 'Expected saving versus HBC alone', 'Nog te besparen tot': 'Still to save until', 'vandaag': 'today', 'In de batterij nu': 'In the battery now',
   },
   de: {
     'laden van het net': 'aus dem Netz laden', 'ontladen': 'entladen', 'vasthouden': 'halten', 'terugleveren': 'einspeisen', 'niet laden / niet ontladen': 'nicht laden / nicht entladen', 'alleen zon / niets': 'nur Sonne / nichts',
     'extra laden van het net': 'zusätzlich aus dem Netz laden', 'extra ontladen': 'zusätzlich entladen', 'vasthouden voor later': 'für später halten',
     'Briefing en plan': 'Briefing und Plan', 'HBC origineel': 'HBC Original', 'klik: alleen deze / beide': 'Klick: nur diese / beide', 'klik: tonen / verbergen': 'Klick: anzeigen / ausblenden',
-    'Nog geen berekening.': 'Noch keine Berechnung.', 'in de batterij': 'in der Batterie', 'Kwartier': 'Viertelstunde', 'hetzelfde als HBC': 'dasselbe wie HBC', 'HBC zou': 'HBC würde', 'Tot': 'Bis', 'einde': 'Ende', 'verschil': 'Differenz',
+    'Nog geen berekening.': 'Noch keine Berechnung.', 'in de batterij': 'in der Batterie', 'Kwartier': 'Viertelstunde', 'hetzelfde als HBC': 'dasselbe wie HBC', 'HBC zou': 'HBC würde', 'Tot': 'Bis', 'einde': 'Ende', 'verwacht': 'erwartet', 'verschil': 'Differenz',
     'Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.': 'Kein Nachsteuern nötig: Batterijplan tut dasselbe wie HBC.',
     'Extra laden van het net': 'Zusätzliches Laden aus dem Netz', 'Ontladen buiten HBC-uren': 'Entladen außerhalb der HBC-Zeiten', 'Vasthouden voor later': 'Halten für später', 'Terugleveren': 'Einspeisen', 'aan': 'an', 'uit': 'aus',
     'Waar Batterijplan bijstuurt': 'Wo Batterijplan nachsteuert', 'Regels': 'Regeln',
     'zon verwachting (kW)': 'Sonnenprognose (kW)', 'lading Batterijplan (kWh)': 'Ladung Batterijplan (kWh)', 'lading HBC (kWh)': 'Ladung HBC (kWh)', 'prijs (ct)': 'Preis (ct)',
     'bijgestuurd kwartier (kleur = actie)': 'nachgesteuerte Viertelstunde (Farbe = Aktion)', 'balk HBC': 'Balken HBC', 'balk Plan': 'Balken Plan', 'Nu': 'Jetzt', 'Plan': 'Plan',
     'Kale prijs': 'Reiner Preis', 'Zon verwacht': 'Sonne erwartet', 'Zon voorzichtig': 'Sonne vorsichtig', 'Lading HBC': 'Ladung HBC', 'Lading Batterijplan': 'Ladung Batterijplan', 'Actie HBC': 'Aktion HBC', 'Actie Batterijplan': 'Aktion Batterijplan',
-    'stroomkosten': 'Stromkosten', 't.o.v. HBC': 'ggü. HBC', 'stroomkosten tot': 'Stromkosten bis', 'Kale prijs nu': 'Reiner Preis jetzt', 'Verwachte besparing t.o.v. HBC alleen': 'Erwartete Ersparnis gegenüber HBC allein', 'In de batterij nu': 'Jetzt in der Batterie',
+    'stroomkosten': 'Stromkosten', 't.o.v. HBC': 'ggü. HBC', 'stroomkosten tot': 'Stromkosten bis', 'Kale prijs nu': 'Reiner Preis jetzt', 'Verwachte besparing t.o.v. HBC alleen': 'Erwartete Ersparnis gegenüber HBC allein', 'Nog te besparen tot': 'Noch zu sparen bis', 'vandaag': 'heute', 'In de batterij nu': 'Jetzt in der Batterie',
   },
 };
 // escape everything that ends up in innerHTML (card config, state attributes): & < > " '
@@ -52,9 +52,31 @@ class BatterijplanPlanCard extends HTMLElement {
     return l === 'nl' || l === 'de' ? l : 'en';
   }
   _T(k) { const d = BP_PLAN_TX[this._lng()]; return (d && d[k]) || k; }
+  _openVandaag() {
+    if (this._pop) return;
+    const self = this, taal = (this._c && this._c.taal) || 'nl';
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 12px;box-sizing:border-box;';
+    const pn = document.createElement('div');
+    pn.style.cssText = 'width:min(820px,100%);background:var(--card-background-color,#1c1c1c);border-radius:18px;padding:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);box-sizing:border-box;';
+    const kop = document.createElement('div'); kop.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
+    const mk = (tekst, rond) => { const b = document.createElement('button'); b.textContent = tekst; b.style.cssText = 'cursor:pointer;border:1px solid var(--divider-color,#555);background:transparent;color:var(--primary-text-color,#fff);font-size:13px;padding:' + (rond ? '6px 11px' : '5px 12px') + ';border-radius:' + (rond ? '50%' : '16px') + ';'; return b; };
+    const sluit = () => { document.removeEventListener('keydown', esc); ov.remove(); self._pop = null; self._popCards = null; };
+    const esc = (e) => { if (e.key === 'Escape') sluit(); };
+    const terug = mk('‹ ' + ({ nl: 'Terug', en: 'Back', de: 'Zurück' }[taal] || 'Terug'), false), x = mk('✕', true);
+    terug.addEventListener('click', sluit); x.addEventListener('click', sluit);
+    kop.appendChild(terug); kop.appendChild(x); pn.appendChild(kop);
+    this._popCards = ['batterijplan-dag-card', 'batterijplan-spaarlijn-card', 'batterijplan-dagen-card'].map((tag) => {
+      const el = document.createElement(tag); el.style.cssText = 'display:block;margin-bottom:12px;';
+      if (el.setConfig) el.setConfig({ taal }); if (self._h) el.hass = self._h; pn.appendChild(el); return el;
+    });
+    ov.addEventListener('click', (e) => { if (e.target === ov) sluit(); });
+    ov.appendChild(pn); document.body.appendChild(ov); document.addEventListener('keydown', esc); this._pop = ov;
+  }
   _eind(ts) { const L = BP_PLAN_LOC[this._lng()]; const d = new Date((ts + 900) * 1000); if (d.getHours() === 0 && d.getMinutes() === 0) return this._T('einde') + ' ' + new Date(ts * 1000).toLocaleDateString(L, { weekday: 'long' }) + ' (24:00)'; return d.toLocaleString(L, { weekday: 'short', hour: '2-digit', minute: '2-digit' }); }
   set hass(h) {
     this._h = h;
+    if (this._popCards) this._popCards.forEach((e) => { e.hass = h; });
     // like the status card: with a second Batterijplan (sensor.batterijplan_2) the _2 one is the live one
     const id = this._c.entity === 'sensor.batterijplan' && h.states['sensor.batterijplan_2'] ? 'sensor.batterijplan_2' : this._c.entity;
     const s = h.states[id];
@@ -249,7 +271,21 @@ class BatterijplanPlanCard extends HTMLElement {
     const legAct = ['L', 'O', 'H', 'V', 'Z'].filter(k => toonP || k !== 'Z').map(k => i(ACT[k], NAAM[k])).join('');
     const pNu = pts.length ? pts[0][1] : null;
     const tEind = pts.length ? this._eind(pts[pts.length - 1][0]) : '';
-    const kop3 = `<div class="top"><div class="kader"><div class="g">${pNu != null ? dec((+pNu).toFixed(1)) : '–'}<small> ct</small></div><div class="o">${T('Kale prijs nu')}</div><div class="f"><span style="color:${GEELT}">HBC ${eur(a.kosten_hbc)}</span> · <span style="color:${BGT}">Batterijplan ${eur(a.kosten_plan)}</span><br>${T('stroomkosten tot')} ${tEind}</div></div><div class="mid"><div class="g" style="color:${ok}">${opb >= 0 ? '+' : ''}${eur(opb)}</div><div class="o">${T('Verwachte besparing t.o.v. HBC alleen')}</div></div><div class="re"><div class="g" style="color:${BGT}">${a.lading != null ? dec((+a.lading).toFixed(2)) : '–'}<small> kWh</small></div><div class="o">${T('In de batterij nu')}</div></div></div>`;
+    // 14-11-2026 (Adrie): the figure runs from now to the end of the plan, so say until when (today or the named day)
+    const tNog = (() => { if (!pts.length) return ''; const ls = pts[pts.length - 1][0], e = new Date((ls + 900) * 1000), d = new Date(ls * 1000);
+      if (e.getHours() !== 0 || e.getMinutes() !== 0) return tEind;
+      return T('einde') + ' ' + (d.toDateString() === new Date().toDateString() ? T('vandaag') : d.toLocaleDateString(LOC, { weekday: 'long' })) + ' (24:00)'; })();
+    const kop3 = `<div class="top"><div class="kader"><div class="g">${pNu != null ? dec((+pNu).toFixed(1)) : '–'}<small> ct</small></div><div class="o">${T('Kale prijs nu')}</div><div class="f"><span style="color:${GEELT}">HBC ${eur(a.kosten_hbc)}</span> · <span style="color:${BGT}">Batterijplan ${eur(a.kosten_plan)}</span><br>${T('stroomkosten tot')} ${tEind}</div></div><div class="mid"><div class="g" style="color:${ok}">${opb >= 0 ? '+' : ''}${eur(opb)}</div><div class="o">${T('Nog te besparen tot')} ${tNog}</div></div><div class="re">${(() => {
+      const ls = this._liveState() || {};
+      const real = parseFloat(ls.state);
+      const e0 = Number((ls.attributes || {}).lading_plan);
+      const e = Number.isFinite(e0) ? e0 : Number(a.lading);
+      if (!Number.isFinite(real) || !Number.isFinite(e)) return `<div class="g" style="color:${BGT}">${a.lading !== null ? dec((+a.lading).toFixed(2)) : '–'}<small> kWh</small></div><div class="o">${T('In de batterij nu')}</div>`;
+      const dev = (real - e) / Math.max(e, 1);
+      const kl = dev > 0.10 ? '#a855f7' : dev < -0.25 ? '#ef4444' : dev < -0.10 ? '#f97316' : '#1dab52';
+      const pct = Math.round(dev * 100);
+      return `<div class="g" style="color:${kl}">${dec(real.toFixed(2))}<small> kWh</small></div><div class="o">${T('In de batterij nu')}</div><div class="o" style="color:${kl}">${T('verwacht')} ${dec(e.toFixed(2))} kWh (${pct > 0 ? '+' : ''}${pct} %)</div>`;
+    })()}</div></div>`;
     this.shadowRoot.innerHTML = `<style>
       ha-card{padding:12px 14px}
       .k{display:flex;justify-content:flex-start;align-items:baseline;flex-wrap:wrap;gap:6px 18px}
@@ -290,6 +326,8 @@ class BatterijplanPlanCard extends HTMLElement {
       this._solo = this._solo === k ? null : k;
       this._render(this._s);
     }));
+    const midEl = this.shadowRoot.querySelector('.mid');
+    if (midEl) { midEl.style.cursor = 'pointer'; midEl.title = ({ nl: 'Tik voor vandaag in detail', en: 'Tap for today in detail', de: 'Tippen für heute im Detail' })[this._lng()] || ''; midEl.addEventListener('click', () => this._openVandaag()); }
     this.shadowRoot.querySelectorAll('.kl').forEach(el => el.addEventListener('click', () => {
       const k = el.dataset.k;
       if (this._uit.has(k)) this._uit.delete(k); else this._uit.add(k);

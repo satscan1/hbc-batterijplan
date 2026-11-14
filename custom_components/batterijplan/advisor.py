@@ -25,7 +25,7 @@ except ImportError:  # plain import in the offline tests
 
 QUARTER = 900
 DAYS = 7  # days that are replayed (and needed before the first advice)
-KEEP_DAYS = 10  # days kept in the history
+KEEP_DAYS = 28  # days kept in the history
 EPS = 0.01  # euro over the replayed days: smaller differences are ties
 COVER = 0.9  # share of the quarters of a day that must have been measured
 MAX_HOURS = 12  # coarse grid goes up to this many hours

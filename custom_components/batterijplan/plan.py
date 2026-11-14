@@ -198,7 +198,7 @@ def _hbc_alone(P: dict[str, Any]) -> tuple[list[list[Any]], float, float, float]
         if not hl:
             hk0 = c
         hk += c
-        hl.append([a, round(s2 + marge, 2)])
+        hl.append([a, round(s2 + marge, 2), round(c, 4)])
         hs = s2
     return hl, hk, hk0, hs
 
@@ -235,6 +235,8 @@ def _assemble(inp: PlanInput, P: dict[str, Any], engine: str, hl, hk, hk0, hs, b
         "start": P["T"],
         "lading": round(P["Eruw"], 2) if P["Eruw"] >= 0 else None,
         "punten": punten,
+        # cost per quarter (EUR) of HBC alone and of the plan, for "saved so far / still expected today" (v1.1.0)
+        "kw": [[round(hl[i][2], 4) if len(hl[i]) > 2 else 0.0, round(bl[i][2], 4) if len(bl[i]) > 2 else 0.0] for i in range(n)],
         # first quarter, for the value counter (counter.py): costs and charge at its end
         "k_hbc0": round(hk0, 4),
         "k_plan0": round(bk0, 4),
@@ -357,7 +359,7 @@ def _heuristic(P: dict[str, Any], inp: PlanInput, hbc_only: bool = False):
         if not bl:
             bk0 = c
         bk += c
-        bl.append([a, round(s2 + marge, 2)])
+        bl.append([a, round(s2 + marge, 2), round(c, 4)])
         bs = s2
     return bl, bk, bk0, bs
 
@@ -520,7 +522,7 @@ def _dp(P: dict[str, Any], inp: PlanInput):
             bk0 = bc
         bk += bc
         bw += bwr
-        bl.append([ba, round(bs2 + marge, 2)])
+        bl.append([ba, round(bs2 + marge, 2), round(bc, 4)])
         k = k_next(ba, k)
         p = bp
         s = bs2

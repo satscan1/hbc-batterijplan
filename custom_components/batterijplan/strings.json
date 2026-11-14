@@ -123,11 +123,15 @@
       },
       "batterijplan_advies_hbc": {
         "name": "HBC settings advice"
-      }
+      },
+      "batterijplan_capaciteitsadvies": {"name": "Capacity advice (experiment)"}
     },
     "switch": {
       "batterijplan_live": {
         "name": "Live (steers HBC)"
+      },
+      "batterijplan_experiment_capaciteit": {
+        "name": "Capacity experiment"
       },
       "batterijplan_hbc_auto": {
         "name": "Auto-adjust HBC settings"

@@ -59,16 +59,21 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # counter
         self.cnt: dict[str, Any] = {"total": 0.0, "live": 0.0, "schaduw": 0.0, "sinds": "", "base": 0.0,
                                     "base_start": "", "n_hold": 0, "n_feed": 0, "n_discharge": 0, "pending": None,
-                                    "schaduw_t": 0.0, "schaduw_nieuw": False,
+                                    "schaduw_t": 0.0, "schaduw_nieuw": False, "alleen_live": False,
                                     "s_cf": None, "cf_dag": ""}
         self.remembered: dict[str, str] = {}
         self.hbc_source = ""  # forecast entity HBC pointed to before we took the pointer (pass-through source)
         # HBC settings advice and auto-adjust (rc6)
         self._hstore: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.history")
+        self._cstore: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.capacity")
+        self.cap_days: dict[str, dict[str, Any]] = {}  # calendar day -> capacity record (see capacity.py)
+        self.cap_advice: dict[str, Any] = {"status": "te_weinig_dagen", "dagen": 0}
+        self._cap_busy = False
         self.hist: dict[str, list] = {}  # str(quarter start ts) -> [bare HBC price ct, house use W, solar W]
         self.adv_days: dict[str, list] = {}  # local day -> [sum, n] of the daily 'solar reserved for house' advice
         self.hbc_advice: dict[str, Any] = {}  # result of the last daily calculation
         self.hbc_auto = False  # switch: set the three HBC settings to the advice
+        self.cap_on = True  # switch (expert): capacity experiment; off = no new days are measured, stored days are kept
         self.hbc_user: dict[str, float] = {}  # your own HBC values, remembered while auto-adjust is on
         self.avg_solar = profile.StepAverage(900)
         self._own_ctx: deque[str] = deque(maxlen=50)  # context ids of our own HBC setting writes
@@ -117,15 +122,27 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if data:  # stored data wins; on a first start the takeover values (if any) stay
             self.profile = profile.Profile.from_dict(data.get("profile"))
             self.cnt.update({k: v for k, v in (data.get("counter") or {}).items() if k in self.cnt})
+            if not self.cnt.get("alleen_live"):
+                # 14-11-2026 (decision Adrie): the total only counts what was really steered (live). A total taken over
+                # from the YAML package also held shadow quarters from before Live; that part is taken out once.
+                if self.cnt["total"] - self.cnt["live"] > 0:
+                    self.cnt["total"] = self.cnt["live"]
+                    self.cnt["base"] = min(self.cnt["base"], self.cnt["total"])
+                self.cnt["alleen_live"] = True
             self.remembered = dict(data.get("remembered") or {})
             self.hbc_source = str(data.get("hbc_source") or "")
             self.hbc_auto = bool(data.get("hbc_auto"))
+            self.cap_on = bool(data.get("cap_on", True))
             self.hbc_user = {k: float(v) for k, v in (data.get("hbc_user") or {}).items() if k in HBC_SETTINGS}
             self.hbc_advice = dict(data.get("hbc_advice") or {})
             self.adv_days = {k: list(v) for k, v in (data.get("adv_days") or {}).items()}
         hdata = await self._hstore.async_load()
         if hdata:
             self.hist = {str(k): list(v) for k, v in (hdata.get("q") or {}).items()}
+        cdata = await self._cstore.async_load()
+        if cdata:
+            self.cap_days = {str(k): dict(v) for k, v in (cdata.get("days") or {}).items()}
+        self._refresh_cap()
         self._refresh_hist_days()
         if not self.cnt["sinds"]:
             self.cnt["sinds"] = dt_util.now().strftime("%d-%m-%Y")
@@ -147,6 +164,9 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._unsub.append(async_track_time_change(hass, self._tick_plan, minute=[14, 29, 44, 59], second=30))
         self._unsub.append(async_track_time_change(hass, self._tick_learn, minute=[0, 15, 30, 45], second=0))
         self._unsub.append(async_track_time_change(hass, self._tick_advice, hour=3, minute=10, second=0))
+        self._unsub.append(async_track_time_change(hass, self._tick_capacity, hour=0, minute=15, second=0))
+        self._unsub.append(async_call_later(hass, 90, callback(lambda _n: hass.async_create_task(self.async_calc_capacity()))))
+        self._unsub.append(async_track_time_change(hass, self._tick_capacity, minute=[10, 40], second=0))
         self._record_prices()
         self._unsub.append(async_at_started(hass, self._started))
         self._remember_pointer()
@@ -179,7 +199,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _data_to_save(self) -> dict[str, Any]:
         return {"profile": self.profile.to_dict(), "counter": self.cnt, "remembered": self.remembered, "hbc_source": self.hbc_source,
-                "hbc_auto": self.hbc_auto, "hbc_user": self.hbc_user, "hbc_advice": self.hbc_advice, "adv_days": self.adv_days}
+                "hbc_auto": self.hbc_auto, "cap_on": self.cap_on, "hbc_user": self.hbc_user, "hbc_advice": self.hbc_advice, "adv_days": self.adv_days}
 
     def _save_hist(self) -> None:
         self._hstore.async_delay_save(lambda: {"q": self.hist}, 30)
@@ -702,6 +722,52 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _tick_advice(self, _now: datetime) -> None:
         await self.async_calc_advice()
 
+    def _refresh_cap(self) -> None:
+        from . import capacity
+        if capacity.prune(self.cap_days, dt_util.now().date()):
+            self._cstore.async_delay_save(lambda: {"days": self.cap_days}, 30)
+        self.cap_advice = capacity.advise(self.cap_days)
+
+    async def _tick_capacity(self, _now: Any) -> None:
+        await self.async_calc_capacity()
+
+    async def async_calc_capacity(self) -> None:
+        """Once a day (just after midnight) and at start: add the complete calendar days that are not in the table yet."""
+        if self._cap_busy or not self.cap_on:
+            return
+        self._cap_busy = True
+        try:
+            from . import capacity
+            today = dt_util.now().date()
+            tz = self._tz()
+            todo = [d for d in advisor.complete_days(self.hist, today, tz) if d.isoformat() not in self.cap_days]
+            c_now, _cs = self._helper(HBC_SETTINGS["cheapest"][0])
+            e_now, _es = self._helper(HBC_SETTINGS["expensive"][0])
+            delta = self._float(HBC_DELTA, -1)
+            if todo and c_now is not None and e_now is not None and delta >= 0:
+                base = self._plan_input()
+                snapshot = {k: list(v) for k, v in self.hist.items()}
+                recs = await self.hass.async_add_executor_job(partial(
+                    capacity.build_records, base, snapshot, todo, tz, float(self.settings[CONF_CAPACITY]),
+                    float(c_now), float(e_now), float(delta), today))
+                self.cap_days.update(recs)
+                self._cstore.async_delay_save(lambda: {"days": self.cap_days}, 30)
+            have = {d.isoformat() for d in advisor.complete_days(self.hist, today, tz)}
+            missing = {k: v for k, v in self.cap_days.items()
+                       if ("net" not in v or v.get("v", 1) < capacity.REC_VERSION) and k in have}
+            if missing:  # once: days recorded before the net-cost table existed (12-11-2026)
+                base = self._plan_input()
+                snapshot = {k: list(v) for k, v in self.hist.items()}
+                extra = await self.hass.async_add_executor_job(partial(
+                    capacity.net_records, base, snapshot, missing, tz))
+                for k, v in extra.items():
+                    self.cap_days[k].update(v)
+                self._cstore.async_delay_save(lambda: {"days": self.cap_days}, 30)
+            self._refresh_cap()
+            self.async_set_updated_data(self._build_data())
+        finally:
+            self._cap_busy = False
+
     async def async_calc_advice(self) -> None:
         """Once a day (night): replay the last 7 days for the cheapest / expensive hours and store the advice."""
         if self._advice_busy:
@@ -794,6 +860,14 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self._set_helper(key, val, "your own value, auto-adjust off")
         self.hbc_user = {}
 
+    async def async_set_cap_on(self, on: bool) -> None:
+        """Capacity experiment on/off (expert). Off only stops measuring new days; every stored day is kept."""
+        was, self.cap_on = self.cap_on, on
+        self._save_now()
+        self.async_set_updated_data(self._build_data())
+        if on and not was:
+            self.hass.async_create_task(self.async_calc_capacity())
+
     async def async_set_hbc_auto(self, on: bool) -> None:
         was, self.hbc_auto = self.hbc_auto, on
         if on and not was:
@@ -844,7 +918,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "plan": r,
             "plan_attrs": {
                 "kosten_hbc": r.get("kosten_hbc"), "kosten_plan": r.get("kosten_plan"), "start": r.get("start"),
-                "lading": r.get("lading"), "punten": pts, "komend_kwartier": r.get("start"),
+                "lading": r.get("lading"), "punten": pts, "kw": r.get("kw"), "pmin_b": r.get("pmin_b"), "komend_kwartier": r.get("start"),
                 "actie": pts[0][5] if pts else None, "hbc_actie": pts[0][3] if pts else None,
                 "modus": "live" if (self.live and self.hbc_dynamic) else "schaduw",
                 "hbc_strategie": st.state if st else None, "versie": VERSION,
@@ -865,6 +939,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "colour": profile.colour(p.dagen, pct),
             "advice": self._advice(),
             "hbc_advice": self._hbc_advice_view(),
+            "capaciteit": {**self.cap_advice, "aan": self.cap_on},
             "hbc_solar": self._hbc_solar(),
             "counter": dict(self.cnt),
             "period": period,

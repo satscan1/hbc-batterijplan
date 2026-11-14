@@ -23,7 +23,7 @@ from .panel import async_remove_dashboard, async_setup_dashboard
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 FRONTEND_DIR = Path(__file__).parent / "frontend"
-CARDS = ("batterijplan-cards.js", "batterijplan-plan-card.js")
+CARDS = ("batterijplan-cards.js", "batterijplan-plan-card.js", "batterijplan-dag-card.js", "batterijplan-vandaag-cards.js", "batterijplan-capaciteit-card.js")
 PLATFORMS = [Platform.DATE, Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH, Platform.TEXT]
 
 

@@ -9,14 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import SWITCH_HBC_AUTO, SWITCH_LIVE, SWITCH_RULES
+from .const import SWITCH_CAPACITY, SWITCH_HBC_AUTO, SWITCH_LIVE, SWITCH_RULES
 from .coordinator import BatterijplanConfigEntry
 from .entity import BatterijplanEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback) -> None:
     c = entry.runtime_data
-    async_add_entities([LiveSwitch(c), HbcAutoSwitch(c), *(RuleSwitch(c, rule, key) for rule, key in SWITCH_RULES.items())])
+    async_add_entities([LiveSwitch(c), HbcAutoSwitch(c), CapacitySwitch(c), *(RuleSwitch(c, rule, key) for rule, key in SWITCH_RULES.items())])
 
 
 class LiveSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
@@ -93,3 +93,23 @@ class RuleSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.async_set_rule(self._rule, False)
+
+
+class CapacitySwitch(BatterijplanEntity, SwitchEntity):
+    """Capacity experiment (expert). Off stops measuring new days; the stored days are kept. Default on."""
+
+    _platform_domain = "switch"
+    _attr_icon = "mdi:flask-outline"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, SWITCH_CAPACITY)
+
+    @property
+    def is_on(self) -> bool:
+        return self.coordinator.cap_on
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_cap_on(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_cap_on(False)

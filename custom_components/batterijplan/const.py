@@ -3,7 +3,7 @@ from __future__ import annotations
 
 DOMAIN = "batterijplan"
 NAME = "Batterijplan"
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 
 # settings (config entry options) and their defaults
 CONF_CAPACITY = "capaciteit"
@@ -77,6 +77,7 @@ HBC_SETTINGS = {
 # keys of the switches (restored on start)
 SWITCH_LIVE = "batterijplan_live"
 SWITCH_HBC_AUTO = "batterijplan_hbc_auto"
+SWITCH_CAPACITY = "batterijplan_experiment_capaciteit"
 SWITCH_RULES = {
     "laden": "batterijplan_regel_laden",
     "ontladen": "batterijplan_regel_ontladen",

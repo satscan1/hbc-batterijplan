@@ -65,6 +65,9 @@ SENSORS: tuple[BpSensorDescription, ...] = (
     BpSensorDescription(key="batterijplan_advies_hbc", translation_key="batterijplan_advies_hbc", icon="mdi:tune-vertical",
                         value=lambda d: d["hbc_advice"]["status"],
                         attrs=lambda d: {k: v for k, v in d["hbc_advice"].items() if k != "status"}),
+    BpSensorDescription(key="batterijplan_capaciteitsadvies", translation_key="batterijplan_capaciteitsadvies", icon="mdi:battery-plus-variant",
+                        value=lambda d: d["capaciteit"]["status"],
+                        attrs=lambda d: {k: v for k, v in d["capaciteit"].items() if k != "status"}),
     BpSensorDescription(key="batterijplan_zon_voor_hbc", translation_key="batterijplan_zon_voor_hbc",
                         icon="mdi:solar-power-variant", native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                         state_class=SensorStateClass.MEASUREMENT,
@@ -85,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
 # plan run). Nothing reads their history (history calls in the cards use no_attributes; statistics use the state).
 # Kept in the database on purpose: actie, hbc_actie, modus, hbc_strategie (the decisions), sinds, advice fields.
 UNRECORDED = frozenset({
-    "punten", "uitleg", "versie", "zon_vandaag", "zon_morgen", "zon_rest_vandaag",
+    "punten", "kw", "pmin_b", "reeks", "uitleg", "versie", "zon_vandaag", "zon_morgen", "zon_rest_vandaag",
     "kosten_hbc", "kosten_plan", "lading", "start", "komend_kwartier",
     "lading_plan", "eur_live", "eur_schaduw",
     "kwartieren_vastgehouden", "kwartieren_teruggeleverd", "kwartieren_ontladen",

@@ -123,11 +123,15 @@
       },
       "batterijplan_advies_hbc": {
         "name": "Empfehlung HBC-Einstellungen"
-      }
+      },
+      "batterijplan_capaciteitsadvies": {"name": "Kapazitätsempfehlung (Experiment)"}
     },
     "switch": {
       "batterijplan_live": {
         "name": "Live (steuert HBC)"
+      },
+      "batterijplan_experiment_capaciteit": {
+        "name": "Experiment Kapazität"
       },
       "batterijplan_hbc_auto": {
         "name": "HBC-Einstellungen automatisch anpassen"

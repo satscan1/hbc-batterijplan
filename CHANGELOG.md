@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.1.0 — Midnight Sunshine
+
+**Added**
+- **Today window.** Saved so far (from 00:00 until now), still expected until 24:00 and the day total, with a chart over the calendar day (solid = saved, dashed = expected) and today plus the last 7 days with the average and the best day. Opens with the new *Today* button or by tapping the saving in the chart header. New card file `batterijplan-vandaag-cards.js`.
+- **Capacity advice (experiment).** Every night one record per complete calendar day: what the expensive quarters needed, what the battery could deliver, and what the plan would have earned on top of HBC alone for every usable capacity from 3 to 20 kWh (same prices, use and sun; charge left at 24:00 valued at the day's cheapest purchase price). The window shows a chart of up to 28 days (needed in purple on top, available in light yellow, the rolling ideal as a green dashed line), the neutral counts and the table *How well does your battery fit?* per year (up to 5), quarter and month of the running year: your battery, earned, possible, used, missed and the optimum of that period. Only real days are added up. Day records are kept for 5 years and are part of the Home Assistant backup. New module `capacity.py`, card file `batterijplan-capaciteit-card.js` and sensor `sensor.batterijplan_capaciteitsadvies`.
+- **Switch `switch.batterijplan_experiment_capaciteit`** (*Capacity experiment*, in *Settings → Expert*, on by default). Off: no new days are measured and the *Capacity* button disappears; everything already measured is kept. On again: missed days are filled in as long as the usage data is still there.
+- **Capacity button** at the far right of the button row, with a blue border because it is an experiment.
+- **Earnings per period.** *What does it earn* has the tabs Days, Weeks, Months, Quarters and Year, from new to old with a trend arrow and a bar, plus *Export to spreadsheet (CSV)* with one line per day since the start.
+- **Report:** a capacity section (years, a quarter grid over 3 years and the months of the running year) when the experiment is on.
+- **In the battery now** shows the expected charge below it, coloured by the difference.
+
+**Changed**
+- **Chart header:** *Still to save until end of &lt;today|weekday&gt; (24:00)* instead of *Expected saving*, also in the plan card and the report.
+- **Earnings count only live.** The total is what Batterijplan earned while *Live* was on. A one-time migration sets the stored total to the live part.
+- The sensor `sensor.batterijplan_voorspelling_kleur` is no longer listed in the report.
+
+**Fixed**
+- **Report:** the forecast verdict is translated (it showed *zeer goed* in English and German), numbers follow your language (27,2 ct and 1.127 W instead of 27.2 and 1127.0) and the contract start date is written as 26-10-2026.
+
+**Docs**
+- New chapter [06 · Capacity advice](docs/06-capacity.md) in English, Dutch and German. The dashboard chapter and the READMEs have new screenshots and an animation, made with demo data.
+
+Nothing changes for HBC: Batterijplan still never touches HBC's flows or code.
+
+
 ## 1.0.1 — clearer end time of the plan
 
 **Fixed**

@@ -75,8 +75,8 @@ Everything at a glance: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
-1. Open HACS, search for **HBC Batterijplan** and choose **Download** (once the integration is in the HACS default list).
-2. Not listed yet, or you do not see it? Add it as a custom repository: HACS → menu (⋮) → **Custom repositories** → `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Then search for it and download it.
+1. Open HACS, search for **HBC Batterijplan** and choose **Download**.
+2. Not showing up yet? HACS refreshes its list now and then. Until it does, you can add it as a custom repository: HACS → menu (⋮) → **Custom repositories** → `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Then search for it and download it.
 3. Restart Home Assistant, then *Settings → Devices & services → Add integration → Batterijplan*.
 
 Details: [01 · Installation](docs/01-installation.md).

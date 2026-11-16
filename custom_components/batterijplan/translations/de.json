@@ -56,8 +56,18 @@
           "teruglever_bonus": "Tages-Einspeisebonus",
           "bonus_van": "Tagsüber ab (Uhr)",
           "bonus_tot": "Tagsüber bis (Uhr)",
-          "land": "Land",
-          "teruglever_vast": "Feste Einspeisevergütung (EUR/kWh)"
+          "teruglever_vast": "Feste Einspeisevergütung (EUR/kWh)",
+          "contract_soort": "Vertragsart",
+          "prijs_vast": "Festpreis (EUR/kWh)",
+          "prijs_dag": "Tagpreis (EUR/kWh)",
+          "prijs_nacht": "Nachtpreis (EUR/kWh)",
+          "capaciteitstarief": "Kapazitätstarif (EUR/kW/Jahr, Flandern)",
+          "eigen_grens_w": "Eigene Grenze in kW (Flandern, 0 = keine)",
+          "nacht_van": "Nacht ab (Uhr)",
+          "nacht_tot": "Nacht bis (Uhr)",
+          "tarief": "Tarif (Festvertrag)",
+          "terugleverprijs_vast": "Einspeisevergütung (Festvertrag, EUR/kWh)",
+          "vlaanderen": "Flandern (Kapazitätstarif)"
         }
       }
     },
@@ -72,11 +82,16 @@
         "all-in": "All-in-Preis"
       }
     },
-    "land": {
+    "contract_soort": {
       "options": {
-        "nl": "Niederlande",
-        "de": "Deutschland",
-        "be": "Belgien (Flandern)"
+        "vast": "Fest",
+        "dynamisch": "Dynamisch"
+      }
+    },
+    "tarief": {
+      "options": {
+        "enkel": "Eintarif",
+        "dubbel": "Zweitarif"
       }
     }
   },
@@ -124,7 +139,15 @@
       "batterijplan_advies_hbc": {
         "name": "Empfehlung HBC-Einstellungen"
       },
-      "batterijplan_capaciteitsadvies": {"name": "Kapazitätsempfehlung (Experiment)"}
+      "batterijplan_capaciteitsadvies": {
+        "name": "Kapazitätsempfehlung (Experiment)"
+      },
+      "batterijplan_piek_maand": {
+        "name": "Spitze diesen Monat"
+      },
+      "batterijplan_kwartier": {
+        "name": "Laufende Viertelstunde"
+      }
     },
     "switch": {
       "batterijplan_live": {
@@ -147,6 +170,12 @@
       },
       "batterijplan_regel_terugleveren": {
         "name": "Regel: einspeisen"
+      },
+      "batterijplan_dal_weekend": {
+        "name": "Wochenende und Feiertage als Nebenzeit"
+      },
+      "batterijplan_vlaanderen": {
+        "name": "Flandern (Kapazitätstarif)"
       }
     },
     "number": {
@@ -167,11 +196,41 @@
       },
       "batterijplan_teruglever_bonus": {
         "name": "Tages-Einspeisebonus"
+      },
+      "batterijplan_prijs_vast": {
+        "name": "Festpreis"
+      },
+      "batterijplan_prijs_dag": {
+        "name": "Tagpreis"
+      },
+      "batterijplan_prijs_nacht": {
+        "name": "Nachtpreis"
+      },
+      "batterijplan_capaciteitstarief": {
+        "name": "Kapazitätstarif"
+      },
+      "batterijplan_eigen_grens": {
+        "name": "Eigene Grenze"
+      },
+      "batterijplan_nacht_van": {
+        "name": "Nacht beginnt"
+      },
+      "batterijplan_nacht_tot": {
+        "name": "Nacht endet"
+      },
+      "batterijplan_terugleverprijs": {
+        "name": "Einspeisevergütung"
       }
     },
     "select": {
       "batterijplan_hbc_prijzen": {
         "name": "Preise von HBC"
+      },
+      "batterijplan_contract_soort": {
+        "name": "Vertragsart"
+      },
+      "batterijplan_tarief": {
+        "name": "Tarif"
       }
     },
     "date": {

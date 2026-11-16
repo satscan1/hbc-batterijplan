@@ -158,3 +158,9 @@ Was your battery big enough for the expensive quarters, and what would another c
 ## Your own dashboard
 
 The entities have fixed names (`sensor.batterijplan`, `switch.batterijplan_live`, and so on) and the cards are loaded everywhere in Home Assistant. You can therefore also use the cards in your own dashboards. The cards come in four files: `batterijplan-cards.js`, `batterijplan-plan-card.js`, `batterijplan-vandaag-cards.js` and `batterijplan-capaciteit-card.js`. The cards have an optional option `taal` (`nl`, `en` or `de`) that sets the language of that card; without it the card follows the language of your Home Assistant profile.
+
+## New in the pre-release 2.0.0-dev1
+
+- **Settings** has two new tabs: **Contract** (kind of contract, rate, prices, feed-in price, night hours, weekend and public holidays) and **Flanders** (the switch, the capacity tariff and an own limit in kW). Rows that do not apply are greyed out with a reason.
+- **Window Peak** (only visible with *Flanders* on): the cards *Running quarter* and *Peak this month*.
+- **Under a Fixed contract** the main screen, the window *Today* and the *Report* show tariffs, the expected battery charge and what the battery does instead of the plan. See [07 · Contracts, off-peak hours and Flanders](07-contracts-and-flanders.md).

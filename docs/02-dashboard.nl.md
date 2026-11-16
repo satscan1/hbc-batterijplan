@@ -158,3 +158,9 @@ Was je batterij groot genoeg voor de dure kwartieren, en wat had een andere capa
 ## Je eigen dashboard
 
 De entiteiten hebben vaste namen (`sensor.batterijplan`, `switch.batterijplan_live`, enzovoort) en de kaarten worden overal in Home Assistant geladen. Je kunt de kaarten dus ook in je eigen dashboards gebruiken. De kaarten komen in vier bestanden: `batterijplan-cards.js`, `batterijplan-plan-card.js`, `batterijplan-vandaag-cards.js` en `batterijplan-capaciteit-card.js`. De kaarten hebben een optionele instelling `taal` (`nl`, `en` of `de`) die de taal van die kaart bepaalt; zonder die instelling volgt de kaart de taal van je Home Assistant-profiel.
+
+## Nieuw in de pre-release 2.0.0-dev1
+
+- **Instellingen** heeft twee nieuwe tabbladen: **Contract** (soort contract, tarief, prijzen, terugleververgoeding, nachturen, weekend en feestdagen) en **Vlaanderen** (de schakelaar, het capaciteitstarief en een eigen grens in kW). Rijen die niet gelden staan grijs met een reden.
+- **Venster Piek** (alleen zichtbaar met *Vlaanderen* aan): de kaarten *Lopend kwartier* en *Piek deze maand*.
+- **Bij een vast contract** tonen het hoofdscherm, het venster *Vandaag* en het *Rapport* tarieven, de verwachte batterijlading en wat de batterij doet in plaats van het plan. Zie [07 · Contracten, daluren en Vlaanderen](07-contracts-and-flanders.nl.md).

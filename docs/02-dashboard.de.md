@@ -158,3 +158,9 @@ War deine Batterie groß genug für die teuren Viertelstunden, und was hätte ei
 ## Dein eigenes Dashboard
 
 Die Entitäten haben feste Namen (`sensor.batterijplan`, `switch.batterijplan_live` und so weiter) und die Karten werden überall in Home Assistant geladen. Du kannst die Karten also auch in deinen eigenen Dashboards nutzen. Die Karten kommen in vier Dateien: `batterijplan-cards.js`, `batterijplan-plan-card.js`, `batterijplan-vandaag-cards.js` und `batterijplan-capaciteit-card.js`. Die Karten haben eine optionale Einstellung `taal` (`nl`, `en` oder `de`), die die Sprache dieser Karte festlegt; ohne sie folgt die Karte der Sprache deines Home-Assistant-Profils.
+
+## Neu in der Pre-Release 2.0.0-dev1
+
+- **Einstellungen** hat zwei neue Reiter: **Vertrag** (Vertragsart, Tarif, Preise, Einspeisevergütung, Nachtstunden, Wochenende und Feiertage) und **Flandern** (der Schalter, der Kapazitätstarif und eine eigene Grenze in kW). Zeilen, die nicht gelten, sind grau mit einem Grund.
+- **Fenster Spitze** (nur sichtbar mit *Flandern* an): die Karten *Laufende Viertelstunde* und *Spitze diesen Monat*.
+- **Bei einem Festvertrag** zeigen der Hauptbildschirm, das Fenster *Heute* und der *Bericht* Tarife, die erwartete Batterieladung und was die Batterie tut, statt des Plans. Siehe [07 · Verträge, Nebenzeiten und Flandern](07-contracts-and-flanders.de.md).

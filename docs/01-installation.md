@@ -131,3 +131,13 @@ Good to know:
 - Recorder with an include list: the list above has not changed in its main names. Remove `sensor.batterijplan_advies_huisverbruik` and `input_boolean.batterijplan_live`; add `switch.batterijplan_live`.
 - The total of the counter is taken over. The counter *added value this period* starts again at the takeover.
 - *Live* is never taken over: it always starts **off**, so the integration changes nothing in HBC. Turn the package's Live off yourself, then turn *Live* on in the integration when you are ready.
+
+## Installing a pre-release (testers)
+
+Pre-releases such as **2.0.0-dev1** are not offered by HACS by default.
+
+1. In HACS, open **HBC Batterijplan**, then the menu (⋮) → **Redownload**.
+2. Choose the version **2.0.0-dev1** (switch on *Show beta versions* if you do not see it) and download it.
+3. Restart Home Assistant.
+
+You can go back to the latest full release (1.1.0) the same way. Your settings and learned usage stay. What is new is explained in [07 · Contracts, off-peak hours and Flanders](07-contracts-and-flanders.md). Report what you notice via [Issues](https://github.com/satscan1/hbc-batterijplan/issues), with your HBC version and your country.

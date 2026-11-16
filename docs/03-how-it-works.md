@@ -2,6 +2,8 @@
 
 *Nederlands: [03-how-it-works.nl.md](03-how-it-works.nl.md) · Deutsch: [03-how-it-works.de.md](03-how-it-works.de.md)*
 
+> Pre-release 2.0.0-dev1: with a *Fixed* contract Batterijplan makes no plan; see [07 · Contracts, off-peak hours and Flanders](07-contracts-and-flanders.md). This chapter describes a *Dynamic* contract.
+
 **In short**
 - For each quarter of an hour HBC says: cheap, expensive or regular. Batterijplan looks ahead (at most 36 hours) and works out where it can do better than HBC alone.
 - Batterijplan only chooses between settings that HBC offers itself. All protections stay with HBC and the battery.

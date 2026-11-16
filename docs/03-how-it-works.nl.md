@@ -2,6 +2,8 @@
 
 *English: [03-how-it-works.md](03-how-it-works.md) · Deutsch: [03-how-it-works.de.md](03-how-it-works.de.md)*
 
+> Pre-release 2.0.0-dev1: bij een *Vast* contract maakt Batterijplan geen plan; zie [07 · Contracten, daluren en Vlaanderen](07-contracts-and-flanders.nl.md). Dit hoofdstuk beschrijft een *Dynamisch* contract.
+
 **In het kort**
 - HBC zegt per kwartier: goedkoop, duur of gewoon. Batterijplan kijkt vooruit (maximaal 36 uur) en rekent uit waar hij het beter kan doen dan HBC alleen.
 - Batterijplan kiest alleen tussen standen die HBC zelf aanbiedt. Alle beveiligingen blijven bij HBC en de batterij.

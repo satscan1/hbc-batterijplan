@@ -131,3 +131,13 @@ Goed om te weten:
 - Recorder met include-lijst: de hoofdnamen in de lijst hierboven zijn niet veranderd. Haal `sensor.batterijplan_advies_huisverbruik` en `input_boolean.batterijplan_live` eraf; zet `switch.batterijplan_live` erop.
 - Het totaal van de teller wordt overgenomen. De teller *meerwaarde dit contractjaar* begint opnieuw bij het overnemen.
 - *Live* wordt nooit overgenomen: hij staat na de installatie altijd **uit**, dus de integratie wijzigt niets in HBC. Zet Live van het pakket zelf uit en zet daarna *Live* van de integratie aan als je zover bent.
+
+## Een pre-release installeren (testers)
+
+Pre-releases zoals **2.0.0-dev1** biedt HACS niet standaard aan.
+
+1. Open in HACS **HBC Batterijplan**, dan het menu (⋮) → **Opnieuw downloaden**.
+2. Kies de versie **2.0.0-dev1** (zet *Bètaversies tonen* aan als je hem niet ziet) en download hem.
+3. Herstart Home Assistant.
+
+Op dezelfde manier ga je terug naar de laatste volledige release (1.1.0). Je instellingen en het geleerde verbruik blijven. Wat nieuw is staat in [07 · Contracten, daluren en Vlaanderen](07-contracts-and-flanders.nl.md). Meld wat je merkt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues), met je HBC-versie en je land.

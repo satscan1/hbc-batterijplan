@@ -2,6 +2,8 @@
 
 *English: [03-how-it-works.md](03-how-it-works.md) · Nederlands: [03-how-it-works.nl.md](03-how-it-works.nl.md)*
 
+> Pre-Release 2.0.0-dev1: bei einem *Festvertrag* macht Batterijplan keinen Plan; siehe [07 · Verträge, Nebenzeiten und Flandern](07-contracts-and-flanders.de.md). Dieses Kapitel beschreibt einen *dynamischen* Vertrag.
+
 **Kurz gesagt**
 - HBC sagt pro Viertelstunde: günstig, teuer oder normal. Batterijplan schaut voraus (höchstens 36 Stunden) und rechnet aus, wo es besser sein kann als HBC allein.
 - Batterijplan wählt nur zwischen Modi, die HBC selbst anbietet. Alle Schutzfunktionen bleiben bei HBC und der Batterie.

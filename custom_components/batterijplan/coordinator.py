@@ -11,17 +11,21 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_call_later, async_track_state_change_event, async_track_time_change
+from homeassistant.helpers.event import (
+    async_call_later, async_track_state_change_event, async_track_time_change, async_track_time_interval,
+)
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import consumption as profile
-from . import advisor, counter, hbcmarks, plan, solcast, steering
+from . import advisor, counter, daluren, hbcmarks, peak, plan, solcast, steering, vastsim
 from .const import (
-    CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_COUNTRY, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE, CONF_FEED_IN_FIXED,
-    COUNTRY_BE, HBC_LIMIT_IMPORT_ON, HBC_LIMIT_IMPORT_W,
+    CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE, CONF_FEED_IN_FIXED,
+    COUNTRY_BE, HBC_LIMIT_IMPORT_ON, HBC_LIMIT_IMPORT_W, CONF_FLANDERS, ha_country, migrate_options,
+    CONF_CAP_TARIFF, CONF_CONTRACT_TYPE, CONF_NIGHT_FROM, CONF_NIGHT_TO, CONF_OWN_LIMIT, CONF_WEEKEND, CONF_PRICE_DAY, CONF_PRICE_FIXED, CONF_PRICE_NIGHT,
+    CONF_TARIFF, CONF_FEED_IN_PRICE, TARIFF_DUAL, internal_contract, CONTRACT_DAYNIGHT, CONTRACT_DYNAMIC, CONTRACT_FIXED, HBC_STRATEGY_CHARGE, HBC_STRATEGY_SELF,
     CONF_MARGIN, CONF_PRICES, CONF_SENSOR_BATTERY, CONF_SENSOR_EV, CONF_SENSOR_NET, CONF_SENSOR_SOLAR,
     CONF_STORAGE_FEE, CONF_VAT, DEFAULTS, DOMAIN, HBC_COUNT, HBC_DELTA, HBC_FORECAST_POINTER, HBC_MAX_ENERGY, HBC_PRICES, HBC_RESERVED, HBC_SETTINGS, HBC_STRATEGY,
     CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW, OWN_SOLAR_SENSOR, PRICES_ALL_IN,
@@ -60,7 +64,12 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.cnt: dict[str, Any] = {"total": 0.0, "live": 0.0, "schaduw": 0.0, "sinds": "", "base": 0.0,
                                     "base_start": "", "n_hold": 0, "n_feed": 0, "n_discharge": 0, "pending": None,
                                     "schaduw_t": 0.0, "schaduw_nieuw": False, "alleen_live": False,
-                                    "s_cf": None, "cf_dag": ""}
+                                    "s_cf": None, "cf_dag": "",
+                                    # 2.0.0-dev1: part of live / schaduw / total that comes from a Fixed / Day-night contract
+                                    # (battery value at the contract price), kept apart from the v1 plan-versus-HBC value
+                                    "contract_live": 0.0, "contract_schaduw": 0.0,
+                                    # today's battery flows under a Fixed contract (kWh): to the house, charged with solar / from the grid, fed in
+                                    "contract_dag": {}}
         self.remembered: dict[str, str] = {}
         self.hbc_source = ""  # forecast entity HBC pointed to before we took the pointer (pass-through source)
         # HBC settings advice and auto-adjust (rc6)
@@ -84,7 +93,20 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._recalc_unsub: Any = None
         self._live_unsub: Any = None  # debounce timer of the live charge level
         self._live_last: float | None = None
+        # Flemish capacity tariff (2.0.0-dev1): own store, never the recorder
+        self._pstore: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.peaks")
+        self.peaks = peak.PeakBook()
+        # channels: net = grid (+ import), nb = grid + battery (= grid without the battery), dis / chg = battery discharge / charge, imp = import only
+        self._qs = peak.QuarterSet(("net", "nb", "dis", "chg", "imp", "exp"))
+        self._night_on = False  # we put HBC on Charge for the night
+        self.lading_hist: list[list[float]] = []  # [quarter ts, kWh in the battery], last 24 h: the chart under a Fixed contract
+        self._vast_cache: tuple[Any, dict[str, Any]] | None = None
+        self.limit_orig: dict[str, Any] | None = None  # HBC import limit as it was before we took it over (None = not ours)
+        self.strat_orig: str | None = None  # HBC strategy as it was before Fixed / Day-night took it over
+        self._lim_last_write: float | None = None
+        self._q_pushed = 0.0
         self.load_settings()
+        self._applied = (self.contract, self.flanders, self.own_limit_w())  # what strategy / HBC limit were last applied for
         self.data = self._build_data()
 
     # ---- settings -------------------------------------------------------------------------
@@ -96,6 +118,67 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         opts = {**self.settings, key: value}
         self.settings[key] = value
         self.hass.config_entries.async_update_entry(self.config_entry, options=opts)
+
+    @property
+    def contract(self) -> str:
+        """Kind of contract: vast / dag_nacht / dynamisch (independent of the country)."""
+        return internal_contract(self.settings.get(CONF_CONTRACT_TYPE), self.settings.get(CONF_TARIFF))
+
+    @property
+    def contract_kind(self) -> str:
+        """What the user chose in step 1: Fixed or Dynamic."""
+        return CONTRACT_DYNAMIC if self.contract == CONTRACT_DYNAMIC else CONTRACT_FIXED
+
+    @property
+    def tariff(self) -> str:
+        return TARIFF_DUAL if self.contract == CONTRACT_DAYNIGHT else "enkel"
+
+    def migration_options(self) -> dict[str, Any] | None:
+        """New options for an entry of v1 / the first dev builds (contract, country, trial mode), or None. See const.migrate_options."""
+        return migrate_options(dict(self.config_entry.data), dict(self.config_entry.options))
+
+    def feed_in_price(self) -> float:
+        """EUR/kWh for feed-in under a Fixed contract. HBC has no feed-in price helper, so this is our own field."""
+        return float(self.settings.get(CONF_FEED_IN_PRICE) or 0)
+
+    @property
+    def real_country(self) -> str:
+        """Country from Home Assistant (nl / be / de, anything else nl): night hours, public holidays and wording follow this."""
+        return ha_country(self.hass.config.country)
+
+    @property
+    def country(self) -> str:
+        """Country the plan rules use: 'be' (Flemish limit logic) only with the Flanders switch on, otherwise the Home Assistant
+        country; a Belgian Home Assistant without the switch plans like the Netherlands."""
+        if self.flanders:
+            return COUNTRY_BE
+        return "nl" if self.real_country == COUNTRY_BE else self.real_country
+
+    @property
+    def flanders(self) -> bool:
+        """Flemish capacity tariff on: quarter calculation, monthly peak, HBC import limit, own limit, kW display. Own switch,
+        independent of the Home Assistant country."""
+        return bool(self.settings.get(CONF_FLANDERS))
+
+    def night_hours(self) -> tuple[int, int]:
+        """Night window (from, to) of a Day/night contract: set by the user, else the country default (NL 23-07, BE 22-07)."""
+        d = daluren.default_night(self.real_country)
+        f, t = self.settings.get(CONF_NIGHT_FROM), self.settings.get(CONF_NIGHT_TO)
+        return int(d[0] if f is None else f), int(d[1] if t is None else t)
+
+    @property
+    def weekend_dal(self) -> bool:
+        """Weekend and public holidays off-peak all day: set by the user, else the country default (NL on)."""
+        v = self.settings.get(CONF_WEEKEND)
+        return daluren.default_weekend(self.real_country) if v is None else bool(v)
+
+    def _is_dal(self, ts: float) -> bool:
+        """Off-peak at this time under the Day/night contract (night hours, weekend and public holidays)."""
+        f, t = self.night_hours()
+        return daluren.is_dal(datetime.fromtimestamp(ts, self._tz()), self.real_country, f, t, self.weekend_dal)
+
+    def own_limit_w(self) -> float:
+        return max(float(self.settings.get(CONF_OWN_LIMIT) or 0), 0.0)
 
     def setting_text(self, key: str) -> str:
         return str(self.settings.get(key) or "").strip()
@@ -136,12 +219,20 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.hbc_user = {k: float(v) for k, v in (data.get("hbc_user") or {}).items() if k in HBC_SETTINGS}
             self.hbc_advice = dict(data.get("hbc_advice") or {})
             self.adv_days = {k: list(v) for k, v in (data.get("adv_days") or {}).items()}
+            lo = data.get("limit_orig")  # additive keys of 2.0.0-dev1: absent in v1 data = not ours
+            self.limit_orig = dict(lo) if isinstance(lo, dict) else None
+            so = data.get("strat_orig")
+            self.strat_orig = str(so) if so else None
+            self.lading_hist = [[float(a), float(b)] for a, b in (data.get("lading_hist") or []) if isinstance(a, (int, float)) and isinstance(b, (int, float))]
         hdata = await self._hstore.async_load()
         if hdata:
             self.hist = {str(k): list(v) for k, v in (hdata.get("q") or {}).items()}
         cdata = await self._cstore.async_load()
         if cdata:
             self.cap_days = {str(k): dict(v) for k, v in (cdata.get("days") or {}).items()}
+        pdata = await self._pstore.async_load()
+        self.peaks = peak.PeakBook.from_dict(pdata)
+        self.peaks.roll(peak.month_key(time.time(), self._tz()))
         self._refresh_cap()
         self._refresh_hist_days()
         if not self.cnt["sinds"]:
@@ -151,6 +242,12 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         srcs = [s for s in srcs if s]
         if srcs:
             self._unsub.append(async_track_state_change_event(hass, srcs, self._source_changed))
+        net = self.setting_text(CONF_SENSOR_NET)
+        if net:
+            self._unsub.append(async_track_state_change_event(hass, [net], self._net_changed))
+        self._unsub.append(async_track_time_interval(hass, self._tick_quarter, timedelta(seconds=10)))
+        self._unsub.append(async_track_time_interval(hass, self._tick_night, timedelta(minutes=1)))
+        self._unsub.append(async_track_time_change(hass, self._tick_quarter_edge, minute=[0, 15, 30, 45], second=1))
         self._unsub.append(async_track_state_change_event(hass, [HBC_PRICES], self._prices_changed))
         self._unsub.append(async_track_state_change_event(hass, [HBC_RESERVED, HBC_MAX_ENERGY], self._source_changed))
         self._unsub.append(async_track_state_change_event(hass, [HBC_FORECAST_POINTER], self._pointer_changed))
@@ -169,6 +266,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._unsub.append(async_track_time_change(hass, self._tick_capacity, minute=[10, 40], second=0))
         self._record_prices()
         self._unsub.append(async_at_started(hass, self._started))
+        self._unsub.append(async_call_later(hass, 60, callback(lambda _n: hass.async_create_task(self._backfill_lading()))))
         self._remember_pointer()
         self._sample()
 
@@ -199,7 +297,11 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _data_to_save(self) -> dict[str, Any]:
         return {"profile": self.profile.to_dict(), "counter": self.cnt, "remembered": self.remembered, "hbc_source": self.hbc_source,
-                "hbc_auto": self.hbc_auto, "cap_on": self.cap_on, "hbc_user": self.hbc_user, "hbc_advice": self.hbc_advice, "adv_days": self.adv_days}
+                "hbc_auto": self.hbc_auto, "cap_on": self.cap_on, "hbc_user": self.hbc_user, "hbc_advice": self.hbc_advice, "adv_days": self.adv_days,
+                "limit_orig": self.limit_orig, "strat_orig": self.strat_orig, "lading_hist": self.lading_hist}
+
+    def _save_peaks(self) -> None:
+        self._pstore.async_delay_save(self.peaks.to_dict, 30)
 
     def _save_hist(self) -> None:
         self._hstore.async_delay_save(lambda: {"q": self.hist}, 30)
@@ -252,6 +354,10 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         when = dt_util.now() - timedelta(minutes=2)
         self.profile = profile.update(self.profile, when, v if v is not None else -1)
         self._record_quarter(v)
+        lv = self._charge_live()
+        if lv is not None:  # the battery level of this quarter: drawn in the chart under a Fixed contract
+            self.lading_hist.append([float(int(time.time() // 900 * 900)), float(lv)])
+            self.lading_hist = self.lading_hist[-96:]
         self._save_now()
         self.async_set_updated_data(self._build_data())
 
@@ -426,9 +532,12 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return out
 
     def _limit_w(self) -> float | None:
-        """BE: HBC import limit in W when peak shaving (import) is on; None when off, unknown or another country."""
-        if str(self.settings[CONF_COUNTRY]).lower() != COUNTRY_BE:  # .lower(): stored "BE" keeps working
+        """BE: import limit in W for the plan. While Live steers the limit it is the target limit (never the moving
+        quarter value we write to HBC); otherwise HBC's own limit when peak shaving (import) is on. None elsewhere."""
+        if not self.flanders:
             return None
+        if self.live:
+            return self._target()
         st = self.hass.states.get(HBC_LIMIT_IMPORT_ON)
         if st is None or st.state != "on":
             return None
@@ -452,7 +561,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             feed_in_bonus=float(s[CONF_FEED_IN_BONUS]),
             bonus_from=int(s[CONF_BONUS_FROM]),
             bonus_to=int(s[CONF_BONUS_TO]),
-            country=str(s[CONF_COUNTRY]).lower(),
+            country=self.country,
             feed_in_fixed=float(s[CONF_FEED_IN_FIXED]),
             limit_w=self._limit_w(),
             all_in=s[CONF_PRICES] == PRICES_ALL_IN,
@@ -483,6 +592,11 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_recalculate(self) -> None:
         """Run the rules, settle the counter, steer HBC for the coming quarter."""
+        if self.contract != CONTRACT_DYNAMIC:  # Fixed / Day-night: no plan on price, HBC stays on Self-consumption
+            self.plan_result = {}
+            self._update_counter()
+            self.async_set_updated_data(self._build_data())
+            return
         try:
             inp = self._plan_input()
             result = await self.hass.async_add_executor_job(plan.compute, inp)
@@ -643,7 +757,401 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.remember_modes()
         elif was and not on:
             await self.async_restore_modes()
+        await self.async_apply_contract()
+        await self._limit_step(time.time())  # Live on: take over the HBC limit (BE); Live off: give it back
         await self.async_recalculate()
+
+    # ---- contract kind: Fixed / Day-night keep HBC on Self-consumption (2.0.0-dev1) ----------
+    def _night_charge_ok(self, now_ts: float) -> bool:
+        """Fixed + dual rate: may HBC charge from the grid in this quarter? Only in the off-peak hours AND when it pays (rate difference
+        at least HBC's threshold) or, in Flanders, when there is room under the target limit (see _night_charge)."""
+        return self._night_charge(now_ts)[0]
+
+    def _night_charge(self, now_ts: float) -> tuple[bool, str, float]:
+        """(allowed, reason, price difference in ct) for charging from the grid in the quarter of ``now_ts``, see vastsim.night_charge_decision.
+        The threshold is HBC's own 'Dynamic threshold delta' (the same helper Batterijplan uses for a Dynamic contract). In Flanders the
+        charge may fill the reserve for peaks: then only the room under the target limit counts (expected house use from the profile)."""
+        s = self.settings
+        headroom = True
+        if self.flanders:
+            hour = datetime.fromtimestamp(now_ts, self._tz()).hour
+            prof = self.profile.uur
+            use = float(prof[hour]) if (len(prof) == 24 and isinstance(prof[hour], (int, float))) else (self.consumption_w or 400.0)
+            headroom = self._target() - use >= peak.MIN_ALLOWED_W
+        return vastsim.night_charge_decision(
+            off_peak=self._is_dal(now_ts), flanders=self.flanders, normal=float(s.get(CONF_PRICE_DAY) or 0), dal=float(s.get(CONF_PRICE_NIGHT) or 0),
+            threshold_ct=self._float(HBC_DELTA, 6.0), headroom_ok=headroom)
+
+    def _desired_strategy(self, now_ts: float) -> str | None:
+        """HBC strategy we want: None = not ours (Live off or Dynamic); Charge in the night of a Day/night contract; else Self-consumption."""
+        if not self.live or self.contract == CONTRACT_DYNAMIC:
+            return None
+        if self.contract == CONTRACT_DAYNIGHT and self._night_charge_ok(now_ts):
+            return HBC_STRATEGY_CHARGE
+        return HBC_STRATEGY_SELF
+
+    async def _set_strategy(self, old: str, new: str, why: str) -> None:
+        await self.hass.services.async_call(
+            "input_select", "select_option", {"entity_id": HBC_STRATEGY, "option": new}, blocking=True)
+        await self.hass.services.async_call("logbook", "log", {
+            "name": "Batterijplan", "message": f"HBC strategy {old} -> {new} ({why})", "entity_id": HBC_STRATEGY})
+
+    async def async_apply_contract(self, transition: bool = True) -> None:
+        """Live on and a Fixed / Day-night contract: HBC on Self-consumption, in the night hours of a Day/night contract on
+        Charge. Live off or back to Dynamic: your own strategy returns (remembered when we took over).
+        ``transition`` (Live / contract change): we set it. The 1-minute tick only follows day <-> night and leaves it alone
+        when you chose another strategy yourself."""
+        st = self.hass.states.get(HBC_STRATEGY)
+        if st is None or st.state in BAD:
+            return
+        want = self._desired_strategy(time.time())
+        if want is not None:
+            ours = st.state in (HBC_STRATEGY_SELF, HBC_STRATEGY_CHARGE)
+            if st.state != want and (transition or (self.strat_orig is not None and ours)):
+                if self.strat_orig is None:
+                    self.strat_orig = st.state
+                    self._save_now()
+                await self._set_strategy(st.state, want, f"contract: {self.contract}")
+            self._night_on = want == HBC_STRATEGY_CHARGE
+        elif self.strat_orig is not None:
+            orig, self.strat_orig, self._night_on = self.strat_orig, None, False
+            self._save_now()
+            if st.state in (HBC_STRATEGY_SELF, HBC_STRATEGY_CHARGE) and st.state != orig:
+                await self._set_strategy(st.state, orig, "your own value back")
+
+    async def _tick_night(self, _now: datetime) -> None:
+        """Every minute (Day/night + Live): switch between Self-consumption (day) and Charge (night)."""
+        if self.live and self.contract == CONTRACT_DAYNIGHT:
+            await self.async_apply_contract(transition=False)
+
+    def settings_need_apply(self) -> bool:
+        """True once when contract, country or own limit differ from what was last applied (async_set_setting writes the
+        new value into ``settings`` before the update listener runs, so a before/after compare there never sees a change)."""
+        now = (self.contract, self.flanders, self.own_limit_w())
+        if now == self._applied:
+            return False
+        self._applied = now
+        return True
+
+    async def async_settings_applied(self) -> None:
+        """Contract, Flanders switch or own limit changed: strategy and HBC limit follow."""
+        await self.async_apply_contract()
+        await self._limit_step(time.time())
+        self.async_set_updated_data(self._build_data())
+
+    # ---- Flemish capacity tariff: quarter average, monthly peak, HBC import limit (BE only) -
+    def _power_w(self, entity_id: str) -> float | None:
+        """Power in W of a sensor (kW is converted); None when it has no number."""
+        st = self.hass.states.get(entity_id) if entity_id else None
+        if st is None or st.state in BAD:
+            return None
+        try:
+            w = float(st.state)
+        except ValueError:
+            return None
+        return w * 1000 if str(st.attributes.get("unit_of_measurement") or "").lower() == "kw" else w
+
+    def _net_w(self) -> float | None:
+        """Net grid power in W (+ = import) from the P1 sensor Batterijplan already uses."""
+        return self._power_w(self.setting_text(CONF_SENSOR_NET))
+
+    def _target(self) -> float:
+        self.peaks.roll(peak.month_key(time.time(), self._tz()))
+        return peak.target_limit(self.peaks.peak_now(), self.own_limit_w())
+
+    def _quarter_observe(self, ts: float) -> bool:
+        """Feed the quarter accumulators. Finished quarters: peaks (BE) and the value of the battery at the contract
+        price (Fixed / Day-night). True when a quarter ended."""
+        net, bat = self._net_w(), self._power_w(self.setting_text(CONF_SENSOR_BATTERY))
+        vals = {"net": net, "imp": None if net is None else max(net, 0.0),
+                "nb": None if (net is None or bat is None) else net + bat,  # grid without the battery: + discharge, - charge
+                "dis": None if bat is None else max(bat, 0.0), "chg": None if bat is None else max(-bat, 0.0),
+                "exp": None if net is None else max(-net, 0.0)}
+        done = self._qs.observe(ts, vals)
+        for q in done:
+            if self.flanders:
+                avg, avg_nb = peak.channel_avg(q, "net"), peak.channel_avg(q, "nb")
+                if avg is not None:
+                    self.peaks.record(q["start"], max(avg, 0.0), self._tz(), None if avg_nb is None else max(avg_nb, 0.0))
+                    self._save_peaks()
+            if self.contract != CONTRACT_DYNAMIC:
+                self._add_contract_value(q)
+        return bool(done)
+
+    def _contract_price(self, start_ts: float) -> float:
+        """EUR/kWh of the Fixed or Day/night contract at the time of a quarter."""
+        s = self.settings
+        if self.contract == CONTRACT_FIXED:
+            return float(s.get(CONF_PRICE_FIXED) or 0)
+        return float(s.get(CONF_PRICE_NIGHT) or 0) if self._is_dal(start_ts) else float(s.get(CONF_PRICE_DAY) or 0)
+
+    def _add_contract_value(self, q: dict[str, Any]) -> None:
+        """Fixed / Day-night: add what the battery earned in this quarter to the counter ('live' when Live is on, else 'shadow')."""
+        dis, chg, imp = peak.channel_kwh(q, "dis"), peak.channel_kwh(q, "chg"), peak.channel_kwh(q, "imp")
+        if dis is None or chg is None or imp is None:
+            return
+        exp = peak.channel_kwh(q, "exp") or 0.0
+        v = peak.energy_value(dis, chg, imp, self._contract_price(q["start"]), exp, self.feed_in_price())
+        c = self.cnt
+        day = datetime.fromtimestamp(q["start"], self._tz()).date().isoformat()  # self-consumption via the battery, per calendar day
+        cd = c.get("contract_dag") or {}
+        if cd.get("datum") != day:
+            cd = {"datum": day, "huis": 0.0, "zon": 0.0, "net": 0.0, "terug": 0.0}
+        to_grid = min(max(dis, 0.0), max(exp, 0.0))
+        grid_ch = min(max(chg, 0.0), max(imp, 0.0))
+        cd["huis"] = round(cd["huis"] + max(dis, 0.0) - to_grid, 4)
+        cd["terug"] = round(cd["terug"] + to_grid, 4)
+        cd["net"] = round(cd["net"] + grid_ch, 4)
+        cd["zon"] = round(cd["zon"] + max(chg, 0.0) - grid_ch, 4)
+        c["contract_dag"] = cd
+        if self.live:
+            c["live"] = round(c["live"] + v, 4)
+            c["total"] = round(c["total"] + v, 4)
+            c["contract_live"] = round(c["contract_live"] + v, 4)
+        else:
+            c["schaduw"] = round(c["schaduw"] + v, 4)
+            c["contract_schaduw"] = round(c["contract_schaduw"] + v, 4)
+        self._save_now()
+
+    @callback
+    def _net_changed(self, _event: Event) -> None:
+        if self.flanders or self.contract != CONTRACT_DYNAMIC:
+            self._quarter_observe(time.time())
+
+    async def _tick_quarter(self, _now: datetime) -> None:
+        """Every 10 s: keep the quarter figures (BE: peaks and the HBC limit; Fixed / Day-night: value of the battery),
+        refresh the cards at most every 30 s."""
+        t = time.time()
+        if not self.flanders:
+            if self.limit_orig is not None:
+                await self._limit_step(t)  # no longer BE: give the HBC limit back
+            if self.contract != CONTRACT_DYNAMIC:
+                self._quarter_observe(t)
+            return
+        new_q = self._quarter_observe(t)
+        await self._limit_step(t, force=new_q)
+        if new_q or t - self._q_pushed >= 30:
+            self._q_pushed = t
+            self.async_set_updated_data(self._build_data())
+
+    async def _tick_quarter_edge(self, _now: datetime) -> None:
+        """Quarter change: back to the target limit right away."""
+        t = time.time()
+        if self.flanders or self.contract != CONTRACT_DYNAMIC:
+            self._quarter_observe(t)
+        if self.flanders:
+            await self._limit_step(t, force=True)
+            self._q_pushed = t
+            self.async_set_updated_data(self._build_data())
+
+    async def _limit_step(self, now_ts: float, force: bool = False) -> None:
+        """Live on and country BE: write the allowed import power of the running quarter to the HBC limit.
+        Otherwise: give the original HBC values back (when we had taken them over)."""
+        if not (self.live and self.flanders):
+            await self._limit_restore()
+            return
+        on_st = self.hass.states.get(HBC_LIMIT_IMPORT_ON)
+        cur_w, (lo, hi, _step) = self._helper(HBC_LIMIT_IMPORT_W)
+        if on_st is None or cur_w is None:
+            return  # HBC helpers not there (yet): nothing to steer
+        if self.limit_orig is None:  # first time: remember what HBC had; never again while we own it (also over a restart)
+            self.limit_orig = {"on": on_st.state, "w": cur_w}
+            self._save_now()
+            await self.hass.services.async_call("logbook", "log", {
+                "name": "Batterijplan", "message": f"HBC import limit taken over (was {on_st.state}, {_fmt(cur_w)} W): "
+                                                   "Batterijplan sets it per quarter (capacity tariff)", "entity_id": HBC_LIMIT_IMPORT_W})
+        lo = lo if lo > 0 else peak.MIN_ALLOWED_W
+        hi = hi if hi > 0 else peak.MAX_ALLOWED_W
+        target = self._target()
+        cur = self._qs.current("net", now_ts)
+        allowed = peak.allowed_w(target, peak.used_estimate(cur, target), cur["elapsed"], lo, hi)
+        wanted = min(max(target, lo), hi) if force else allowed
+        if on_st.state != "on":
+            await self.hass.services.async_call("input_boolean", "turn_on", {"entity_id": HBC_LIMIT_IMPORT_ON}, blocking=True)
+        if peak.should_write(cur_w, wanted, now_ts, self._lim_last_write, force):
+            self._lim_last_write = now_ts
+            await self.hass.services.async_call(
+                "input_number", "set_value", {"entity_id": HBC_LIMIT_IMPORT_W, "value": int(round(wanted))}, blocking=True)
+
+    async def _limit_restore(self) -> None:
+        if self.limit_orig is None:
+            return
+        orig, self.limit_orig = self.limit_orig, None
+        self._lim_last_write = None
+        self._save_now()
+        if orig.get("w") is not None and self.hass.states.get(HBC_LIMIT_IMPORT_W) is not None:
+            await self.hass.services.async_call(
+                "input_number", "set_value", {"entity_id": HBC_LIMIT_IMPORT_W, "value": orig["w"]}, blocking=True)
+        st = self.hass.states.get(HBC_LIMIT_IMPORT_ON)
+        if orig.get("on") in ("on", "off") and st is not None and st.state != orig["on"]:
+            await self.hass.services.async_call(
+                "input_boolean", "turn_on" if orig["on"] == "on" else "turn_off", {"entity_id": HBC_LIMIT_IMPORT_ON}, blocking=True)
+        await self.hass.services.async_call("logbook", "log", {
+            "name": "Batterijplan", "message": f"HBC import limit back to your own values ({orig.get('on')}, {_fmt(orig.get('w'))} W)",
+            "entity_id": HBC_LIMIT_IMPORT_W})
+
+    def _vast_sim(self, now: float, dual: bool, pv: dict[int, float]) -> tuple[list[list[Any]] | None, dict[str, Any] | None, float | None]:
+        """Expected battery level for the next 30 h under a Fixed contract (see vastsim.py): outside the off-peak hours HBC is on
+        Self-consumption (the battery covers the house use with the learned profile, charges with the solar surplus), in the off-peak
+        hours of a dual rate on Charge up to the HBC charge target. Returns (rows [ts, kWh, action], timeline, level now)."""
+        cap = float(self.settings[CONF_CAPACITY])
+        level = self._charge_live()
+        if level is None and self.lading_hist:
+            level = self.lading_hist[-1][1]
+        if level is None or cap <= 1:
+            return None, None, level
+        nbat = int(self._float(HBC_COUNT, 0))
+        lw = sum(self._float(f"number.marstek_m{i}_max_charge_power") for i in range(1, nbat + 1))
+        ow = sum(self._float(f"number.marstek_m{i}_max_discharge_power") for i in range(1, nbat + 1))
+        cq = lw / 1000 * 0.25 if lw > 0 else cap / 8
+        dq = ow / 1000 * 0.25 if ow > 0 else cq
+        prof = self.profile.uur
+        fallback = self.consumption_w if self.consumption_w is not None else 400.0
+        tz = self._tz()
+
+        def house(ts: int) -> float:
+            h = datetime.fromtimestamp(ts, tz).hour
+            return float(prof[h]) if (len(prof) == 24 and isinstance(prof[h], (int, float))) else float(fallback)
+
+        target = self._float("input_number.house_battery_strategy_charge_target_energy", cap)
+        rows = vastsim.simulate(
+            start_ts=int(now // 900 * 900), n=120, level0=level, cap=cap, charge_q=cq, discharge_q=dq, house_w=house,
+            pv_kw=lambda ts: pv.get(ts // 1800 * 1800, 0.0), grid_charge=(lambda ts: dual and self._night_charge_ok(ts)),
+            target_kwh=target if target > 0 else cap, limit_w=self._target() if self.flanders else None)
+        return [[r[0], r[1], r[2]] for r in rows], vastsim.summarize(rows, level, cap, hour_of=lambda ts: datetime.fromtimestamp(ts, tz).hour), round(level, 2)
+
+    async def _backfill_lading(self) -> None:
+        """After a start: fill the battery-level history of the last 24 h from the recorder (sensor.batterijplan_lading), per quarter,
+        so the chart under a Fixed contract shows the past hours at once. Measured quarters already in the history are kept."""
+        eid = "sensor.batterijplan_lading"
+        try:
+            from homeassistant.components.recorder import get_instance, history
+            start = dt_util.utcnow() - timedelta(hours=24)
+
+            def _q() -> Any:
+                return history.get_significant_states(
+                    self.hass, start, None, [eid], include_start_time_state=True, significant_changes_only=False,
+                    minimal_response=False, no_attributes=True)
+
+            res = await get_instance(self.hass).async_add_executor_job(_q)
+        except Exception:  # noqa: BLE001 - the chart then starts empty and fills per quarter
+            _LOGGER.debug("Batterijplan: no battery-level history from the recorder", exc_info=True)
+            return
+        pts: list[tuple[float, float]] = []
+        for st in res.get(eid) or []:
+            try:
+                pts.append((st.last_updated.timestamp(), float(st.state)))
+            except (ValueError, TypeError, AttributeError):
+                continue
+        if not pts:
+            return
+        pts.sort()
+        have = {int(a): b for a, b in self.lading_hist}
+        now_q = int(time.time() // 900 * 900)
+        k = 0
+        last: float | None = None
+        for ts in range(int(start.timestamp() // 900 * 900), now_q + 1, 900):
+            while k < len(pts) and pts[k][0] <= ts:
+                last = pts[k][1]
+                k += 1
+            if last is not None and ts not in have:
+                have[ts] = last
+        self.lading_hist = [[float(t), float(v)] for t, v in sorted(have.items())][-96:]
+        self._vast_cache = None
+        self._save_now()
+        self.async_set_updated_data(self._build_data())
+
+    def _vast_view(self) -> dict[str, Any] | None:
+        """Fixed contract (single or dual rate): what the main screen shows instead of the plan: price now, the rates, the next
+        change between normal and off-peak, the strategy HBC should be on, the sun forecast and the battery level around now.
+        None under a Dynamic contract. Recomputed at most once a minute."""
+        if self.contract == CONTRACT_DYNAMIC:
+            return None
+        now = time.time()
+        s = self.settings
+        key = (int(now // 60), self.contract, s.get(CONF_PRICE_FIXED), s.get(CONF_PRICE_DAY), s.get(CONF_PRICE_NIGHT), s.get(CONF_FEED_IN_PRICE),
+               self.night_hours(), self.weekend_dal, self.flanders, len(self.lading_hist), s.get(CONF_CAPACITY), self._float(HBC_DELTA, 6.0))
+        if self._vast_cache is not None and self._vast_cache[0] == key:
+            return self._vast_cache[1]
+        dual = self.contract == CONTRACT_DAYNIGHT
+        p_normal = float(s.get(CONF_PRICE_DAY if dual else CONF_PRICE_FIXED) or 0)
+        p_off = float(s.get(CONF_PRICE_NIGHT) or 0) if dual else None
+        dal_now = bool(dual and self._is_dal(now))
+        nxt = None
+        if dual:  # next change between normal and off-peak, looking 7 days ahead
+            t = (int(now // 900) + 1) * 900
+            for _ in range(7 * 96):
+                if self._is_dal(t) != dal_now:
+                    nxt = t
+                    break
+                t += 900
+        _pv10, pv = self._solcast()
+        first = int((now - 6 * 3600) // 900 * 900)
+        rows = []
+        for i in range(144):  # 6 h back, 30 h ahead, per quarter: [ts, solar kW, off-peak 0/1]
+            ts = first + i * 900
+            z = pv.get(ts // 1800 * 1800)
+            rows.append([ts, round(z, 2) if z is not None else 0.0, 1 if (dual and self._is_dal(ts)) else 0])
+        hist = [[int(a), round(b, 2)] for a, b in self.lading_hist if a >= first]
+        sim, summary, level_now = self._vast_sim(now, dual, pv)
+        laden = None
+        if dual:  # does charging from the grid in the off-peak hours pay? (threshold = HBC's own, as for a Dynamic contract)
+            _ok, reason, diff = vastsim.night_charge_decision(off_peak=True, flanders=self.flanders, normal=p_normal, dal=float(p_off or 0),
+                                                              threshold_ct=self._float(HBC_DELTA, 6.0))
+            laden = {"actief": reason in ("loont", "vlaanderen"), "reden": reason, "verschil_ct": diff, "drempel_ct": self._float(HBC_DELTA, 6.0)}
+        out = {
+            "tarief": "dubbel" if dual else "enkel", "prijs_normaal": p_normal, "prijs_dal": p_off,
+            "prijs_nu": p_off if dal_now else p_normal, "dal_nu": dal_now, "volgende_wissel": nxt, "weekend": self.weekend_dal,
+            "nacht_van": self.night_hours()[0], "nacht_tot": self.night_hours()[1], "terugleverprijs": self.feed_in_price(),
+            "strategie": HBC_STRATEGY_CHARGE if (dual and self._night_charge_ok(now)) else HBC_STRATEGY_SELF,
+            "vlaanderen": self.flanders, "kwartieren": rows, "lading": hist,
+            "laden": laden, "sim": sim, "tijdlijn": summary, "niveau_nu": level_now, "capaciteit": float(self.settings[CONF_CAPACITY]),
+        }
+        self._vast_cache = (key, out)
+        return out
+
+    def _piek_view(self) -> dict[str, Any]:
+        """Sensor 'monthly peak': highest quarter per day this month (with and without battery), last 12 months with the
+        saving per month, and the Fluvius averages (last 12 monthly peaks) with and without the battery."""
+        now = time.time()
+        mk = peak.month_key(now, self._tz())
+        tariff = float(self.settings.get(CONF_CAP_TARIFF) or 0)
+        rows = self.peaks.table(mk, tariff)
+        av = self.peaks.averages(mk)
+        save_year = None
+        if av["zonder"] is not None:
+            save_year = round((av["zonder"] - av["met_zelfde"]) / 1000 * tariff, 2)  # same months with and without
+        nb_now = self.peaks.peak_now_nb()
+        return {
+            "state": round(self.peaks.peak_now()) if self.flanders else None,
+            "vlaanderen": self.flanders, "maand": mk, "doelgrens": round(self._target()),
+            "eigen_grens": round(self.own_limit_w()), "minimum": int(peak.FLOOR_W),
+            "piek_zonder": None if nb_now is None else round(nb_now),
+            "dagen": [[d, round(w)] for d, w in sorted(self.peaks.days.items())],
+            "dagen_zonder": [[d, round(w)] for d, w in sorted(self.peaks.days_nb.items())],
+            "maanden": [{**r, "piek": round(r["piek"]), "zonder": None if r["zonder"] is None else round(r["zonder"])} for r in rows],
+            "gemiddelde": None if av["met"] is None else round(av["met"]), "aantal_maanden": av["n"],
+            "gemiddelde_zonder": None if av["zonder"] is None else round(av["zonder"]), "aantal_maanden_zonder": av["n_zonder"],
+            "besparing_jaar": save_year, "tarief": tariff,
+            "kosten_jaar": None if av["met"] is None else round(av["met"] / 1000 * tariff, 2),
+        }
+
+    def _kwartier_view(self) -> dict[str, Any]:
+        """Sensor 'running quarter': average so far, what is still allowed, the limit set in HBC."""
+        now = time.time()
+        cur = self._qs.current("net", now)
+        target = self._target()
+        el = cur["elapsed"]
+        lim_w = self._float(HBC_LIMIT_IMPORT_W, -1)
+        on_st = self.hass.states.get(HBC_LIMIT_IMPORT_ON)
+        return {
+            "state": round(cur["avg_w"]) if (self.flanders and cur["covered"] >= 5) else None,
+            "stuurt": bool(self.live and self.flanders), "start": cur["start"], "verstreken_s": round(el),
+            "verbruikt_kwh": round(cur["used_kwh"], 3), "budget_kwh": round(target * 0.25 / 1000, 3), "doelgrens": round(target),
+            "toegestaan_w": round(peak.allowed_w(target, peak.used_estimate(cur, target), el)),
+            "hbc_grens_w": round(lim_w) if lim_w > 0 else None,
+            "hbc_grens_aan": bool(on_st is not None and on_st.state == "on"),
+        }
 
     async def async_set_rule(self, rule: str, on: bool) -> None:
         self.rules[rule] = on
@@ -820,7 +1328,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_apply_hbc(self) -> None:
         """Auto-adjust on: set a HBC setting to the advice when it differs enough (>= 1 h, >= 0.5 kWh)."""
-        if not self.hbc_auto or self.hbc_advice.get("status") != "berekend":
+        if self.contract != CONTRACT_DYNAMIC or not self.hbc_auto or self.hbc_advice.get("status") != "berekend":
             return
         advice = {"cheapest": self.hbc_advice.get("cheapest"), "expensive": self.hbc_advice.get("expensive"),
                   "solar": advisor.solar_advice(self.adv_days, dt_util.now().date())}
@@ -920,7 +1428,8 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "kosten_hbc": r.get("kosten_hbc"), "kosten_plan": r.get("kosten_plan"), "start": r.get("start"),
                 "lading": r.get("lading"), "punten": pts, "kw": r.get("kw"), "pmin_b": r.get("pmin_b"), "komend_kwartier": r.get("start"),
                 "actie": pts[0][5] if pts else None, "hbc_actie": pts[0][3] if pts else None,
-                "modus": "live" if (self.live and self.hbc_dynamic) else "schaduw",
+                "modus": "live" if (self.live and (self.hbc_dynamic or self.contract != CONTRACT_DYNAMIC)) else "schaduw",
+                "contract": self.contract, "vast": self._vast_view(),
                 "hbc_strategie": st.state if st else None, "versie": VERSION,
                 "zon_vandaag": sol["vandaag"], "zon_morgen": sol["morgen"], "zon_rest_vandaag": sol["rest"],
                 "uitleg": "punten = [time, price ct, kind (1 HBC expensive, 2 extra expensive, -1 cheap, 0 normal), "
@@ -944,6 +1453,8 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "counter": dict(self.cnt),
             "period": period,
             "period_start": start.isoformat(),
+            "piek": self._piek_view(),
+            "kwartier": self._kwartier_view(),
         }
 
     def _price_now(self) -> float | None:

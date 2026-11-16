@@ -16,14 +16,15 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, FRONTEND_URL
+from .const import DOMAIN, FRONTEND_URL, OBSOLETE_ENTITIES
 from .coordinator import BatterijplanConfigEntry, BatterijplanCoordinator
 from .panel import async_remove_dashboard, async_setup_dashboard
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 FRONTEND_DIR = Path(__file__).parent / "frontend"
-CARDS = ("batterijplan-cards.js", "batterijplan-plan-card.js", "batterijplan-dag-card.js", "batterijplan-vandaag-cards.js", "batterijplan-capaciteit-card.js")
+CARDS = ("batterijplan-cards.js", "batterijplan-plan-card.js", "batterijplan-dag-card.js", "batterijplan-vandaag-cards.js", "batterijplan-capaciteit-card.js",
+         "batterijplan-piek-cards.js")
 PLATFORMS = [Platform.DATE, Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH, Platform.TEXT]
 
 
@@ -45,6 +46,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry) -> bool:
     coordinator = BatterijplanCoordinator(hass, entry)
+    mig = coordinator.migration_options()  # v1 / first dev builds: contract, country -> Flanders switch, trial mode dropped; nothing is lost
+    if mig is not None:
+        hass.config_entries.async_update_entry(entry, options=mig)
+        coordinator.load_settings()
+    _remove_obsolete_entities(hass, entry)
     coordinator.apply_takeover(entry.data.get("import"))
     if entry.data.get("import"):
         hass.config_entries.async_update_entry(entry, data={k: v for k, v in entry.data.items() if k != "import"})
@@ -56,6 +62,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry)
     entry.async_on_unload(entry.add_update_listener(_settings_changed))
     await async_setup_dashboard(hass)  # first install: the dashboard could not be registered in async_setup yet
     return True
+
+
+def _remove_obsolete_entities(hass: HomeAssistant, entry: BatterijplanConfigEntry) -> None:
+    """The country select and the trial-mode switch of the first dev builds are gone: remove them from the entity registry,
+    so no orphan (restored / unavailable) entity is left behind."""
+    reg = er.async_get(hass)
+    for domain, key in OBSOLETE_ENTITIES:
+        eid = reg.async_get_entity_id(domain, DOMAIN, f"{entry.entry_id}_{key}")
+        if eid is not None:
+            reg.async_remove(eid)
+            _LOGGER.info("Batterijplan: removed obsolete entity %s", eid)
 
 
 def _restore_ids(hass: HomeAssistant, entry: BatterijplanConfigEntry) -> None:
@@ -91,6 +108,8 @@ async def _settings_changed(hass: HomeAssistant, entry: BatterijplanConfigEntry)
     if any(old[k] != c.settings.get(k) for k in c.source_keys):
         await hass.config_entries.async_reload(entry.entry_id)
         return
+    if c.settings_need_apply():
+        hass.async_create_task(c.async_settings_applied())  # strategy and HBC limit follow contract / Flanders switch / own limit
     c.async_set_updated_data(c._build_data())
     c.request_recalculate()
 

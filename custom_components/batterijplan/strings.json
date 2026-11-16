@@ -56,8 +56,18 @@
           "teruglever_bonus": "Daytime feed-in bonus",
           "bonus_van": "Daytime from (hour)",
           "bonus_tot": "Daytime until (hour)",
-          "land": "Country",
-          "teruglever_vast": "Fixed feed-in tariff (EUR/kWh)"
+          "teruglever_vast": "Fixed feed-in tariff (EUR/kWh)",
+          "contract_soort": "Kind of contract",
+          "prijs_vast": "Fixed price (EUR/kWh)",
+          "prijs_dag": "Day price (EUR/kWh)",
+          "prijs_nacht": "Night price (EUR/kWh)",
+          "capaciteitstarief": "Capacity tariff (EUR/kW/year, Flanders)",
+          "eigen_grens_w": "Own limit in kW (Flanders, 0 = none)",
+          "nacht_van": "Night from (hour)",
+          "nacht_tot": "Night until (hour)",
+          "tarief": "Rate (Fixed contract)",
+          "terugleverprijs_vast": "Feed-in price (Fixed contract, EUR/kWh)",
+          "vlaanderen": "Flanders (capacity tariff)"
         }
       }
     },
@@ -72,11 +82,16 @@
         "all-in": "All-in price"
       }
     },
-    "land": {
+    "contract_soort": {
       "options": {
-        "nl": "Netherlands",
-        "de": "Germany",
-        "be": "Belgium (Flanders)"
+        "vast": "Fixed",
+        "dynamisch": "Dynamic"
+      }
+    },
+    "tarief": {
+      "options": {
+        "enkel": "Single rate",
+        "dubbel": "Dual rate"
       }
     }
   },
@@ -124,7 +139,15 @@
       "batterijplan_advies_hbc": {
         "name": "HBC settings advice"
       },
-      "batterijplan_capaciteitsadvies": {"name": "Capacity advice (experiment)"}
+      "batterijplan_capaciteitsadvies": {
+        "name": "Capacity advice (experiment)"
+      },
+      "batterijplan_piek_maand": {
+        "name": "Peak this month"
+      },
+      "batterijplan_kwartier": {
+        "name": "Running quarter"
+      }
     },
     "switch": {
       "batterijplan_live": {
@@ -147,6 +170,12 @@
       },
       "batterijplan_regel_terugleveren": {
         "name": "Rule: feed in"
+      },
+      "batterijplan_dal_weekend": {
+        "name": "Weekend and public holidays off-peak"
+      },
+      "batterijplan_vlaanderen": {
+        "name": "Flanders (capacity tariff)"
       }
     },
     "number": {
@@ -167,11 +196,41 @@
       },
       "batterijplan_teruglever_bonus": {
         "name": "Daytime feed-in bonus"
+      },
+      "batterijplan_prijs_vast": {
+        "name": "Fixed price"
+      },
+      "batterijplan_prijs_dag": {
+        "name": "Day price"
+      },
+      "batterijplan_prijs_nacht": {
+        "name": "Night price"
+      },
+      "batterijplan_capaciteitstarief": {
+        "name": "Capacity tariff"
+      },
+      "batterijplan_eigen_grens": {
+        "name": "Own limit"
+      },
+      "batterijplan_nacht_van": {
+        "name": "Night starts"
+      },
+      "batterijplan_nacht_tot": {
+        "name": "Night ends"
+      },
+      "batterijplan_terugleverprijs": {
+        "name": "Feed-in price"
       }
     },
     "select": {
       "batterijplan_hbc_prijzen": {
         "name": "Prices from HBC"
+      },
+      "batterijplan_contract_soort": {
+        "name": "Kind of contract"
+      },
+      "batterijplan_tarief": {
+        "name": "Rate"
       }
     },
     "date": {

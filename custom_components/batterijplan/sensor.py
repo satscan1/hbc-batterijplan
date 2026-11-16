@@ -30,7 +30,11 @@ def _counter_attrs(d: dict[str, Any]) -> dict[str, Any]:
     c = d["counter"]
     return {"sinds": c["sinds"], "eur_live": c["live"], "eur_schaduw": c["schaduw"],
             "kwartieren_vastgehouden": c["n_hold"], "kwartieren_teruggeleverd": c["n_feed"],
-            "kwartieren_ontladen": c["n_discharge"]}
+            "kwartieren_ontladen": c["n_discharge"],
+            "eur_contract_live": c.get("contract_live", 0.0), "eur_contract_schaduw": c.get("contract_schaduw", 0.0),
+            "dag_datum": (c.get("contract_dag") or {}).get("datum"), "dag_huis_kwh": (c.get("contract_dag") or {}).get("huis", 0.0),
+            "dag_zon_kwh": (c.get("contract_dag") or {}).get("zon", 0.0), "dag_net_kwh": (c.get("contract_dag") or {}).get("net", 0.0),
+            "dag_terug_kwh": (c.get("contract_dag") or {}).get("terug", 0.0)}
 
 
 SENSORS: tuple[BpSensorDescription, ...] = (
@@ -73,6 +77,12 @@ SENSORS: tuple[BpSensorDescription, ...] = (
                         state_class=SensorStateClass.MEASUREMENT,
                         value=lambda d: d["hbc_solar"]["value"],
                         attrs=lambda d: {k: v for k, v in d["hbc_solar"].items() if k != "value"}),
+    BpSensorDescription(key="batterijplan_piek_maand", translation_key="batterijplan_piek_maand", icon="mdi:chart-areaspline",
+                        native_unit_of_measurement=UnitOfPower.WATT, device_class=SensorDeviceClass.POWER,
+                        value=lambda d: d["piek"]["state"], attrs=lambda d: {k: v for k, v in d["piek"].items() if k != "state"}),
+    BpSensorDescription(key="batterijplan_kwartier", translation_key="batterijplan_kwartier", icon="mdi:timer-sand",
+                        native_unit_of_measurement=UnitOfPower.WATT, device_class=SensorDeviceClass.POWER,
+                        value=lambda d: d["kwartier"]["state"], attrs=lambda d: {k: v for k, v in d["kwartier"].items() if k != "state"}),
     BpSensorDescription(key="batterijplan_meerwaarde_periode", translation_key="batterijplan_meerwaarde_periode", icon="mdi:calendar-check",
                         native_unit_of_measurement="EUR", device_class=SensorDeviceClass.MONETARY,
                         value=lambda d: d["period"], attrs=lambda d: {"periode_start": d["period_start"]}),
@@ -90,8 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry,
 UNRECORDED = frozenset({
     "punten", "kw", "pmin_b", "reeks", "uitleg", "versie", "zon_vandaag", "zon_morgen", "zon_rest_vandaag",
     "kosten_hbc", "kosten_plan", "lading", "start", "komend_kwartier",
-    "lading_plan", "eur_live", "eur_schaduw",
+    "lading_plan", "eur_live", "eur_schaduw", "eur_contract_live", "eur_contract_schaduw",
+    "dag_datum", "dag_huis_kwh", "dag_zon_kwh", "dag_net_kwh", "dag_terug_kwh",
     "kwartieren_vastgehouden", "kwartieren_teruggeleverd", "kwartieren_ontladen",
+    "vast", "dagen", "dagen_zonder", "maanden", "verstreken_s", "verbruikt_kwh", "toegestaan_w", "hbc_grens_w",  # capacity tariff cards (2.0.0-dev1)
 })
 
 

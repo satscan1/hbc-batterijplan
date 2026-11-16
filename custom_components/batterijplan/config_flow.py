@@ -9,9 +9,12 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 
+from . import daluren
+from .const import ha_country
+
 from .const import (
-    CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_COUNTRY, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE,
-    CONF_FEED_IN_FIXED, COUNTRIES,
+    CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE,
+    CONF_FEED_IN_FIXED, CONF_FLANDERS, CONF_CAP_TARIFF, CONF_CONTRACT_TYPE, CONF_OWN_LIMIT, CONF_PRICE_DAY, CONF_PRICE_FIXED, CONF_PRICE_NIGHT, CONTRACTS, CONF_NIGHT_FROM, CONF_NIGHT_TO, CONF_TARIFF, CONF_FEED_IN_PRICE, TARIFFS,
     CONF_MARGIN, CONF_PRICES, CONF_SENSOR_BATTERY, CONF_SENSOR_EV, CONF_SENSOR_NET, CONF_SENSOR_SOLAR,
     CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW, CONF_STORAGE_FEE, CONF_VAT, DEFAULTS, DOMAIN, PRICES_ALL_IN, PRICES_RAW,
 )
@@ -24,12 +27,16 @@ def _number(minimum: float, maximum: float, step: float | str, unit: str) -> sel
         min=minimum, max=maximum, step=step, unit_of_measurement=unit, mode=selector.NumberSelectorMode.BOX))
 
 
-def _schema(values: dict[str, Any], expert: bool) -> vol.Schema:
+def _schema(values: dict[str, Any], expert: bool, country: str | None = None) -> vol.Schema:
     """The form. Optional text fields use ``suggested_value`` so an empty field stays empty."""
     def sug(key: str) -> dict[str, Any]:
         v = values.get(key, DEFAULTS[key])
-        if key == CONF_COUNTRY and v:
-            v = str(v).lower()  # stored "NL"/"DE"/"BE" -> selector option
+        if v is None and key in (CONF_NIGHT_FROM, CONF_NIGHT_TO):  # not set yet: show the default of the country
+            v = daluren.default_night(ha_country(country))[0 if key == CONF_NIGHT_FROM else 1]
+        if key == CONF_OWN_LIMIT and v not in (None, ""):
+            v = round(float(v) / 1000, 3)  # stored in W, shown in kW (Flanders thinks in kW)
+        if key == CONF_CONTRACT_TYPE and v == "dag_nacht":
+            v = "vast"  # first dev build value; shown as Fixed (the rate is set below)
         return {"suggested_value": v} if v not in (None, "") else {}
 
     fields: dict[Any, Any] = {
@@ -48,8 +55,19 @@ def _schema(values: dict[str, Any], expert: bool) -> vol.Schema:
     }
     if expert:
         fields.update({
-            vol.Required(CONF_COUNTRY, description=sug(CONF_COUNTRY)): selector.SelectSelector(selector.SelectSelectorConfig(
-                options=COUNTRIES, translation_key=CONF_COUNTRY, mode=selector.SelectSelectorMode.DROPDOWN)),
+            vol.Required(CONF_FLANDERS, description=sug(CONF_FLANDERS)): selector.BooleanSelector(),
+            vol.Required(CONF_CONTRACT_TYPE, description=sug(CONF_CONTRACT_TYPE)): selector.SelectSelector(selector.SelectSelectorConfig(
+                options=CONTRACTS, translation_key=CONF_CONTRACT_TYPE, mode=selector.SelectSelectorMode.DROPDOWN)),
+            vol.Required(CONF_TARIFF, description=sug(CONF_TARIFF)): selector.SelectSelector(selector.SelectSelectorConfig(
+                options=TARIFFS, translation_key=CONF_TARIFF, mode=selector.SelectSelectorMode.DROPDOWN)),
+            vol.Required(CONF_FEED_IN_PRICE, description=sug(CONF_FEED_IN_PRICE)): _number(0, 1, "any", "EUR/kWh"),
+            vol.Required(CONF_PRICE_FIXED, description=sug(CONF_PRICE_FIXED)): _number(0, 2, "any", "EUR/kWh"),
+            vol.Required(CONF_PRICE_DAY, description=sug(CONF_PRICE_DAY)): _number(0, 2, "any", "EUR/kWh"),
+            vol.Required(CONF_PRICE_NIGHT, description=sug(CONF_PRICE_NIGHT)): _number(0, 2, "any", "EUR/kWh"),
+            vol.Optional(CONF_NIGHT_FROM, description=sug(CONF_NIGHT_FROM)): _number(0, 23, 1, "h"),
+            vol.Optional(CONF_NIGHT_TO, description=sug(CONF_NIGHT_TO)): _number(0, 23, 1, "h"),
+            vol.Required(CONF_CAP_TARIFF, description=sug(CONF_CAP_TARIFF)): _number(0, 200, 0.01, "EUR/kW/jaar"),
+            vol.Required(CONF_OWN_LIMIT, description=sug(CONF_OWN_LIMIT)): _number(0, 25, 0.1, "kW"),
             vol.Required(CONF_VAT, description=sug(CONF_VAT)): _number(0, 30, 1, "%"),
             vol.Required(CONF_FEED_IN_FEE, description=sug(CONF_FEED_IN_FEE)): _number(-0.5, 0.5, 0.001, "EUR/kWh"),
             vol.Required(CONF_FEED_IN_BONUS, description=sug(CONF_FEED_IN_BONUS)): _number(0, 50, 1, "%"),
@@ -62,9 +80,11 @@ def _schema(values: dict[str, Any], expert: bool) -> vol.Schema:
 
 def _clean(user_input: dict[str, Any]) -> dict[str, Any]:
     out = dict(user_input)
-    for k in (CONF_BONUS_FROM, CONF_BONUS_TO):
+    for k in (CONF_BONUS_FROM, CONF_BONUS_TO, CONF_NIGHT_FROM, CONF_NIGHT_TO):
         if k in out:
             out[k] = int(out[k])
+    if CONF_OWN_LIMIT in out:
+        out[CONF_OWN_LIMIT] = round(float(out[CONF_OWN_LIMIT]) * 1000)  # form is in kW, stored in W
     for k in (CONF_SENSOR_SOLAR, CONF_SENSOR_EV, CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW, CONF_CONTRACT_START):
         out.setdefault(k, "")
     return out
@@ -175,4 +195,4 @@ class BatterijplanOptionsFlow(OptionsFlow):
                 errors["base"] = "same_sensor"
             else:
                 return self.async_create_entry(data={**current, **data})
-        return self.async_show_form(step_id="init", data_schema=_schema(current, expert=True), errors=errors)
+        return self.async_show_form(step_id="init", data_schema=_schema(current, expert=True, country=self.hass.config.country), errors=errors)

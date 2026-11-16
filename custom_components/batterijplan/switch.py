@@ -9,14 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import SWITCH_CAPACITY, SWITCH_HBC_AUTO, SWITCH_LIVE, SWITCH_RULES
+from .const import CONF_FLANDERS, CONF_WEEKEND, SWITCH_CAPACITY, SWITCH_FLANDERS, SWITCH_HBC_AUTO, SWITCH_LIVE, SWITCH_RULES
 from .coordinator import BatterijplanConfigEntry
 from .entity import BatterijplanEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback) -> None:
     c = entry.runtime_data
-    async_add_entities([LiveSwitch(c), HbcAutoSwitch(c), CapacitySwitch(c), *(RuleSwitch(c, rule, key) for rule, key in SWITCH_RULES.items())])
+    async_add_entities([LiveSwitch(c), HbcAutoSwitch(c), CapacitySwitch(c), FlandersSwitch(c), WeekendSwitch(c), *(RuleSwitch(c, rule, key) for rule, key in SWITCH_RULES.items())])
 
 
 class LiveSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
@@ -113,3 +113,45 @@ class CapacitySwitch(BatterijplanEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.async_set_cap_on(False)
+
+
+class FlandersSwitch(BatterijplanEntity, SwitchEntity):
+    """Flemish capacity tariff (default off, independent of the Home Assistant country). Only this switch turns on the quarter
+    calculation, the monthly peak, the capacity tariff, the own limit and the kW display. Stored in the options."""
+
+    _platform_domain = "switch"
+    _attr_icon = "mdi:transmission-tower"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, SWITCH_FLANDERS)
+
+    @property
+    def is_on(self) -> bool:
+        return self.coordinator.flanders
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_setting(CONF_FLANDERS, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_setting(CONF_FLANDERS, False)
+
+
+class WeekendSwitch(BatterijplanEntity, SwitchEntity):
+    """Day/night contract: Saturday, Sunday and public holidays count as off-peak all day. Default: on in the Netherlands,
+    off elsewhere. Stored in the options once you switch it yourself."""
+
+    _platform_domain = "switch"
+    _attr_icon = "mdi:calendar-weekend"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "batterijplan_dal_weekend")
+
+    @property
+    def is_on(self) -> bool:
+        return self.coordinator.weekend_dal
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_setting(CONF_WEEKEND, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_setting(CONF_WEEKEND, False)

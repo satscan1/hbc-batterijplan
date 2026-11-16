@@ -1,5 +1,40 @@
 # Changelog
 
+## 2.0.0-dev1 — pre-release for testers
+
+**Pre-release.** Meant for testers, especially in Flanders. The latest full release stays 1.1.0. Nothing is lost when you update; you can go back to 1.1.0 in HACS.
+
+**New**
+- **Kind of contract.** *Fixed* or *Dynamic*, and with *Fixed* a *single* or *dual* rate. *Dynamic* works as before. With *Fixed* there is no plan on price: HBC stays on Self-consumption (NOM); in the off-peak hours of a dual rate it goes to Charge, **only when that pays**.
+- **Night charging pays only above HBC's threshold.** The rate difference (normal − off-peak) must be at least HBC's own *Dynamic threshold delta* (the same helper as for a Dynamic contract, no value of its own). Otherwise HBC stays on Self-consumption. In Flanders, charging in the off-peak hours may also fill the reserve for peaks, whatever the price difference, but only under the target limit.
+- **Off-peak hours.** Night hours (default 23:00–07:00 in the Netherlands, 22:00–07:00 in Belgium) and a switch for weekend and public holidays off-peak all day (default on in the Netherlands, off in Belgium; Dutch and Belgian public holidays).
+- **Prices.** Price, normal rate and off-peak rate per kWh with five decimals in the settings (two on the dashboard), and a **feed-in price** (HBC has no helper for it). *Earnings* under a Fixed contract values the battery at your prices.
+- **Flanders (capacity tariff).** A switch, off by default and independent of the Home Assistant country. It turns on the quarter-hour calculation from the grid power sensor, the monthly peak, the target limit (highest of the monthly peak so far, 2.5 kW and your own limit), the HBC import limit per quarter (only while Live is on; your own HBC values are remembered and restored) and the display in kW. New settings: capacity tariff (EUR/kW/year) and an own limit in kW.
+- **Cards *Peak this month* and *Running quarter*** in a window that is only visible with Flanders on. Monthly peaks of the last 12 months **with and without the battery**, the saving per month (difference in kW × tariff ÷ 12), the averages Fluvius counts and the saving per year. *Without battery* is grid import plus battery power.
+- **Main screen under a Fixed contract.** Briefing with the contract, the price now, when charging from the grid starts or why it does not pay, and the weekend rule; the four plan rules greyed out; the rules block shows *Night charging*, *Weekend and public holidays off-peak* and *Flanders* (name and on/off only). The chart shows the **measured charge**, the **expected charge** for the next 30 hours (simulated per quarter), the sun forecast, the off-peak hours as a band and a **coloured action bar** per quarter (blue grid, green discharging for the house, yellow solar, grey nothing). A short **timeline** under *What the battery does*.
+- **Report and window Today for every contract form.** Under a Fixed contract: contract, prices, off-peak hours, whether night charging pays, NOM behaviour and self-consumption via the battery. With Flanders on the report has a section *Capacity tariff*.
+- **Settings.** New tabs *Contract* and *Flanders*; rows that do not apply are greyed out with a short reason.
+- **New entities:** `select.batterijplan_contract_soort`, `select.batterijplan_tarief`, `number.batterijplan_prijs_vast`, `_prijs_dag`, `_prijs_nacht`, `_terugleverprijs`, `_nacht_van`, `_nacht_tot`, `_capaciteitstarief`, `_eigen_grens` (kW), `switch.batterijplan_dal_weekend`, `switch.batterijplan_vlaanderen`, `sensor.batterijplan_piek_maand`, `sensor.batterijplan_kwartier`.
+
+**Changed**
+- **The country comes from Home Assistant** (NL, BE or DE; anything else counts as the Netherlands). It decides the off-peak hours, the public holidays and the words (normal / off-peak rate, day / night price, HT / NT). **Germany: the Home Assistant country must be DE.**
+- Amounts on the dashboard are shown with two decimals.
+
+**Removed**
+- The country setting (`select.batterijplan_land`) and the trial mode switch of the earlier test builds. *Flanders on* in any country does what the trial mode did.
+
+**Fixed**
+- "+610 %": the deviation of the battery level is no longer shown when the expected level is unknown or zero.
+- The mode showed *shadow* under a Fixed contract while Live was on.
+- After a restart in the middle of a quarter the unmeasured part of that quarter counted as zero, so the HBC import limit could be set to 25 kW. It now counts at the target limit.
+- The battery-level history is filled from the recorder after a restart.
+
+**Updating.** Update in HACS (pre-release), then restart Home Assistant. A stored country **BE** turns the *Flanders* switch on, the country setting and trial mode disappear (with their entities), a contract *day/night* of an earlier test build becomes *Fixed* with a *dual rate*. Learned usage, the counter and all other settings stay.
+
+**Tests**: `tests/test_peak.py` (quarter average, monthly peaks, target limit, off-peak hours and public holidays, night-charging decision, simulation, migration), `tests/test_piek_cards.mjs`, `tests/test_velden_grijs.mjs`, `tests/test_vast_cards.mjs` and `tests/test_vandaag_cards.mjs` (cards, report and window Today for Fixed, Flanders and Dynamic; Dutch, English and German).
+
+**Docs**: new chapter *07 · Contracts, off-peak hours and Flanders* (EN/NL/DE); installation guide: installing a pre-release; dashboard guide: what is new.
+
 ## 1.1.0 — Midnight Sunshine
 
 **Added**

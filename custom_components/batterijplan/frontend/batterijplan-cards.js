@@ -462,7 +462,55 @@
     "Extra percentage dat je overdag (met zon, of tussen 08:00 en 17:00) bovenop de terugleververgoeding krijgt, als die positief is.\n\nVoorbeeld: 10 % betekent dat de vergoeding overdag 10 % hoger is. Heeft je contract geen bonus, zet dit dan op 0.": "Extra percentage you receive during the day (with sun, or between 08:00 and 17:00) on top of the feed-in payment, when that is positive.\n\nExample: 10 % means the payment is 10 % higher in the daytime. If your contract has no bonus, set this to 0.",
     "Btw": "VAT",
     "Teruglever-toeslag (excl. btw)": "Feed-in supplement (excl. VAT)",
-    "Teruglever-bonus overdag": "Daytime feed-in bonus"
+    "Teruglever-bonus overdag": "Daytime feed-in bonus",
+    "Alleen bij een dynamisch contract": "Only with a dynamic contract",
+    "Alleen bij contract Vast": "Only with a fixed contract",
+    "Alleen bij contract Dag/nacht": "Only with a day/night contract",
+    "Wat doet de batterij bij jouw vaste contract?": "What does the battery do with your fixed contract?",
+    "Bij een vast contract zet Batterijplan HBC op **Self-consumption**: de batterij gebruikt eerst je eigen zonne-energie. Bij een dubbel tarief zet Batterijplan HBC in de daluren tijdelijk op **Charge** (bijladen van het net) en daarna weer terug.\n\nDit gebeurt alleen als Live aanstaat. Zet je Live uit, dan krijg je jouw eigen HBC-stand terug.": "With a fixed contract Batterijplan puts HBC on **Self-consumption**: the battery uses your own solar first. With a dual rate Batterijplan puts HBC on **Charge** for a while in the off-peak hours (topping up from the grid) and then back.\n\nThis only happens while Live is on. Switch Live off and you get your own HBC setting back.",
+    "Wat een kWh je nu kost volgens je vaste contract: het normaaltarief of het daltarief, met de prijzen die je zelf hebt ingevuld. Bij een dubbel tarief staat in de briefing wanneer het tarief wisselt.": "What a kWh costs you now under your fixed contract: the normal rate or the off-peak rate, with the prices you entered. With a dual rate the briefing says when the rate changes.",
+    "laden loont niet": "charging does not pay",
+    "Contract": "Contract",
+    "Vast": "Fixed",
+    "Daluren": "Off-peak hours",
+    "weekend en feestdagen de hele dag": "weekend and public holidays all day",
+    "Nachtladen": "Night charging",
+    "verschil": "difference",
+    "drempel": "threshold",
+    "aan (Vlaanderen: reserve voor pieken, onder de doelgrens)": "on (Flanders: reserve for peaks, below the target limit)",
+    "uit (loont niet)": "off (not worth it)",
+    "Prijs": "Price",
+    "HBC-strategie nu": "HBC strategy now",
+    "Gedrag": "Behaviour",
+    "NOM: de batterij dekt eerst het huisverbruik en laadt met zonneoverschot": "NOM: the battery covers the house use first and charges with a solar surplus",
+    "Terugleververgoeding": "Feed-in price",
+    "Verwacht leeg rond": "Expected empty around",
+    "Zelfverbruik via de batterij vandaag": "Self-consumption via the battery today",
+    "naar het huis": "to the house",
+    "geladen met zon": "charged with solar",
+    "geladen van het net": "charged from the grid",
+    "Vast contract": "Fixed contract",
+    "HBC staat op Self-consumption (NOM); bij een dubbel tarief laadt Batterijplan in het dal alleen van het net als dat loont.": "HBC is on Self-consumption (NOM); with a dual rate Batterijplan only charges from the grid in the off-peak hours when that pays.",
+    "Met batterij": "With battery",
+    "Zonder batterij": "Without battery",
+    "Besparing": "Saving",
+    "lopend": "running",
+    "Doelgrens": "Target limit",
+    "Maandpiek tot nu": "Monthly peak so far",
+    "Minimum per maand": "Minimum per month",
+    "Gemiddelde laatste 12 maandpieken met batterij": "Average of the last 12 monthly peaks with battery",
+    "Gemiddelde laatste 12 maandpieken zonder batterij": "Average of the last 12 monthly peaks without battery",
+    "maanden": "months",
+    "Besparing per jaar door de batterij": "Saving per year through the battery",
+    "Capaciteitstarief": "Capacity tariff",
+    "jaar": "year",
+    "Capaciteitstarief (Vlaanderen)": "Capacity tariff (Flanders)",
+    "Bij een vast contract zet Batterijplan HBC alleen op Self-consumption (en in het dal van een dubbel tarief op Charge), en alleen als Live aan staat. Dit rapport is in je browser gemaakt; er is niets op de server bewaard. Er staan geen namen of adressen in. Lees het na voordat je het deelt.": "With a fixed contract Batterijplan only puts HBC on Self-consumption (and, in the off-peak hours of a dual rate, on Charge), and only while Live is on. This report was made in your browser; nothing is stored on the server. It contains no names or addresses. Read it before you share it.",
+    "Alleen met Vlaanderen aan": "Only with Flanders on",
+    "Alleen bij een vast contract": "Only with a fixed contract",
+    "Alleen bij Vast met een enkel tarief": "Only with Fixed and a single rate",
+    "Alleen bij Vast met een dubbel tarief": "Only with Fixed and a dual rate",
+    "Niet beschikbaar": "Not available"
    },
    "de": {
     "Goedkoopste en duurste kwartier van die dag.": "Günstigste und teuerste Viertelstunde dieses Tages.",
@@ -892,7 +940,55 @@
     "Extra percentage dat je overdag (met zon, of tussen 08:00 en 17:00) bovenop de terugleververgoeding krijgt, als die positief is.\n\nVoorbeeld: 10 % betekent dat de vergoeding overdag 10 % hoger is. Heeft je contract geen bonus, zet dit dan op 0.": "Zusätzlicher Prozentsatz, den du tagsüber (bei Sonne oder zwischen 08:00 und 17:00 Uhr) auf die Einspeisevergütung erhältst, wenn diese positiv ist.\n\nBeispiel: 10 % bedeutet, dass die Vergütung tagsüber 10 % höher ist. Hat dein Vertrag keinen Bonus, setze dies auf 0.",
     "Btw": "MwSt",
     "Teruglever-toeslag (excl. btw)": "Einspeise-Zuschlag (ohne MwSt)",
-    "Teruglever-bonus overdag": "Einspeise-Bonus tagsüber"
+    "Teruglever-bonus overdag": "Einspeise-Bonus tagsüber",
+    "Alleen bij een dynamisch contract": "Nur bei einem dynamischen Vertrag",
+    "Alleen bij contract Vast": "Nur bei einem Festvertrag",
+    "Alleen bij contract Dag/nacht": "Nur bei einem Tag/Nacht-Vertrag",
+    "Wat doet de batterij bij jouw vaste contract?": "Was tut die Batterie bei deinem Festvertrag?",
+    "Bij een vast contract zet Batterijplan HBC op **Self-consumption**: de batterij gebruikt eerst je eigen zonne-energie. Bij een dubbel tarief zet Batterijplan HBC in de daluren tijdelijk op **Charge** (bijladen van het net) en daarna weer terug.\n\nDit gebeurt alleen als Live aanstaat. Zet je Live uit, dan krijg je jouw eigen HBC-stand terug.": "Bei einem Festvertrag stellt Batterijplan HBC auf **Self-consumption**: die Batterie nutzt zuerst deinen eigenen Solarstrom. Bei einem Zweitarif stellt Batterijplan HBC in der Nebenzeit vorübergehend auf **Charge** (Nachladen aus dem Netz) und danach wieder zurück.\n\nDas geschieht nur, wenn Live an ist. Schaltest du Live aus, bekommst du deine eigene HBC-Einstellung zurück.",
+    "Wat een kWh je nu kost volgens je vaste contract: het normaaltarief of het daltarief, met de prijzen die je zelf hebt ingevuld. Bij een dubbel tarief staat in de briefing wanneer het tarief wisselt.": "Was eine kWh dich jetzt bei deinem Festvertrag kostet: der Normaltarif oder der Nebenzeittarif, mit den Preisen, die du eingetragen hast. Bei einem Zweitarif steht im Bericht, wann der Tarif wechselt.",
+    "laden loont niet": "Laden lohnt sich nicht",
+    "Contract": "Vertrag",
+    "Vast": "Fest",
+    "Daluren": "Nebenzeiten",
+    "weekend en feestdagen de hele dag": "Wochenende und Feiertage ganztägig",
+    "Nachtladen": "Nachtladen",
+    "verschil": "Unterschied",
+    "drempel": "Schwelle",
+    "aan (Vlaanderen: reserve voor pieken, onder de doelgrens)": "an (Flandern: Reserve für Spitzen, unter der Zielgrenze)",
+    "uit (loont niet)": "aus (lohnt nicht)",
+    "Prijs": "Preis",
+    "HBC-strategie nu": "HBC-Strategie jetzt",
+    "Gedrag": "Verhalten",
+    "NOM: de batterij dekt eerst het huisverbruik en laadt met zonneoverschot": "NOM: die Batterie deckt zuerst den Hausverbrauch und lädt mit Solarüberschuss",
+    "Terugleververgoeding": "Einspeisevergütung",
+    "Verwacht leeg rond": "Voraussichtlich leer gegen",
+    "Zelfverbruik via de batterij vandaag": "Eigenverbrauch über die Batterie heute",
+    "naar het huis": "ins Haus",
+    "geladen met zon": "mit Sonne geladen",
+    "geladen van het net": "aus dem Netz geladen",
+    "Vast contract": "Festvertrag",
+    "HBC staat op Self-consumption (NOM); bij een dubbel tarief laadt Batterijplan in het dal alleen van het net als dat loont.": "HBC steht auf Self-consumption (NOM); bei einem Zweitarif lädt Batterijplan in der Nebenzeit nur aus dem Netz, wenn es sich lohnt.",
+    "Met batterij": "Mit Batterie",
+    "Zonder batterij": "Ohne Batterie",
+    "Besparing": "Ersparnis",
+    "lopend": "laufend",
+    "Doelgrens": "Zielgrenze",
+    "Maandpiek tot nu": "Monatsspitze bisher",
+    "Minimum per maand": "Minimum pro Monat",
+    "Gemiddelde laatste 12 maandpieken met batterij": "Durchschnitt der letzten 12 Monatsspitzen mit Batterie",
+    "Gemiddelde laatste 12 maandpieken zonder batterij": "Durchschnitt der letzten 12 Monatsspitzen ohne Batterie",
+    "maanden": "Monate",
+    "Besparing per jaar door de batterij": "Ersparnis pro Jahr durch die Batterie",
+    "Capaciteitstarief": "Kapazitätstarif",
+    "jaar": "Jahr",
+    "Capaciteitstarief (Vlaanderen)": "Kapazitätstarif (Flandern)",
+    "Bij een vast contract zet Batterijplan HBC alleen op Self-consumption (en in het dal van een dubbel tarief op Charge), en alleen als Live aan staat. Dit rapport is in je browser gemaakt; er is niets op de server bewaard. Er staan geen namen of adressen in. Lees het na voordat je het deelt.": "Bei einem Festvertrag stellt Batterijplan HBC nur auf Self-consumption (und in der Nebenzeit eines Zweitarifs auf Charge), und nur wenn Live an ist. Dieser Bericht wurde in deinem Browser erstellt; auf dem Server wird nichts gespeichert. Er enthält keine Namen oder Adressen. Lies ihn nach, bevor du ihn teilst.",
+    "Alleen met Vlaanderen aan": "Nur mit Flandern an",
+    "Alleen bij een vast contract": "Nur bei einem Festvertrag",
+    "Alleen bij Vast met een enkel tarief": "Nur bei Fest mit Eintarif",
+    "Alleen bij Vast met een dubbel tarief": "Nur bei Fest mit Zweitarif",
+    "Niet beschikbaar": "Nicht verfügbar"
    }
   };
   const t = (s) => (LANG !== "nl" && I18N[LANG] && I18N[LANG][s] != null ? I18N[LANG][s] : s);
@@ -1217,6 +1313,7 @@
   // Rows: entity (number = slider or - value + pill, select = chips, switch = toggle, text = edit on the line, date) and "section".
   // Optional "tabs: [{naam, rows}]" for setting levels; "info" on the card or on a row opens a "Hoe lees je dit?" window.
   const VCSS =
+    ".gr{opacity:.45;pointer-events:none;filter:grayscale(.6)}.gr .grr{font-size:12px;color:var(--muted);padding:0 0 8px;font-style:italic}" +
     ":host{display:block;--line:var(--divider-color,#30333c);--muted:var(--secondary-text-color,#9aa0aa);--card2:var(--secondary-background-color,#262932)}" +
     "ha-card{padding:16px 18px 8px;container-type:inline-size}" +
     ".title{font-size:20px;font-weight:700;color:var(--primary-text-color);display:flex;align-items:center;gap:8px;margin-bottom:6px}.title ha-icon{--mdc-icon-size:24px}" +
@@ -1311,6 +1408,42 @@
     const kwJaren = Object.keys(kw).sort().reverse().slice(0, 3).map((y) => ({ jaar: y, q: [1, 2, 3, 4].map((q) => kw[y][q] || null) }));
     return { jaren: jaren, maanden: maanden, kwJaren: kwJaren };
   }
+  // ---------- 2.0.0-dev1: the report under a Fixed contract and with Flanders on ----------
+  const bpVastD = (pa) => (pa && pa.contract && pa.contract !== "dynamisch" && pa.vast && typeof pa.vast === "object" ? pa.vast : null);
+  const bpP2 = (v) => (v == null || v === "" || !Number.isFinite(Number(v)) ? "–" : "€ " + nl(Number(v), 2));  // amounts: two decimals
+  const bpHM = (ts) => new Date(ts * 1000).toLocaleTimeString(LOC[LANG] || "nl-NL", { hour: "2-digit", minute: "2-digit" });
+  // rows [label, text] about the contract: prices, off-peak hours, whether night charging pays, behaviour, battery flows today
+  function bpVastRijen(hass, pa, vd) {
+    const S = hass.states, w = vastW(hass), dual = vd.tarief === "dubbel", ld = vd.laden || {}, p2 = (n) => String(n).padStart(2, "0");
+    const strat = (S["input_select.house_battery_strategy"] || {}).state || "—", ma = (S["sensor.batterijplan_meerwaarde"] || {}).attributes || {};
+    const d0 = new Date(), iso = d0.getFullYear() + "-" + p2(d0.getMonth() + 1) + "-" + p2(d0.getDate()), vandaag = ma.dag_datum === iso;
+    const r = [[t("Contract"), t("Vast") + " · " + (dual ? w.x : w.e)]];
+    if (dual) {
+      r.push([w.n, bpP2(vd.prijs_normaal) + " /kWh"], [w.d, bpP2(vd.prijs_dal) + " /kWh"]);
+      r.push([t("Daluren"), p2(vd.nacht_van) + ":00–" + p2(vd.nacht_tot) + ":00" + (vd.weekend ? " · " + t("weekend en feestdagen de hele dag") : "")]);
+      r.push([t("Nachtladen"), ld.actief ? (ld.reden === "vlaanderen" ? t("aan (Vlaanderen: reserve voor pieken, onder de doelgrens)") : t("aan") + ": " + t("verschil") + " " + nl(Number(ld.verschil_ct), 1) + " ct, " + t("drempel") + " " + nl(Number(ld.drempel_ct), 1) + " ct")
+        : t("uit (loont niet)") + ": " + t("verschil") + " " + nl(Number(ld.verschil_ct), 1) + " ct, " + t("drempel") + " " + nl(Number(ld.drempel_ct), 1) + " ct"]);
+    } else r.push([t("Prijs"), bpP2(vd.prijs_normaal) + " /kWh"]);
+    r.push([t("HBC-strategie nu"), strat + (dual && strat === vd.strategie ? " (" + (strat === "Charge" || vd.dal_nu ? w.d : w.n) + ")" : "")]);
+    r.push([t("Gedrag"), t("NOM: de batterij dekt eerst het huisverbruik en laadt met zonneoverschot")]);
+    if (Number(vd.terugleverprijs) > 0) r.push([t("Terugleververgoeding"), bpP2(vd.terugleverprijs) + " /kWh"]);
+    if (vd.niveau_nu != null) r.push([t("In de batterij nu"), nl(Number(vd.niveau_nu), 1) + " kWh" + (vd.tijdlijn && vd.tijdlijn.leeg ? " · " + t("Verwacht leeg rond") + " " + bpHM(vd.tijdlijn.leeg) : "")]);
+    r.push([t("Zelfverbruik via de batterij vandaag"), nl(Number(vandaag ? ma.dag_huis_kwh : 0), 1) + " kWh " + t("naar het huis") + " · " + nl(Number(vandaag ? ma.dag_zon_kwh : 0), 1) + " kWh " + t("geladen met zon") + " · " + nl(Number(vandaag ? ma.dag_net_kwh : 0), 1) + " kWh " + t("geladen van het net")]);
+    return r;
+  }
+  // capacity tariff (Flanders on): monthly peaks with and without the battery, averages of the last 12 months, saving
+  function bpPiekRap(S) {
+    const sw = S["switch.batterijplan_vlaanderen"], pk = S["sensor.batterijplan_piek_maand"];
+    if (!sw || sw.state !== "on" || !pk || ["unavailable", "unknown"].includes(pk.state) || !pk.attributes || !Array.isArray(pk.attributes.maanden)) return null;
+    const a = pk.attributes, loc = LOC[LANG] || "nl-NL", kw = (v) => (v == null ? "–" : nl(Number(v) / 1000, 1) + " kW");
+    const maand = (mk) => new Date(+mk.slice(0, 4), +mk.slice(5, 7) - 1, 1).toLocaleDateString(loc, { month: "long", year: "numeric" });
+    const rows = a.maanden.map((m) => ({ maand: maand(m.maand) + (m.lopend ? " (" + t("lopend") + ")" : ""), met: kw(m.piek), zonder: kw(m.zonder), besp: bpP2(m.besparing_eur) }));
+    const kv = [[t("Doelgrens"), kw(a.doelgrens)], [t("Maandpiek tot nu"), kw(pk.state)], [t("Minimum per maand"), kw(a.minimum)],
+      [t("Gemiddelde laatste 12 maandpieken met batterij"), kw(a.gemiddelde) + " (" + a.aantal_maanden + " " + t("maanden") + ")"],
+      [t("Gemiddelde laatste 12 maandpieken zonder batterij"), a.gemiddelde_zonder == null ? "–" : kw(a.gemiddelde_zonder) + " (" + a.aantal_maanden_zonder + " " + t("maanden") + ")"],
+      [t("Besparing per jaar door de batterij"), a.besparing_jaar == null ? "–" : bpP2(a.besparing_jaar)], [t("Capaciteitstarief"), nl(Number(a.tarief), 2) + " €/kW/" + t("jaar")]];
+    return { rows: rows, kv: kv };
+  }
   async function bpRapport(hass, cfg) {
     zetTaal(hass, cfg);
     const S = hass.states, nu = new Date(), r = [], pa = (S[IDS.plan] || {}).attributes || {}, pts = planPunten(pa);
@@ -1322,6 +1455,10 @@
     r.push("# Batterijplan report", "", "_" + t("Gemaakt op") + " " + nu.toLocaleString(LOC[LANG] || "nl-NL") + " · " + t("Er staan geen namen of adressen in. Lees het na voordat je het deelt.") + "_", "");
     r.push("## Versions", "- Batterijplan: " + (pa.versie || "?"), "- Home Assistant: " + ((hass.config && hass.config.version) || "?"),
       "- " + t("Taal") + ": " + LANG + " · " + t("tijdzone") + ": " + ((hass.config && hass.config.time_zone) || "?"), "");
+    const vdM = bpVastD(pa);
+    if (vdM) { r.push("## " + t("Contract")); bpVastRijen(hass, pa, vdM).forEach((x) => r.push("- " + x[0] + ": " + x[1])); r.push(""); }
+    const piekM = bpPiekRap(S);
+    if (piekM) { r.push("## " + t("Capaciteitstarief (Vlaanderen)"), "| " + [t("Maand"), t("Met batterij"), t("Zonder batterij"), t("Besparing")].join(" | ") + " |", "|---|---|---|---|", ...piekM.rows.map((x) => "| " + [x.maand, x.met, x.zonder, x.besp].join(" | ") + " |"), "", ...piekM.kv.map((x) => "- " + x[0] + ": " + x[1]), ""); }
     r.push("## Status", regel("switch.batterijplan_live"), regel(IDS.plan), regel("sensor.batterijplan_voorspelling"), regel("sensor.batterijplan_meerwaarde"), regel("sensor.batterijplan_meerwaarde_periode"));
     REGELS.forEach((x) => r.push(regel("switch.batterijplan_regel_" + x[0])));
     r.push("- " + t("Komend kwartier") + ": " + t(ACT_NAAM[pa.actie] || "—") + " (HBC: " + t(ACT_NAAM[pa.hbc_actie] || "—") + ")", "");
@@ -1406,26 +1543,32 @@
     const telP = telActies(pts, 5), telH = telActies(pts, 3);
     const ACTK = { L: "#3b82f6", O: "#22c55e", H: "#f59e0b", V: "#ec4899", Z: "#94a3b8" };
     const versie = pa.versie || "?", ha = (hass.config && hass.config.version) || "?";
+    // Fixed contract: contract, prices, off-peak hours, whether night charging pays, NOM behaviour and self-consumption instead of the plan texts
+    const vd = bpVastD(pa), vRij = vd ? bpVastRijen(hass, pa, vd) : [], vw = vd ? vastW(hass) : null, piek = bpPiekRap(S);
+    const vStrat = vd ? esc(((S["input_select.house_battery_strategy"] || {}).state || "—") + (vd.tarief === "dubbel" && (S["input_select.house_battery_strategy"] || {}).state === vd.strategie ? " (" + (vd.strategie === "Charge" || vd.dal_nu ? vw.d : vw.n) + ")" : "")) : "";
+    const vSamen = vd ? esc(t("Vast contract") + " (" + (vd.tarief === "dubbel" ? vw.x : vw.e) + ").") + " " + esc(t("HBC staat op Self-consumption (NOM); bij een dubbel tarief laadt Batterijplan in het dal alleen van het net als dat loont.")) : "";
     const samen = "<div class='box lead'>" +
       "<p>" + (live ? esc(t("Batterijplan staat op Live en stuurt HBC.")) : "<span class='or'>" + esc(t("Batterijplan staat in schaduw: het rekent mee maar stuurt niets.")) + "</span>") + " " +
-      (strat === "Dynamic" ? esc(t("HBC staat op Dynamic.")) : "<span class='warn'>" + esc(t("HBC staat niet op Dynamic; Batterijplan wacht.")) + "</span>") + "</p>" +
-      "<p>" + esc(t("Komend kwartier:")) + " <b>" + kwTxt + "</b> · " + esc(t("Verbruik leren:")) + " <b>" + esc(t(st("sensor.batterijplan_voorspelling") || "–")) + "</b></p>" +
+      (vd ? vSamen : strat === "Dynamic" ? esc(t("HBC staat op Dynamic.")) : "<span class='warn'>" + esc(t("HBC staat niet op Dynamic; Batterijplan wacht.")) + "</span>") + "</p>" +
+      (vd ? "<p>" + esc(t("HBC-strategie nu")) + ": <b>" + vStrat + "</b> · " : "<p>" + esc(t("Komend kwartier:")) + " <b>" + kwTxt + "</b> · ") + esc(t("Verbruik leren:")) + " <b>" + esc(t(st("sensor.batterijplan_voorspelling") || "–")) + "</b></p>" +
       "<p>" + esc(t("Opgeleverd sinds")) + " " + esc(mw.sinds || "–") + ": <b>" + geldH(st("sensor.batterijplan_meerwaarde")) + "</b></p>" +
       "<p>" + (mist.length ? "<span class='warn'>" + esc(t("Ontbreekt:")) + " " + mist.map(esc).join(", ") + "</span>" : "<span class='ok'>✓ " + esc(t("Alle sensoren en HBC-instellingen gevonden.")) + "</span>") + (zonMist ? "<br><span class='warn'>" + esc(t(ZON_TIP)) + "</span>" : "") + "</p></div>";
     const status = "<div class='kpis'>" +
       kaart(t("Modus"), live ? "live" : esc(t("schaduw")), live ? esc(t("stuurt HBC")) : "", live ? "ok" : "or") +
-      kaart(t("Komend kwartier"), kwTxt, "") +
+      (vd ? kaart(t("HBC-strategie nu"), vStrat, "") : kaart(t("Komend kwartier"), kwTxt, "")) +
       kaart(t("In de batterij nu"), esc(nl(Number(Number.isFinite(parseFloat((S["sensor.batterijplan_lading_2"] || S["sensor.batterijplan_lading"] || {}).state)) ? parseFloat((S["sensor.batterijplan_lading_2"] || S["sensor.batterijplan_lading"]).state) : pa.lading), 1)) + " kWh", "") +
-      kaart(t("Prijs nu"), val("sensor.batterijplan_prijs"), "") +
+      (vd ? kaart(t("Prijs nu"), esc(bpP2(vd.prijs_nu) + " /kWh"), esc(vd.tarief === "dubbel" ? (vd.dal_nu ? vw.d : vw.n) : vw.e)) : kaart(t("Prijs nu"), val("sensor.batterijplan_prijs"), "")) +
       kaart(t("Huisverbruik nu"), val("sensor.batterijplan_huisverbruik"), "") +
       kaart(t("Voorspelling"), esc(t(st("sensor.batterijplan_voorspelling") || "–")), esc(t("Verbruik leren"))) + "</div>";
     const eindT = pts.length ? new Date((pts[pts.length - 1][0] + 900) * 1000).toLocaleString(loc) : "–";
-    const plan = kv([[t("Plan tot"), esc(eindT)], [t("Kosten HBC alleen"), esc("€ " + nl(Number(pa.kosten_hbc), 2))], [t("Kosten met Batterijplan"), esc("€ " + nl(Number(pa.kosten_plan), 2))],
+    const planDyn = kv([[t("Plan tot"), esc(eindT)], [t("Kosten HBC alleen"), esc("€ " + nl(Number(pa.kosten_hbc), 2))], [t("Kosten met Batterijplan"), esc("€ " + nl(Number(pa.kosten_plan), 2))],
       [bpNogTot(pa), geldH(st(IDS.plan))], [t("Modus"), esc(pa.modus || "–")], [t("HBC-strategie"), esc(pa.hbc_strategie || "–")], [t("Kwartieren in het plan"), esc(pts.length)]]
       .concat(REGELS.map((x) => [t("Regel") + ": " + t(x[1]), esc(t(st("switch.batterijplan_regel_" + x[0]) === "off" ? "uit" : "aan"))])));
+    const plan = vd ? kv(vRij.map((x) => [x[0], esc(x[1])])) : planDyn;
     const opbr = "<div class='kpis'>" + kaart(t("Totaal"), geldH(st("sensor.batterijplan_meerwaarde")), esc(t("sinds") + " " + (mw.sinds || "–"))) +
       kaart(t("Schaduw (zou opleveren)"), geldH(mw.eur_schaduw), "") + kaart(t("Dit contractjaar"), geldH(st("sensor.batterijplan_meerwaarde_periode")), esc(at("sensor.batterijplan_meerwaarde_periode").periode_start || "")) +
-      kaart(t("Kwartieren ontladen / vastgehouden / teruggeleverd"), esc((mw.kwartieren_ontladen || 0) + " / " + (mw.kwartieren_vastgehouden || 0) + " / " + (mw.kwartieren_teruggeleverd || 0)), "") + "</div>";
+      (vd ? kaart(t("Zelfverbruik via de batterij vandaag"), esc((vRij[vRij.length - 1] || ["", ""])[1]), "") : kaart(t("Kwartieren ontladen / vastgehouden / teruggeleverd"), esc((mw.kwartieren_ontladen || 0) + " / " + (mw.kwartieren_vastgehouden || 0) + " / " + (mw.kwartieren_teruggeleverd || 0)), "")) + "</div>";
+    const piekH = !piek ? "" : tabel([t("Maand"), t("Met batterij"), t("Zonder batterij"), t("Besparing")], piek.rows.map((x) => "<tr><td>" + esc(x.maand) + "</td><td>" + esc(x.met) + "</td><td>" + esc(x.zonder) + "</td><td>" + esc(x.besp) + "</td></tr>")) + kv(piek.kv.map((x) => [x[0], esc(x[1])]));
     const rij = (id) => "<tr><td>" + naam(id) + "<div class='mut'><code>" + esc(id) + "</code></div></td><td>" + val(id) + "</td><td class='mut'>" + (S[id] ? esc(tijd(S[id].last_changed)) : "–") + "</td></tr>";
     const inst = tabel([t("Instelling"), t("Waarde"), t("Sinds")], eigen.filter((k) => EIGEN_INST.test(k)).map(rij));
     const hbc = tabel([t("Instelling"), t("Waarde"), t("Sinds")], RAPPORT_HBC.map(rij));
@@ -1434,7 +1577,8 @@
     const dag = pts.length ? "<div class='box'><b>Batterijplan</b>" + balken(telP) + "</div><div class='box'><b>HBC</b>" + balken(telH) + "</div>" : "<div class='box'><span class='mut'>–</span></div>";
     const overig = tabel([t("Overige sensoren"), t("Waarde"), t("Sinds")], eigen.filter((k) => /^(sensor|binary_sensor)\./.test(k)).map(rij));
     const ruw = tabel([t("Alle planwaarden"), t("Waarde")], Object.keys(pa).filter((k) => !["friendly_name", "icon"].includes(k)).sort().map((k) => "<tr><td class='mut'><code>" + esc(k) + "</code></td><td>" + kort(pa[k]) + "</td></tr>"));
-    const NAV = [["samenvatting", "Samenvatting"], ["status", "Status"], ["plan", "Plan"], ["opbrengst", "Opbrengst"], ["instellingen", "Instellingen"], ["hbc", "HBC"], ["dag", "Acties in het plan"], ["techniek", "Techniek"]];
+    const NAV = [["samenvatting", "Samenvatting"], ["status", "Status"], ["plan", vd ? "Contract" : "Plan"], ["opbrengst", "Opbrengst"]].concat(piek ? [["capaciteitstarief", "Capaciteitstarief (Vlaanderen)"]] : [])
+      .concat([["instellingen", "Instellingen"], ["hbc", "HBC"]]).concat(vd ? [] : [["dag", "Acties in het plan"]]).concat([["techniek", "Techniek"]]);
     const p2 = (n) => String(n).padStart(2, "0"), bestand = "batterijplan-rapport-" + nu.getFullYear() + p2(nu.getMonth() + 1) + p2(nu.getDate()) + "-" + p2(nu.getHours()) + p2(nu.getMinutes()) + ".html";
     return "<!doctype html><html lang='" + LANG + "'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>" + esc(t("Batterijplan-rapport")) + "</title><style>" + RAPPORT_CSS + "</style></head><body><div class='wrap'>" +
       "<header class='top'><div class='nm'><img src='" + esc(location.origin) + BASE + "logo-neon.png' alt=''><div><h1>" + esc(t("Batterijplan-rapport")) + "</h1><div class='meta'>" + esc(nu.toLocaleString(loc)) + " · Batterijplan " + esc(versie) + " · Home Assistant " + esc(ha) + "</div></div></div>" +
@@ -1442,17 +1586,19 @@
       "<nav>" + NAV.map((n) => "<a href='#" + n[0] + "'>" + esc(t(n[1])) + "</a>").join("") + "</nav>" +
       "<section id='samenvatting'><h2>" + esc(t("Samenvatting")) + "</h2>" + samen + "</section>" +
       "<section id='status'><h2>" + esc(t("Status")) + "</h2>" + status + "</section>" +
-      "<section id='plan'><h2>" + esc(t("Plan")) + "</h2>" + plan + "</section>" +
+      "<section id='plan'><h2>" + esc(t(vd ? "Contract" : "Plan")) + "</h2>" + plan + "</section>" +
       "<section id='opbrengst'><h2>" + esc(t("Opbrengst")) + "</h2>" + opbr + "</section>" +
+      (piek ? "<section id='capaciteitstarief'><h2>" + esc(t("Capaciteitstarief (Vlaanderen)")) + "</h2>" + piekH + "</section>" : "") +
       (capH ? "<section id='capaciteit'><h2>" + esc(t("Capaciteit (experiment)")) + "</h2>" + capH + "</section>" : "") +
       "<section id='instellingen'><h2>" + esc(t("Instellingen")) + " (Batterijplan)</h2>" + inst + "</section>" +
       "<section id='hbc'><h2>HBC</h2>" + hbc + "</section>" +
-      "<section id='dag'><h2>" + esc(t("Acties in het plan")) + "</h2>" + dag + "</section>" +
+      (vd ? "" : "<section id='dag'><h2>" + esc(t("Acties in het plan")) + "</h2>" + dag + "</section>") +
       "<section id='techniek'><h2>" + esc(t("Techniek")) + "</h2>" + overig + "<details class='compact'><summary>" + esc(t("Alle planwaarden")) + "</summary>" + ruw + "</details></section>" +
-      "<div class='sub' style='margin:20px 0'>" + esc(t("Batterijplan stuurt alleen de drie Dynamic-standen van HBC, en alleen als Live aan staat. Dit rapport is in je browser gemaakt; er is niets op de server bewaard. Er staan geen namen of adressen in. Lees het na voordat je het deelt.")) + "</div></div>" +
+      "<div class='sub' style='margin:20px 0'>" + esc(t(vd ? "Bij een vast contract zet Batterijplan HBC alleen op Self-consumption (en in het dal van een dubbel tarief op Charge), en alleen als Live aan staat. Dit rapport is in je browser gemaakt; er is niets op de server bewaard. Er staan geen namen of adressen in. Lees het na voordat je het deelt." : "Batterijplan stuurt alleen de drie Dynamic-standen van HBC, en alleen als Live aan staat. Dit rapport is in je browser gemaakt; er is niets op de server bewaard. Er staan geen namen of adressen in. Lees het na voordat je het deelt.")) + "</div></div>" +
       "<script>document.getElementById('download').addEventListener('click',function(){var b=new Blob(['<!doctype html>'+document.documentElement.outerHTML],{type:'text/html;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=" + JSON.stringify(bestand) + ";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)});<\/script></body></html>";
   }
 
+  if (window.__bpExpose) { window.__bpExpose.rapportHtml = bpRapportHtml; window.__bpExpose.rapport = bpRapport; }  // for the offline tests only
   // ---------- custom:batterijplan-rapport: the report in its own window behind the Report button ----------
   class BpRapport extends BpBase {
     static getStubConfig() { return { title: "Rapport", icon: "batterijplan:info" }; }
@@ -1501,7 +1647,7 @@
     set hass(h) {
       this._hass = h; zetTaal(h, this._config);
       const sig = this._rows(true).map((r) => { const s = r.entity && h.states[r.entity]; const x = s && /^[a-z_]+\.[a-z0-9_]+$/.test(s.state) && h.states[s.state];
-        return s ? s.state + (x ? x.state : "") : "-"; }).join("|") + LANG;
+        return s ? s.state + (x ? x.state : "") + this._grijs(r) : "-"; }).join("|") + LANG + this._land();
       if (sig === this._sig || this._busy || this._edit !== undefined) return;
       this._sig = sig; this._render();
     }
@@ -1513,7 +1659,9 @@
       return all ? c.tabs.reduce((a, tb) => a.concat(tb.rows || []), []) : ((c.tabs[this._tab] || {}).rows || []);
     }
     _num(v, step) { const d = String(step).includes(".") ? String(step).split(".")[1].length : 0; return nl(Number(v), d); }
-    _naam(r, i) { return "<div class='nm'><div>" + esc(r.name || r.entity || "") + (r.hint ? "<small>" + esc(r.hint) + "</small>" : "") + "</div>" +
+    // 2.0.0-dev1: names and chip labels may depend on the Home Assistant country (nl / be / de, else nl): name_land / labels_land {nl:..,be:..,de:..}
+    _land() { const c = String((this._hass && this._hass.config && this._hass.config.country) || "").toLowerCase(); return ["nl", "be", "de"].includes(c) ? c : "nl"; }
+    _naam(r, i) { return "<div class='nm'><div>" + esc((r.name_land && r.name_land[this._land()]) || r.name || r.entity || "") + (r.hint ? "<small>" + esc(r.hint) + "</small>" : "") + "</div>" +
       (r.info ? "<ha-icon class='i' data-info='" + i + "' icon='mdi:information-outline' title='" + esc(t("Hoe lees je dit?")) + "'></ha-icon>" : "") + "</div>"; }
     _askBox(r) {
       const rood = !!r.danger;
@@ -1523,7 +1671,19 @@
         (rood ? "<div class='f'><div class='nm'>" + esc(t(r.sure || "Ik weet het zeker")) + "</div><button class='tg rood" + (this._sure ? " on" : "") + "' role='switch' aria-checked='" + !!this._sure + "' data-sure='1'></button></div>" : "") +
         "<div class='askbtns'><button class='btn' data-ask='no'>" + esc(t("Annuleren")) + "</button><button class='btn " + (rood ? "yes" : "ok") + "' data-ask='yes'" + (rood && !this._sure ? " disabled" : "") + ">" + esc(t(r.yes || "Ja, uitvoeren")) + "</button></div></div>";
     }
+    // 2.0.0-dev1: a row may carry "beschikbaar" (list of groups; a group = list of {entity, state:[..]}). The row is available when
+    // all conditions of at least one group hold; otherwise it is greyed out and the short reason "reden" shows. Rows without it: unchanged.
+    _grijs(r) {
+      if (!r || !Array.isArray(r.beschikbaar) || !this._hass) return "";
+      const H = this._hass.states, ok = r.beschikbaar.some((g) => (Array.isArray(g) ? g : [g]).every((c) => { const s = H[c.entity]; return !!s && (c.state || []).includes(s.state); }));
+      return ok ? "" : (r.reden || "Niet beschikbaar");
+    }
     _row(r, i) {
+      const reden = this._grijs(r);
+      if (reden && r.type !== "section") {
+        const inner = this._row(Object.assign({}, r, { beschikbaar: null }), i);
+        return "<div class='gr' inert aria-disabled='true'>" + inner + "<div class='grr'>" + esc(t(reden)) + "</div></div>";
+      }
       const H = this._hass.states;
       if (r.type === "section") return "<div class='sec'>" + esc(r.name || "") + "</div>";
       if (r.type === "actie") {
@@ -1545,7 +1705,7 @@
       }
       if (dom === "switch") return "<div class='f'>" + this._naam(r, i) + "<button class='tg" + (s.state === "on" ? " on" : "") + "' role='switch' aria-checked='" + (s.state === "on") + "' data-i='" + i + "'></button></div>";
       if (dom === "select") {
-        const opts = a.options || [], lab = r.labels || {};
+        const opts = a.options || [], lab = (r.labels_land && r.labels_land[this._land()]) || r.labels || {};
         if (opts.length <= 6) return "<div class='f'>" + this._naam(r, i) + "<div class='chips'>" + opts.map((o) => "<button class='chip" + (o === s.state ? " on" : "") + "' data-i='" + i + "' data-o='" + esc(o) + "'>" + esc(lab[o] || o) + "</button>").join("") + "</div></div>";
         return "<div class='f'>" + this._naam(r, i) + "<div class='stp' data-i='" + i + "' data-sel='1'><button data-dir='-1'>‹</button><b>" + esc(lab[s.state] || s.state) + "</b><button data-dir='1'>›</button></div></div>";
       }
@@ -1658,12 +1818,19 @@
     leren: "Batterijplan leert per uur van de dag hoeveel je huis gebruikt. Na 7 dagen is het klaar met leren. Daarna leert het glijdend door, zodat het met de seizoenen meegaat.\n\nDe **voorspelling** zegt hoe goed het geleerde verbruik het echte verbruik raakt, per blok van 3 uur:\n- wisselvallig: minder dan 55 %\n- redelijk: 55 % of meer\n- goed: 65 % of meer\n- zeer goed: 75 % of meer\n- uitstekend: 85 % of meer\n\nZolang er nog geen blok van 3 uur gemeten is, staat er: nog aan het meten.",
     hbc: "Batterijplan werkt alleen als HBC op **Dynamic** staat. Staat HBC op iets anders, dan wacht het plan en verandert Batterijplan niets. Het leren gaat gewoon door.",
     kwartier: "Wat Batterijplan voor het volgende kwartier besluit, naast wat HBC alleen zou doen:\n- **Laden van het net**: de batterij wordt van het net geladen.\n- **Ontladen**: de batterij levert aan het huis.\n- **Vasthouden**: de lading wordt bewaard voor een nog duurder moment.\n- **Terugleveren**: de batterij levert terug aan het net.\n- **Alleen zon / niets**: niet laden van het net en niet ontladen.\n\nIs het plan gelijk aan HBC, dan staat er dat het hetzelfde is.",
+    hbcvast: "Bij een vast contract zet Batterijplan HBC op **Self-consumption**: de batterij gebruikt eerst je eigen zonne-energie. Bij een dubbel tarief zet Batterijplan HBC in de daluren tijdelijk op **Charge** (bijladen van het net) en daarna weer terug.\n\nDit gebeurt alleen als Live aanstaat. Zet je Live uit, dan krijg je jouw eigen HBC-stand terug.",
+    tariefnu: "Wat een kWh je nu kost volgens je vaste contract: het normaaltarief of het daltarief, met de prijzen die je zelf hebt ingevuld. Bij een dubbel tarief staat in de briefing wanneer het tarief wisselt.",
     regels: "De vier regels waarmee Batterijplan mag bijsturen. Je zet ze aan of uit onder Instellingen, tabblad Regels.\n\nStaat een regel uit, dan doet Batterijplan op dat punt wat HBC doet.",
   };
   const VOORSPELLING_KLEUR = { uitstekend: "#1b5e20", "zeer goed": "#2e7d32", goed: "#43a047", redelijk: "#9ccc65" };
   // action letters of the plan (L charge from grid, O discharge, H hold, Z solar only, V feed in) -> Dutch source text
   const ACT_NAAM = { L: "laden van het net", O: "ontladen", H: "vasthouden", V: "terugleveren", Z: "alleen zon / niets" };
   const REGELS = [["laden", "laden"], ["ontladen", "ontladen"], ["vasthouden", "vasthouden"], ["terugleveren", "terugleveren"]];
+  // 2.0.0-dev1: words for the normal / off-peak rate per language and Home Assistant country (nl / be / de, else nl)
+  const VAST_W = { nl: { nl: { n: "normaaltarief", d: "daltarief", e: "enkeltarief", x: "dubbeltarief" }, be: { n: "dagprijs", d: "nachtprijs", e: "enkelvoudig", x: "tweevoudig" }, de: { n: "HT", d: "NT", e: "Eintarif", x: "Zweitarif" } },
+    en: { nl: { n: "normal rate", d: "off-peak rate", e: "single rate", x: "dual rate" }, be: { n: "day price", d: "night price", e: "single rate", x: "dual rate" }, de: { n: "HT", d: "NT", e: "single rate", x: "dual rate" } },
+    de: { nl: { n: "Normaltarif", d: "Nebenzeittarif", e: "Eintarif", x: "Zweitarif" }, be: { n: "Tagpreis", d: "Nachtpreis", e: "Eintarif", x: "Zweitarif" }, de: { n: "HT", d: "NT", e: "Eintarif", x: "Zweitarif" } } };
+  const vastW = (hass) => { const c = String((hass.config && hass.config.country) || "").toLowerCase(); return (VAST_W[LANG] || VAST_W.en)[["nl", "be", "de"].includes(c) ? c : "nl"]; };
   class BpStatus extends HTMLElement {
     setConfig(c) { this._config = Object.assign({ logo: BASE + "logo-neon-ademend.webp?v=2" }, c || {}); this._sig = ""; if (this._hass) this._render(); }
     set hass(h) {
@@ -1672,7 +1839,7 @@
       const ids = ["switch.batterijplan_live", "sensor.batterijplan_verbruiksprofiel", "sensor.batterijplan_voorspelling", "input_select.house_battery_strategy", "sensor.batterijplan_advies_zon_na_goedkoop_laden", "input_number.house_battery_solar_reserved_for_house", this._pid]
         .concat(REGELS.map((r) => "switch.batterijplan_regel_" + r[0]));
       const pa = (h.states[this._pid] || {}).attributes || {};
-      const sig = ids.map((id) => (h.states[id] || {}).state).join("|") + pa.actie + pa.hbc_actie + pa.komend_kwartier + "|" + pa.versie + LANG;
+      const sig = ids.map((id) => (h.states[id] || {}).state).join("|") + pa.actie + pa.hbc_actie + pa.komend_kwartier + "|" + pa.versie + LANG + "|" + pa.contract + (pa.vast ? pa.vast.prijs_nu + "|" + pa.vast.dal_nu + "|" + pa.vast.strategie : "");
       if (sig !== this._sig) { this._sig = sig; this._render(); }
     }
     getCardSize() { return 5; }
@@ -1691,6 +1858,12 @@
       const dyn = st("input_select.house_battery_strategy") === "Dynamic";
       const ic = (n) => "<img src='" + BASE + n + ".png?v=1' alt=''>";
       const pa = at(this._pid), versie = pa.versie;
+      // Fixed contract: no plan, so the card tells about the tariffs and the strategy instead (Dynamic: everything as before)
+      const vd = pa.contract && pa.contract !== "dynamisch" && pa.vast && typeof pa.vast === "object" ? pa.vast : null;
+      const vw = vastW(this._hass), strat = st("input_select.house_battery_strategy") || "—";
+      const vStrat = !vd ? "" : esc(strat) + (vd.tarief === "dubbel" && strat === vd.strategie ? " (" + esc(strat === "Charge" || vd.dal_nu ? vw.d : vw.n) + ")" +
+        (vd.dal_nu && strat !== "Charge" && vd.laden && !vd.laden.actief ? " · " + esc(t("laden loont niet")) : "") : "");
+      const vPrijs = !vd ? "" : "<b>€ " + esc(nl(Number(vd.prijs_nu), 2)) + "</b> — " + esc(vd.tarief === "dubbel" ? (vd.dal_nu ? vw.d : vw.n) : vw.e);
       const leren = prima ? "<b>" + esc(t("klaar met leren")) + "</b> · " + esc(t("voorspelling")) + " " + vtxt
         : "<b>" + esc(t("aan het leren")) + "</b> · " + esc(t("dag")) + " " + dag + " " + esc(t("van")) + " 7 · " + esc(t("voorspelling")) + " " + vtxt +
           (gezien >= 24 ? "" : " · " + gezien + " " + esc(t("van 24 uren al gezien")));
@@ -1710,12 +1883,13 @@
         ".r{display:grid;grid-template-columns:24px minmax(90px,.8fr) minmax(0,1.6fr) 20px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14px}" +
         ".r img{height:22px}.r .n{color:var(--secondary-text-color)}.r .i{--mdc-icon-size:18px}</style>" +
         "<ha-card><div class='kop'><img class='logo' src='" + esc(this._config.logo) + "' alt='' title='" + esc(t("Seizoen")) + "'><span class='tt'>Batterijplan" + (versie ? "<small>v" + esc(versie) + "</small>" : "") + "</span></div>" +
-        "<div class='vraag'>" + esc(t("Haalt de batterij meer uit de duurste kwartieren dan HBC alleen?")) + "</div>" +
+        "<div class='vraag'>" + esc(t(vd ? "Wat doet de batterij bij jouw vaste contract?" : "Haalt de batterij meer uit de duurste kwartieren dan HBC alleen?")) + "</div>" +
         rij(ic(live ? "vinkje-cirkel" : "spook"), esc(t("Modus")), live ? "<b>" + esc(t("live")) + "</b> — " + esc(t("stuurt HBC")) : "<b>" + esc(t("schaduw")) + "</b> — " + esc(t("rekent mee, stuurt niet")), "modus") +
         rij(ic(prima ? "vinkje-cirkel" : "zandloper"), esc(t("Verbruik leren")), leren, "leren") +
-        rij(ic(dyn ? "vinkje-cirkel" : "zandloper"), esc(t("HBC-strategie")), esc(st("input_select.house_battery_strategy") || "—") + (dyn ? "" : " — " + esc(t("plan wacht tot Dynamic"))), "hbc") +
-        rij(ic("kalender-klok"), esc(t("Komend kwartier")), kw, "kwartier") +
-        (() => { const ad = S["sensor.batterijplan_advies_zon_na_goedkoop_laden"], ing = Number(st("input_number.house_battery_solar_reserved_for_house")); const av7 = this._adv7 || {}; const uurNu = Math.floor(Date.now() / 3600000); if (av7.uur !== uurNu && !av7.bezig) { this._adv7 = { uur: av7.uur, n: av7.n, v: av7.v, bezig: true }; this._hass.callWS({ type: "recorder/statistics_during_period", start_time: new Date(Date.now() - 7 * 86400000).toISOString(), statistic_ids: ["sensor.batterijplan_advies_zon_na_goedkoop_laden"], period: "day", types: ["mean"] }).then((r) => { const l = (r["sensor.batterijplan_advies_zon_na_goedkoop_laden"] || []).map((x) => Number(x.mean)).filter((v) => Number.isFinite(v)); this._adv7 = { uur: uurNu, n: l.length, v: l.length ? l.reduce((p, q) => p + q, 0) / l.length : null }; this._sig = ""; this._render(); }).catch(() => { this._adv7 = { uur: uurNu, n: 0, v: null }; }); } const meet = !(this._adv7 && this._adv7.n >= 7); const av = !ad || meet ? NaN : Number(this._adv7.v); const ok = Number.isFinite(av) && Number.isFinite(ing); const kl = !ok ? "" : Math.abs(av - ing) < 1 ? "#66bb6a" : "#ff9800"; const w = "<b>" + (Number.isFinite(ing) ? esc(nl(ing, Number.isInteger(ing) ? 0 : 1)) + " kWh" : "—") + "</b> " + esc(t("ingesteld")) + " · " + esc(t("advies")) + " <b" + (kl ? " style='color:" + kl + "'" : "") + ">" + (Number.isFinite(av) ? esc(nl(Math.round(av * 2) / 2, 1)) + " kWh" : "– –") + "</b>"; return rij(ic("schuifregelaars"), esc(t("Advies huisverbruik")), w, "advies"); })() +
+        (vd ? rij(ic(strat === vd.strategie ? "vinkje-cirkel" : "zandloper"), esc(t("HBC-strategie")), vStrat, "hbcvast")
+          : rij(ic(dyn ? "vinkje-cirkel" : "zandloper"), esc(t("HBC-strategie")), esc(st("input_select.house_battery_strategy") || "—") + (dyn ? "" : " — " + esc(t("plan wacht tot Dynamic"))), "hbc")) +
+        (vd ? rij(ic("kalender-klok"), esc(t("Prijs nu")), vPrijs, "tariefnu") : rij(ic("kalender-klok"), esc(t("Komend kwartier")), kw, "kwartier")) +
+        (vd ? "" : (() => { const ad = S["sensor.batterijplan_advies_zon_na_goedkoop_laden"], ing = Number(st("input_number.house_battery_solar_reserved_for_house")); const av7 = this._adv7 || {}; const uurNu = Math.floor(Date.now() / 3600000); if (av7.uur !== uurNu && !av7.bezig) { this._adv7 = { uur: av7.uur, n: av7.n, v: av7.v, bezig: true }; this._hass.callWS({ type: "recorder/statistics_during_period", start_time: new Date(Date.now() - 7 * 86400000).toISOString(), statistic_ids: ["sensor.batterijplan_advies_zon_na_goedkoop_laden"], period: "day", types: ["mean"] }).then((r) => { const l = (r["sensor.batterijplan_advies_zon_na_goedkoop_laden"] || []).map((x) => Number(x.mean)).filter((v) => Number.isFinite(v)); this._adv7 = { uur: uurNu, n: l.length, v: l.length ? l.reduce((p, q) => p + q, 0) / l.length : null }; this._sig = ""; this._render(); }).catch(() => { this._adv7 = { uur: uurNu, n: 0, v: null }; }); } const meet = !(this._adv7 && this._adv7.n >= 7); const av = !ad || meet ? NaN : Number(this._adv7.v); const ok = Number.isFinite(av) && Number.isFinite(ing); const kl = !ok ? "" : Math.abs(av - ing) < 1 ? "#66bb6a" : "#ff9800"; const w = "<b>" + (Number.isFinite(ing) ? esc(nl(ing, Number.isInteger(ing) ? 0 : 1)) + " kWh" : "—") + "</b> " + esc(t("ingesteld")) + " · " + esc(t("advies")) + " <b" + (kl ? " style='color:" + kl + "'" : "") + ">" + (Number.isFinite(av) ? esc(nl(Math.round(av * 2) / 2, 1)) + " kWh" : "– –") + "</b>"; return rij(ic("schuifregelaars"), esc(t("Advies huisverbruik")), w, "advies"); })()) +
         "</ha-card>";
       this.shadowRoot.querySelectorAll("[data-info]").forEach((b) => b.addEventListener("click", () => BpVelden.prototype._uitleg.call(this, ST_INFO[b.dataset.info])));
       // klik op het logo: seizoensplaat groot (huisstijl, zoals HESC)

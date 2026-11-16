@@ -6,9 +6,9 @@
 //   batterijplan-dagen-card      opbrengst per dag: label, trend, bedrag; vandaag (verwacht) bovenaan, nieuw naar oud
 (function () {
   var TXT = {
-    nl: { loc: 'nl-NL', live: 'Live', schaduw: 'Schaduw', strat: 'HBC', voorsp: 'voorspelling', kw: 'Kwartier', zelfde: 'hetzelfde als HBC', zou: 'HBC zou', nu: 'Nu', dag: 'Dag', trend: 'Trend', opl: 'Opgeleverd', vandaag: 'Vandaag', verwacht: 'verwacht', alb: 'al bespaard', gem: 'Gemiddeld per dag', beste: 'Beste dag', leg: '▲ meer dan de dag ervoor · ▼ minder · = ongeveer gelijk (±10 %)', titelL: 'Besparing vandaag', legL: 'doorgetrokken = al bespaard · gestippeld = verwacht', geen: 'Nog geen gegevens', wacht: 'Wacht op het plan', act: { L: 'laden van het net', O: 'ontladen', H: 'vasthouden', V: 'terugleveren', Z: 'zon / niets' } },
-    en: { loc: 'en-GB', live: 'Live', schaduw: 'Shadow', strat: 'HBC', voorsp: 'forecast', kw: 'Quarter', zelfde: 'same as HBC', zou: 'HBC would', nu: 'Now', dag: 'Day', trend: 'Trend', opl: 'Earned', vandaag: 'Today', verwacht: 'expected', alb: 'saved so far', gem: 'Average per day', beste: 'Best day', leg: '▲ more than the day before · ▼ less · = about the same (±10 %)', titelL: 'Savings today', legL: 'solid = saved so far · dashed = expected', geen: 'No data yet', wacht: 'Waiting for the plan', act: { L: 'charge from grid', O: 'discharge', H: 'hold', V: 'feed in', Z: 'solar / nothing' } },
-    de: { loc: 'de-DE', live: 'Live', schaduw: 'Schatten', strat: 'HBC', voorsp: 'Prognose', kw: 'Viertelstunde', zelfde: 'wie HBC', zou: 'HBC würde', nu: 'Jetzt', dag: 'Tag', trend: 'Trend', opl: 'Ertrag', vandaag: 'Heute', verwacht: 'erwartet', alb: 'bisher gespart', gem: 'Durchschnitt pro Tag', beste: 'Bester Tag', leg: '▲ mehr als am Vortag · ▼ weniger · = ungefähr gleich (±10 %)', titelL: 'Ersparnis heute', legL: 'durchgezogen = bisher gespart · gestrichelt = erwartet', geen: 'Noch keine Daten', wacht: 'Warte auf den Plan', act: { L: 'aus dem Netz laden', O: 'entladen', H: 'halten', V: 'einspeisen', Z: 'Solar / nichts' } }
+    nl: { loc: 'nl-NL', live: 'Live', schaduw: 'Schaduw', strat: 'HBC', voorsp: 'voorspelling', kw: 'Kwartier', zelfde: 'hetzelfde als HBC', zou: 'HBC zou', nu: 'Nu', dag: 'Dag', trend: 'Trend', opl: 'Opgeleverd', vandaag: 'Vandaag', verwacht: 'verwacht', alb: 'al bespaard', gem: 'Gemiddeld per dag', beste: 'Beste dag', leg: '▲ meer dan de dag ervoor · ▼ minder · = ongeveer gelijk (±10 %)', titelL: 'Besparing vandaag', legL: 'doorgetrokken = al bespaard · gestippeld = verwacht', titelV: 'Waarde van de batterij vandaag', legV: 'doorgetrokken = tot nu, tegen jouw prijzen', geen: 'Nog geen gegevens', wacht: 'Wacht op het plan', act: { L: 'laden van het net', O: 'ontladen', H: 'vasthouden', V: 'terugleveren', Z: 'zon / niets' } },
+    en: { loc: 'en-GB', live: 'Live', schaduw: 'Shadow', strat: 'HBC', voorsp: 'forecast', kw: 'Quarter', zelfde: 'same as HBC', zou: 'HBC would', nu: 'Now', dag: 'Day', trend: 'Trend', opl: 'Earned', vandaag: 'Today', verwacht: 'expected', alb: 'saved so far', gem: 'Average per day', beste: 'Best day', leg: '▲ more than the day before · ▼ less · = about the same (±10 %)', titelL: 'Savings today', legL: 'solid = saved so far · dashed = expected', titelV: 'Value of the battery today', legV: 'solid = until now, at your prices', geen: 'No data yet', wacht: 'Waiting for the plan', act: { L: 'charge from grid', O: 'discharge', H: 'hold', V: 'feed in', Z: 'solar / nothing' } },
+    de: { loc: 'de-DE', live: 'Live', schaduw: 'Schatten', strat: 'HBC', voorsp: 'Prognose', kw: 'Viertelstunde', zelfde: 'wie HBC', zou: 'HBC würde', nu: 'Jetzt', dag: 'Tag', trend: 'Trend', opl: 'Ertrag', vandaag: 'Heute', verwacht: 'erwartet', alb: 'bisher gespart', gem: 'Durchschnitt pro Tag', beste: 'Bester Tag', leg: '▲ mehr als am Vortag · ▼ weniger · = ungefähr gleich (±10 %)', titelL: 'Ersparnis heute', legL: 'durchgezogen = bisher gespart · gestrichelt = erwartet', titelV: 'Wert der Batterie heute', legV: 'durchgezogen = bis jetzt, zu deinen Preisen', geen: 'Noch keine Daten', wacht: 'Warte auf den Plan', act: { L: 'aus dem Netz laden', O: 'entladen', H: 'halten', V: 'einspeisen', Z: 'Solar / nichts' } }
   };
   var GROEN = '#1dab52', ORANJE = '#f59e0b', GRIJS = 'var(--secondary-text-color)';
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -73,7 +73,7 @@
       rest = exp.length ? exp[exp.length - 1][1] : 0;
     }
     var tot = (bespaard !== null && rest !== null) ? bespaard + rest : null;
-    return { s: s, a: a, pts: pts, bespaard: bespaard, exp: exp, rest: rest, tot: tot, t0: pts.length ? Number(pts[0][0]) * 1000 : null };
+    return { vast: !!(a.contract && a.contract !== 'dynamisch' && a.vast), s: s, a: a, pts: pts, bespaard: bespaard, exp: exp, rest: rest, tot: tot, t0: pts.length ? Number(pts[0][0]) * 1000 : null };
   }
 
   class Basis extends HTMLElement {
@@ -137,7 +137,7 @@
         '<line x1="' + X(now).toFixed(1) + '" x2="' + X(now).toFixed(1) + '" y1="' + T + '" y2="' + (H - B) + '" stroke="#14b8d4" stroke-width="1.5"/>' +
         '<text x="' + (X(now) + 4).toFixed(1) + '" y="' + (T + 10) + '" font-size="11" fill="#14b8d4">' + esc(t.nu) + '</text>' +
         (c.tot !== null ? '<text x="' + (W - R - 2) + '" y="' + (Y(c.bespaard + c.rest) - 8).toFixed(1) + '" text-anchor="end" font-size="13" font-weight="600" fill="' + geld(c.tot, t).kl + '">' + esc(geld(c.tot, t).tx) + '</text>' : '') + '</svg>';
-      this.shadowRoot.innerHTML = '<style>ha-card{padding:12px 14px}.k{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap}.tt{font-size:16px;font-weight:600;color:var(--primary-text-color)}.s{font-size:12px;color:var(--secondary-text-color)}</style><ha-card><div class="k"><span class="tt">' + esc(t.titelL) + '</span><span class="s">' + esc(t.legL) + '</span></div>' + svg + '</ha-card>';
+      this.shadowRoot.innerHTML = '<style>ha-card{padding:12px 14px}.k{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap}.tt{font-size:16px;font-weight:600;color:var(--primary-text-color)}.s{font-size:12px;color:var(--secondary-text-color)}</style><ha-card><div class="k"><span class="tt">' + esc(c.vast ? t.titelV : t.titelL) + '</span><span class="s">' + esc(c.vast ? t.legV : t.legL) + '</span></div>' + svg + '</ha-card>';
     }
   }
 
@@ -147,6 +147,7 @@
       var h = this._h; if (!h || !this.shadowRoot) return;
       var t = tx(this._c), c = cijfers(h), rows = [];
       if (c.tot !== null) rows.push({ lab: t.vandaag + ' (' + t.verwacht + ')', sub: t.alb + ' ' + geld(c.bespaard, t).tx, v: c.tot, nu: true });
+      else if (c.vast && c.bespaard !== null) rows.push({ lab: t.vandaag, v: c.bespaard, nu: true });  // Fixed contract: no expectation, today so far
       (DATA.dagen || []).slice().sort(function (p, q) { return q.d - p.d; }).forEach(function (x) { rows.push({ lab: x.d.toLocaleDateString(t.loc, { weekday: 'short', day: 'numeric', month: 'numeric' }), v: x.v }); });
       if (!rows.length) { this.shadowRoot.innerHTML = '<ha-card style="padding:12px 14px">' + esc(t.geen) + '</ha-card>'; return; }
       var mx = Math.max.apply(null, rows.slice(0, 8).map(function (r) { return Math.abs(r.v); }).concat([0.01]));

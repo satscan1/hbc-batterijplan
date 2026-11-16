@@ -32,8 +32,10 @@ def test_service_calls_use_fixed_targets():
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "async_call":
                 a = node.args
-                assert isinstance(a[0], ast.Constant) and a[0].value in ("input_select", "input_number", "logbook"), f"{f}:{node.lineno} domain"
-                assert isinstance(a[1], ast.Constant), f"{f}:{node.lineno} service"
+                assert isinstance(a[0], ast.Constant) and a[0].value in ("input_select", "input_number", "input_boolean", "logbook"), f"{f}:{node.lineno} domain"
+                if a[0].value == "input_boolean":  # 2.0.0-dev1: only the HBC import-limit switch (Flanders), a fixed constant
+                    assert "HBC_LIMIT_IMPORT_ON" in ast.unparse(node), f"{f}:{node.lineno} input_boolean target"
+                assert isinstance(a[1], ast.Constant) or (isinstance(a[1], ast.IfExp) and isinstance(a[1].body, ast.Constant) and isinstance(a[1].orelse, ast.Constant)), f"{f}:{node.lineno} service"
                 text = ast.unparse(node)
                 assert "self.settings" not in text and "setting_text" not in text and "CONF_" not in text, f"{f}:{node.lineno} user setting in service call"
     c = src("coordinator.py")

@@ -54,6 +54,11 @@ The form:
 
 Several inverters and no sensor with the total? Create a helper: *Settings → Devices & services → Helpers → Create helper → Combine the state of several sensors*, type **Sum**.
 
+**Example: two unequal batteries** (5.12 kWh at 2400 W and 7.68 kWh at 2500 W)
+- *Battery power sensor*: a helper of type **Sum** over the two power sensors, so the power **right now**. Do not add up the maximum power (2400 + 2500).
+- *Usable capacity*: 5.12 + 7.68 = 12.8 kWh, minus the lower limit in HBC. With a 12 % lower limit about 11.3 kWh.
+- A combined SoC helper is not needed; Batterijplan does not ask for one.
+
 > As long as the usable capacity is not filled in, there is no plan and Batterijplan does nothing.
 
 You get an error if the grid sensor and the battery sensor are the same one.

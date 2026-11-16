@@ -54,6 +54,11 @@ Het formulier:
 
 Meerdere omvormers en geen sensor met het totaal? Maak een helper: *Instellingen → Apparaten & diensten → Helpers → Helper maken → De status van meerdere sensoren combineren*, type **Som**.
 
+**Voorbeeld: twee ongelijke batterijen** (5,12 kWh met 2400 W en 7,68 kWh met 2500 W)
+- *Sensor batterijvermogen*: een helper van het type **Som** over de twee vermogenssensoren, dus het vermogen van **nu**. Tel niet het maximale vermogen (2400 + 2500) op.
+- *Bruikbare capaciteit*: 5,12 + 7,68 = 12,8 kWh, min de ondergrens in HBC. Bij 12 % ondergrens ongeveer 11,3 kWh.
+- Een gecombineerde SoC-helper is niet nodig; Batterijplan vraagt er niet om.
+
 > Zolang de bruikbare capaciteit niet is ingevuld, is er geen plan en doet Batterijplan niets.
 
 Je krijgt een foutmelding als de netsensor en de batterijsensor dezelfde sensor zijn.

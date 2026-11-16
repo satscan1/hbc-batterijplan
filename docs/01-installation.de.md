@@ -54,6 +54,11 @@ Das Formular:
 
 Mehrere Wechselrichter und kein Sensor mit der Summe? Lege einen Helfer an: *Einstellungen → Geräte & Dienste → Helfer → Helfer erstellen → Status mehrerer Sensoren kombinieren*, Typ **Summe**.
 
+**Beispiel: zwei ungleiche Batterien** (5,12 kWh mit 2400 W und 7,68 kWh mit 2500 W)
+- *Sensor Batterieleistung*: ein Helfer vom Typ **Summe** über die beiden Leistungssensoren, also die Leistung von **jetzt**. Nicht die maximale Leistung (2400 + 2500) addieren.
+- *Nutzbare Kapazität*: 5,12 + 7,68 = 12,8 kWh, abzüglich der Untergrenze in HBC. Bei 12 % Untergrenze etwa 11,3 kWh.
+- Ein kombinierter SoC-Helfer ist nicht nötig; Batterijplan fragt nicht danach.
+
 > Solange die nutzbare Kapazität nicht ausgefüllt ist, gibt es keinen Plan, und Batterijplan tut nichts.
 
 Du bekommst eine Fehlermeldung, wenn Netz- und Batteriesensor derselbe Sensor sind.

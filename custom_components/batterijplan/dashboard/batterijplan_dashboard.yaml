@@ -66,6 +66,11 @@ views:
                 As long as this is not filled in, the plan does nothing.
             - entity: select.batterijplan_hbc_prijzen
               name: Prices from HBC
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               labels:
                 kaal: raw (kaal)
               info: |-
@@ -78,29 +83,189 @@ views:
                 The day your contract year starts. The year does not matter.
 
                 The earnings "this contract year" count from this date and start again every contract year.
+          - naam: Contract
+            sub: First fixed or dynamic, with fixed the rate
+            rows:
+            - entity: select.batterijplan_contract_soort
+              name: Kind of contract
+              labels:
+                vast: Fixed
+                dynamisch: Dynamic
+              info: |-
+                **Fixed:** HBC goes to Self-consumption, Batterijplan makes no plan on price. You enter your prices.
+
+                **Dynamic:** as before: HBC on Dynamic and Batterijplan makes the plan.
+
+                Batterijplan only changes HBC while Live is on and gives your own setting back when Live goes off.
+            - entity: select.batterijplan_tarief
+              name: Rate
+              name_land:
+                nl: Rate
+                be: Rate
+                de: Rate
+              labels:
+                enkel: Single rate
+                dubbel: Dual rate
+              labels_land:
+                nl:
+                  enkel: Single rate
+                  dubbel: Dual rate
+                be:
+                  enkel: Single rate
+                  dubbel: Dual rate
+                de:
+                  enkel: Single rate
+                  dubbel: Dual rate
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+              reden: Only with a fixed contract
+              info: |-
+                **Single rate:** one price all day.
+
+                **Dual rate:** a normal rate and an off-peak rate. In the off-peak hours Batterijplan puts HBC on Charge for a while to top up, but only when the difference between the normal rate and the off-peak rate is at least HBC's threshold (the same threshold as for Dynamic, Threshold delta); otherwise HBC stays on Self-consumption. With Flanders on, charging in the off-peak hours is always allowed, below the target limit. In the Netherlands the night, the weekend and public holidays count as off-peak.
+            - entity: number.batterijplan_prijs_vast
+              name: Price per kWh
+              name_land:
+                nl: Price per kWh
+                be: Price per kWh
+                de: Price per kWh
+              kind: stepper
+              step: 0.001
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - enkel
+              reden: Only with Fixed and a single rate
+              info: "What you pay per kWh, including taxes and VAT. Suppliers quote five decimals: tap the number to type it exactly."
+            - entity: number.batterijplan_prijs_dag
+              name: Normal rate per kWh
+              name_land:
+                nl: Normal rate per kWh
+                be: Day price per kWh
+                de: HT price per kWh
+              kind: stepper
+              step: 0.001
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Only with Fixed and a dual rate
+              info: Your normal rate (day price, HT) per kWh, including taxes and VAT.
+            - entity: number.batterijplan_prijs_nacht
+              name: Off-peak rate per kWh
+              name_land:
+                nl: Off-peak rate per kWh
+                be: Night price per kWh
+                de: NT price per kWh
+              kind: stepper
+              step: 0.001
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Only with Fixed and a dual rate
+              info: Your off-peak rate (night price, NT) per kWh, including taxes and VAT. Together with the normal rate it values what the battery earns in What does it earn.
+            - entity: switch.batterijplan_dal_weekend
+              name: Weekend and public holidays off-peak
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Only with Fixed and a dual rate
+              info: "On: Saturday, Sunday and public holidays (NL: 1 Jan, Easter Monday, King's Day, Ascension Day, Whit Monday, 25 and 26 Dec) count as off-peak all day. Default on in the Netherlands, off in Belgium."
+            - entity: number.batterijplan_nacht_van
+              name: Night starts (hour)
+              kind: stepper
+              step: 1
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Only with Fixed and a dual rate
+              info: "From this hour it is off-peak. Default: Netherlands 23, Belgium 22. Enexis (part of Noord-Brabant and Limburg) starts at 21."
+            - entity: number.batterijplan_nacht_tot
+              name: Night ends (hour)
+              kind: stepper
+              step: 1
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Only with Fixed and a dual rate
+              info: Until this hour it is off-peak; then HBC goes back to Self-consumption. Default 7. In Belgium HBC only tops up when the expected house use leaves room under the target limit, and the import limit keeps the charging below it.
+            - entity: number.batterijplan_terugleverprijs
+              name: Feed-in price per kWh
+              kind: stepper
+              step: 0.001
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+              reden: Only with a fixed contract
+              info: "What you get per kWh for electricity fed back. HBC has no setting for this, so you enter it here. It counts in What does it earn: solar energy the battery stores would otherwise have earned this price."
           - naam: Rules
             sub: What Batterijplan may steer
             rows:
             - entity: switch.batterijplan_regel_laden
               name: Extra charging from the grid
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               info: |-
                 **On:** Batterijplan charges extra from the grid when a shortage is coming for expensive quarters, and in a cheap quarter it does not charge from the grid when that is not needed.
 
                 **Off:** like HBC: only charge in the cheap hours of HBC, and then always.
             - entity: switch.batterijplan_regel_ontladen
               name: Discharging outside HBC hours
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               info: |-
                 **On:** also discharge in quarters that are at least the HBC threshold more expensive, even if HBC does not call them expensive.
 
                 **Off:** like HBC: only discharge in the expensive hours of HBC.
             - entity: switch.batterijplan_regel_vasthouden
               name: Holding for later
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               info: |-
                 **On:** keep charge for a quarter that is at least the HBC threshold more expensive.
 
                 **Off:** like HBC: discharge straight away in an expensive quarter.
             - entity: switch.batterijplan_regel_terugleveren
               name: Feeding in
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               info: |-
                 **On:** feed in what is certainly left over, only when the feed-in payment is at least the HBC threshold higher than the cheapest purchase later on.
 
@@ -116,6 +281,11 @@ views:
                 Start with a small margin, for example 0.3 kWh. If the battery often runs empty too early, raise the margin.
             - entity: number.batterijplan_opslag
               name: Energy tax + purchase (excl. VAT)
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               kind: stepper
               step: 0.001
               info: |-
@@ -124,12 +294,22 @@ views:
                 Tap the number to type it exactly. With Prices from HBC = all-in this is not needed.
             - entity: number.batterijplan_btw
               name: VAT
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               info: |-
                 The VAT percentage Batterijplan adds to the purchase price.
 
                 In the Netherlands that is 21 %. If Prices from HBC is set to all-in, this is not needed.
             - entity: number.batterijplan_teruglever_toeslag
               name: Feed-in supplement (excl. VAT)
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               kind: stepper
               step: 0.001
               info: |-
@@ -138,12 +318,22 @@ views:
                 Example: 0.02 means market + € 0.02 per kWh. You can find this in the terms of your contract.
             - entity: number.batterijplan_teruglever_bonus
               name: Daytime feed-in bonus
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               info: |-
                 Extra percentage you receive during the day (with sun, or between 08:00 and 17:00) on top of the feed-in payment, when that is positive.
 
                 Example: 10 % means the payment is 10 % higher in the daytime. If your contract has no bonus, set this to 0.
             - entity: switch.batterijplan_hbc_auto
               name: Auto-adjust HBC settings
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
               info: |-
                 **Off (default):** Batterijplan changes nothing in HBC. Under HBC advice you only see the advice.
 
@@ -156,6 +346,32 @@ views:
                 **On:** every night the previous day is measured: what the expensive quarters needed and what another capacity would have earned. The Capacity button then sits on the right of the row.
 
                 **Off:** no new days are measured and the button disappears. Everything already measured is kept (up to 5 years) and comes back as soon as you switch it on again.
+          - naam: Flanders
+            sub: Capacity tariff (Flanders), everything in kW
+            rows:
+            - entity: switch.batterijplan_vlaanderen
+              name: Flanders (capacity tariff)
+              info: "**Off (default).** On: Batterijplan calculates every quarter for the Flemish capacity tariff, keeps the monthly peak, sets the HBC import limit (only while Live is on) and shows all powers in kW. This switch is independent of the Home Assistant country."
+            - entity: number.batterijplan_capaciteitstarief
+              name: Capacity tariff (EUR/kW/year)
+              kind: stepper
+              step: 1
+              beschikbaar:
+              - - entity: switch.batterijplan_vlaanderen
+                  state:
+                  - "on"
+              reden: Only with Flanders on
+              info: What your grid operator charges per kW of your average monthly peak per year. Default 55.
+            - entity: number.batterijplan_eigen_grens
+              name: Own limit (kW, 0 = none)
+              kind: stepper
+              step: 0.1
+              beschikbaar:
+              - - entity: switch.batterijplan_vlaanderen
+                  state:
+                  - "on"
+              reden: Only with Flanders on
+              info: "Optional: your own upper limit for grid import in kW. The target limit is never lower than this value, than 2.5 kW or than your monthly peak so far."
       - naam: Sensors
         melding: sensoren
         kaarten:
@@ -245,6 +461,12 @@ views:
           - entity: sensor.batterijplan_huisverbruik
             name: House use now
             info: Grid power + solar power + battery power - charger. Should roughly match what your house really uses, and is never negative.
+      - naam: Peak
+        toon: switch.batterijplan_vlaanderen
+        breed: 820
+        kaarten:
+        - type: custom:batterijplan-kwartier
+        - type: custom:batterijplan-piek
       - naam: Capacity
         experiment: true
         toon: switch.batterijplan_experiment_capaciteit

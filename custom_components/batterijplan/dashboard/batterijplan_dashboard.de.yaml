@@ -66,6 +66,11 @@ views:
                 Solange dies nicht ausgefüllt ist, tut der Plan nichts.
             - entity: select.batterijplan_hbc_prijzen
               name: Preise von HBC
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               labels:
                 kaal: rein (kaal)
               info: |-
@@ -78,29 +83,189 @@ views:
                 Der Tag, an dem dein Vertragsjahr beginnt. Das Jahr spielt keine Rolle.
 
                 Der Ertrag "dieses Vertragsjahr" zählt ab diesem Datum und beginnt jedes Vertragsjahr neu.
+          - naam: Vertrag
+            sub: Erst fest oder dynamisch, bei fest der Tarif
+            rows:
+            - entity: select.batterijplan_contract_soort
+              name: Vertragsart
+              labels:
+                vast: Fest
+                dynamisch: Dynamisch
+              info: |-
+                **Fest:** HBC geht auf Self-consumption, Batterijplan macht keinen Plan nach Preis. Du trägst deine Preise ein.
+
+                **Dynamisch:** wie bisher: HBC auf Dynamic und Batterijplan macht den Plan.
+
+                Batterijplan stellt HBC nur um, wenn Live an ist, und gibt deinen eigenen Stand zurück, wenn Live ausgeht.
+            - entity: select.batterijplan_tarief
+              name: Tarif
+              name_land:
+                nl: Tarif
+                be: Tarif
+                de: Tarif
+              labels:
+                enkel: Eintarif
+                dubbel: Zweitarif
+              labels_land:
+                nl:
+                  enkel: Eintarif
+                  dubbel: Zweitarif
+                be:
+                  enkel: Eintarif
+                  dubbel: Zweitarif
+                de:
+                  enkel: Eintarif
+                  dubbel: Zweitarif
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+              reden: Nur bei einem Festvertrag
+              info: |-
+                **Eintarif:** ein Preis den ganzen Tag.
+
+                **Zweitarif:** ein Normaltarif und ein Nebenzeittarif. In der Nebenzeit stellt Batterijplan HBC vorübergehend auf Charge, um nachzuladen, aber nur wenn der Unterschied zwischen Normal- und Nebenzeittarif mindestens die Schwelle von HBC beträgt (dieselbe Schwelle wie bei Dynamisch, Threshold delta); sonst bleibt HBC auf Self-consumption. Mit Flandern an ist Laden in der Nebenzeit immer erlaubt, unter der Zielgrenze. In den Niederlanden gelten Nacht, Wochenende und Feiertage als Nebenzeit.
+            - entity: number.batterijplan_prijs_vast
+              name: Preis pro kWh
+              name_land:
+                nl: Preis pro kWh
+                be: Preis pro kWh
+                de: Preis pro kWh
+              kind: stepper
+              step: 0.001
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - enkel
+              reden: Nur bei Fest mit Eintarif
+              info: "Was du pro kWh zahlst, inklusive Steuern und MwSt. Lieferanten nennen fünf Dezimalstellen: tippe auf die Zahl, um sie genau einzugeben."
+            - entity: number.batterijplan_prijs_dag
+              name: Normaltarif pro kWh
+              name_land:
+                nl: Normaltarif pro kWh
+                be: Tagpreis pro kWh
+                de: HT-Preis pro kWh
+              kind: stepper
+              step: 0.001
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Nur bei Fest mit Zweitarif
+              info: Dein Normaltarif (Tagpreis, HT) pro kWh, inklusive Steuern und MwSt.
+            - entity: number.batterijplan_prijs_nacht
+              name: Nebenzeittarif pro kWh
+              name_land:
+                nl: Nebenzeittarif pro kWh
+                be: Nachtpreis pro kWh
+                de: NT-Preis pro kWh
+              kind: stepper
+              step: 0.001
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Nur bei Fest mit Zweitarif
+              info: Dein Nebenzeittarif (Nachtpreis, NT) pro kWh, inklusive Steuern und MwSt. Zusammen mit dem Normaltarif bewertet er, was die Batterie einbringt.
+            - entity: switch.batterijplan_dal_weekend
+              name: Wochenende und Feiertage als Nebenzeit
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Nur bei Fest mit Zweitarif
+              info: "An: Samstag, Sonntag und Feiertage zählen den ganzen Tag als Nebenzeit. Standard an in den Niederlanden, aus in Belgien."
+            - entity: number.batterijplan_nacht_van
+              name: Nacht beginnt (Uhr)
+              kind: stepper
+              step: 1
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Nur bei Fest mit Zweitarif
+              info: "Ab dieser Uhrzeit ist Nebenzeit. Standard: Niederlande 23, Belgien 22. Enexis (Teil von Noord-Brabant und Limburg) beginnt um 21."
+            - entity: number.batterijplan_nacht_tot
+              name: Nacht endet (Uhr)
+              kind: stepper
+              step: 1
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+                - entity: select.batterijplan_tarief
+                  state:
+                  - dubbel
+              reden: Nur bei Fest mit Zweitarif
+              info: Bis zu dieser Uhrzeit ist Nebenzeit; danach geht HBC zurück auf Self-consumption. Standard 7. In Belgien lädt HBC nur nach, wenn der erwartete Hausverbrauch Platz unter der Zielgrenze lässt.
+            - entity: number.batterijplan_terugleverprijs
+              name: Einspeisevergütung pro kWh
+              kind: stepper
+              step: 0.001
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - vast
+              reden: Nur bei einem Festvertrag
+              info: "Was du pro kWh für eingespeisten Strom bekommst. HBC hat dafür keine eigene Einstellung, darum trägst du sie hier ein. Sie zählt beim Ertrag mit: Solarenergie, die die Batterie speichert, hätte sonst diese Vergütung gebracht."
           - naam: Regeln
             sub: Was Batterijplan nachsteuern darf
             rows:
             - entity: switch.batterijplan_regel_laden
               name: Zusätzliches Laden aus dem Netz
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               info: |-
                 **An:** Batterijplan lädt zusätzlich aus dem Netz, wenn später ein Mangel für teure Viertelstunden droht, und lädt in einer günstigen Viertelstunde nicht aus dem Netz, wenn das nicht nötig ist.
 
                 **Aus:** wie HBC: nur in den günstigen Stunden von HBC laden, und dann immer.
             - entity: switch.batterijplan_regel_ontladen
               name: Entladen außerhalb der HBC-Zeiten
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               info: |-
                 **An:** auch in Viertelstunden entladen, die mindestens die HBC-Schwelle teurer sind, auch wenn HBC sie nicht teuer nennt.
 
                 **Aus:** wie HBC: nur in den teuren Stunden von HBC entladen.
             - entity: switch.batterijplan_regel_vasthouden
               name: Halten für später
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               info: |-
                 **An:** Ladung für eine Viertelstunde aufbewahren, die mindestens die HBC-Schwelle teurer ist.
 
                 **Aus:** wie HBC: in einer teuren Viertelstunde sofort entladen.
             - entity: switch.batterijplan_regel_terugleveren
               name: Einspeisen
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               info: |-
                 **An:** einspeisen, was sicher übrig ist, nur wenn die Vergütung mindestens die HBC-Schwelle höher ist als der günstigste spätere Einkauf.
 
@@ -116,6 +281,11 @@ views:
                 Beginne mit einer kleinen Reserve, zum Beispiel 0,3 kWh. Wird die Batterie oft zu früh leer, erhöhe die Reserve.
             - entity: number.batterijplan_opslag
               name: Energiesteuer + Einkauf (ohne MwSt)
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               kind: stepper
               step: 0.001
               info: |-
@@ -124,12 +294,22 @@ views:
                 Tippe auf die Zahl, um sie genau einzugeben. Bei Preise von HBC = all-in ist dies nicht nötig.
             - entity: number.batterijplan_btw
               name: MwSt
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               info: |-
                 Der Mehrwertsteuersatz, den Batterijplan auf den Einkaufspreis rechnet.
 
                 In den Niederlanden sind das 21 %. Steht Preise von HBC auf all-in, ist das nicht nötig.
             - entity: number.batterijplan_teruglever_toeslag
               name: Einspeise-Zuschlag (ohne MwSt)
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               kind: stepper
               step: 0.001
               info: |-
@@ -138,12 +318,22 @@ views:
                 Beispiel: 0,02 bedeutet Börse + 0,02 € pro kWh. Das findest du in den Bedingungen deines Vertrags.
             - entity: number.batterijplan_teruglever_bonus
               name: Einspeise-Bonus tagsüber
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               info: |-
                 Zusätzlicher Prozentsatz, den du tagsüber (bei Sonne oder zwischen 08:00 und 17:00 Uhr) auf die Einspeisevergütung erhältst, wenn diese positiv ist.
 
                 Beispiel: 10 % bedeutet, dass die Vergütung tagsüber 10 % höher ist. Hat dein Vertrag keinen Bonus, setze dies auf 0.
             - entity: switch.batterijplan_hbc_auto
               name: HBC-Einstellungen automatisch anpassen
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
               info: |-
                 **Aus (Standard):** Batterijplan ändert nichts in HBC. Unter HBC-Empfehlung siehst du nur die Empfehlung.
 
@@ -156,6 +346,32 @@ views:
                 **An:** jede Nacht wird der Vortag gemessen: was die teuren Viertelstunden brauchten und was eine andere Kapazität gebracht hätte. Die Schaltfläche Kapazität steht dann rechts in der Reihe.
 
                 **Aus:** es werden keine neuen Tage gemessen und die Schaltfläche verschwindet. Alles bereits Gemessene bleibt gespeichert (bis zu 5 Jahre) und ist wieder da, sobald du es einschaltest.
+          - naam: Flandern
+            sub: Kapazitätstarif (Flandern), alles in kW
+            rows:
+            - entity: switch.batterijplan_vlaanderen
+              name: Flandern (Kapazitätstarif)
+              info: "**Aus (Standard).** An: Batterijplan rechnet jede Viertelstunde für den flämischen Kapazitätstarif, führt die Monatsspitze, setzt die Importgrenze von HBC (nur bei Live an) und zeigt alle Leistungen in kW. Der Schalter ist unabhängig vom Land von Home Assistant."
+            - entity: number.batterijplan_capaciteitstarief
+              name: Kapazitätstarif (EUR/kW/Jahr)
+              kind: stepper
+              step: 1
+              beschikbaar:
+              - - entity: switch.batterijplan_vlaanderen
+                  state:
+                  - "on"
+              reden: Nur mit Flandern an
+              info: Was dein Netzbetreiber pro kW deiner durchschnittlichen Monatsspitze pro Jahr berechnet. Standard 55.
+            - entity: number.batterijplan_eigen_grens
+              name: Eigene Grenze (kW, 0 = keine)
+              kind: stepper
+              step: 0.1
+              beschikbaar:
+              - - entity: switch.batterijplan_vlaanderen
+                  state:
+                  - "on"
+              reden: Nur mit Flandern an
+              info: "Optional: eine eigene Obergrenze für deinen Netzbezug in kW. Die Zielgrenze liegt nie darunter, nie unter 2,5 kW und nie unter deiner bisherigen Monatsspitze."
       - naam: Sensoren
         melding: sensoren
         kaarten:
@@ -247,6 +463,12 @@ views:
           - entity: sensor.batterijplan_huisverbruik
             name: Hausverbrauch jetzt
             info: Netzleistung + Solarleistung + Batterieleistung − Wallbox. Sollte ungefähr stimmen mit dem, was dein Haus wirklich verbraucht, und ist nie negativ.
+      - naam: Spitze
+        toon: switch.batterijplan_vlaanderen
+        breed: 820
+        kaarten:
+        - type: custom:batterijplan-kwartier
+        - type: custom:batterijplan-piek
       - naam: Kapazität
         experiment: true
         toon: switch.batterijplan_experiment_capaciteit

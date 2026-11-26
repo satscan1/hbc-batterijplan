@@ -171,6 +171,12 @@
       "batterijplan_regel_terugleveren": {
         "name": "Regel: terugleveren"
       },
+      "batterijplan_regel_elk_kwartier": {
+        "name": "Regel: laden in elk goedkoop kwartier"
+      },
+      "batterijplan_regel_verkoopreserve": {
+        "name": "Regel: verkoopreserve automatisch"
+      },
       "batterijplan_dal_weekend": {
         "name": "Weekend en feestdagen als daluren"
       },

@@ -123,6 +123,7 @@ def _day_input(base: plan.PlanInput, day: dict[str, Any], marks: list[str | None
         grid_step=GRID_STEP_KWH,
         prev_l_run=0,
         engine="dp",
+        end_floor=0.0,  # 2.0.0: the dark days of today say nothing about a replayed day
     )
 
 
@@ -238,7 +239,7 @@ def advise(
 
 def solar_advice(adv_days: dict[str, list], today: date) -> float | None:
     """Advice for 'Solar reserved for house': mean of the last 7 completed days of the daily advice value,
-    rounded to 0.5 kWh; None until 7 days are known."""
+    rounded to whole kWh (half up; HBC's field takes whole kWh only); None until 7 days are known."""
     vals = []
     for k in sorted(adv_days):
         s, n = adv_days[k]
@@ -247,7 +248,7 @@ def solar_advice(adv_days: dict[str, list], today: date) -> float | None:
     if len(vals) < DAYS:
         return None
     mean = sum(vals[-DAYS:]) / DAYS
-    return round(mean * 2) / 2
+    return float(math.floor(mean + 0.5))  # half up, not round() (banker's rounding)
 
 
 # ---- applying the advice (pure, so it can be tested) ------------------------------------------
@@ -262,7 +263,7 @@ def changes(
     specs: dict[str, tuple[float, float, float]], thresholds: dict[str, float],
 ) -> dict[str, float]:
     """New values for the settings whose advice differs from the current value by at least the threshold
-    (1 h, 1 h, 0.5 kWh); the new value is snapped to the helper's step and min / max."""
+    (1 h, 1 h, 1 kWh); the new value is snapped to the helper's step and min / max."""
     out: dict[str, float] = {}
     for key, thr in thresholds.items():
         want, cur = advice.get(key), current.get(key)

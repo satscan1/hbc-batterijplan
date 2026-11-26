@@ -268,6 +268,28 @@ views:
                 **Aan:** terugleveren wat zeker over is, alleen als de vergoeding minstens de drempel van HBC hoger is dan de goedkoopste inkoop verderop.
 
                 **Uit:** nooit terugleveren.
+            - entity: switch.batterijplan_regel_elk_kwartier
+              name: Laden in elk goedkoop kwartier
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Alleen bij een dynamisch contract
+              info: |-
+                **Aan:** Batterijplan herkent goedkope kwartieren zelf (dezelfde regel als HBC, zonder het maximum aantal goedkope uren) en mag daarin van het net laden. Valt zo'n laadblok buiten de goedkope uren van HBC, dan zet Batterijplan de strategie van HBC voor dat blok op Charge en daarna weer op Dynamic. Alleen vanuit Dynamic, nooit vanuit een strategie die je zelf koos.
+
+                **Uit:** alleen laden in de goedkope uren van HBC (standaard).
+            - entity: switch.batterijplan_regel_verkoopreserve
+              name: Verkoopreserve automatisch
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Alleen bij een dynamisch contract
+              info: |-
+                **Aan:** met Live aan vult Batterijplan elk kwartier *Keep energy in reserve* van HBC (bij de Sell-strategie) met wat je huis nog nodig heeft tot het volgende goedkope kwartier, plus de reserve van het plan. Zo verkoopt HBC in een Sell-kwartier niet meer dan het plan bedoelt. Werkt alleen als *Sell until* in HBC op *energy reserve* staat. Batterijplan schrijft alleen bij minstens 0,5 kWh verschil en hooguit één keer per kwartier. Zet je Live of deze regel uit, dan krijgt HBC jouw eigen waarde terug.
+
+                **Uit:** HBC houdt jouw eigen waarde (standaard).
           - naam: Expert
             sub: Alleen aanpassen als je weet waarom
             rows:
@@ -335,7 +357,7 @@ views:
               info: |-
                 **Uit (standaard):** Batterijplan verandert niets in HBC. Onder Advies HBC zie je alleen het advies.
 
-                **Aan:** Batterijplan zet *cheapest hrs*, *expensive hrs* en *Solar reserved for house* in HBC zelf op het advies, alleen als het verschil minstens 1 uur of 0,5 kWh is. Jouw eigen waarden worden eerst onthouden en komen exact terug als je dit weer uitzet. Elke wijziging staat in het logboek.
+                **Aan:** Batterijplan zet *cheapest hrs*, *expensive hrs* en *Solar reserved for house* in HBC zelf op het advies, alleen als het verschil minstens 1 uur of 1 kWh is. Jouw eigen waarden worden eerst onthouden en komen exact terug als je dit weer uitzet. Elke wijziging staat in het logboek.
 
                 Er komt pas een advies na 7 volle dagen meten.
             - entity: switch.batterijplan_experiment_capaciteit

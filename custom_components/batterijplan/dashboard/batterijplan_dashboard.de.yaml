@@ -270,6 +270,28 @@ views:
                 **An:** einspeisen, was sicher übrig ist, nur wenn die Vergütung mindestens die HBC-Schwelle höher ist als der günstigste spätere Einkauf.
 
                 **Aus:** nie einspeisen.
+            - entity: switch.batterijplan_regel_elk_kwartier
+              name: In jeder günstigen Viertelstunde laden
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
+              info: |-
+                **An:** Batterijplan erkennt günstige Viertelstunden selbst (dieselbe Regel wie HBC, ohne die maximale Zahl günstiger Stunden) und darf darin aus dem Netz laden. Liegt so ein Ladeblock außerhalb der günstigen Stunden von HBC, stellt Batterijplan die HBC-Strategie für diesen Block auf Charge und danach wieder auf Dynamic. Nur aus Dynamic, nie aus einer Strategie, die du selbst gewählt hast.
+
+                **Aus:** nur in den günstigen Stunden von HBC laden (Standard).
+            - entity: switch.batterijplan_regel_verkoopreserve
+              name: Verkaufsreserve automatisch
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Nur bei einem dynamischen Vertrag
+              info: |-
+                **An:** Mit Live an füllt Batterijplan jede Viertelstunde *Keep energy in reserve* von HBC (Sell-Strategie) mit dem, was dein Haus bis zur nächsten günstigen Viertelstunde noch braucht, plus der Reserve des Plans. So verkauft HBC in einer Sell-Viertelstunde nicht mehr, als der Plan meint. Funktioniert nur, wenn *Sell until* in HBC auf *energy reserve* steht. Batterijplan schreibt nur bei mindestens 0,5 kWh Unterschied und höchstens einmal pro Viertelstunde. Schaltest du Live oder diese Regel aus, bekommt HBC deinen eigenen Wert zurück.
+
+                **Aus:** HBC behält deinen eigenen Wert (Standard).
           - naam: Experte
             sub: Nur ändern, wenn du weißt warum
             rows:
@@ -337,7 +359,7 @@ views:
               info: |-
                 **Aus (Standard):** Batterijplan ändert nichts in HBC. Unter HBC-Empfehlung siehst du nur die Empfehlung.
 
-                **An:** Batterijplan stellt *cheapest hrs*, *expensive hrs* und *Solar reserved for house* in HBC selbst auf die Empfehlung ein, nur wenn der Unterschied mindestens 1 Stunde oder 0,5 kWh beträgt. Deine eigenen Werte werden zuerst gemerkt und kommen beim Ausschalten genau zurück. Jede Änderung steht im Logbuch.
+                **An:** Batterijplan stellt *cheapest hrs*, *expensive hrs* und *Solar reserved for house* in HBC selbst auf die Empfehlung ein, nur wenn der Unterschied mindestens 1 Stunde oder 1 kWh beträgt. Deine eigenen Werte werden zuerst gemerkt und kommen beim Ausschalten genau zurück. Jede Änderung steht im Logbuch.
 
                 Die erste Empfehlung kommt nach 7 vollen Messtagen.
             - entity: switch.batterijplan_experiment_capaciteit

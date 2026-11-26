@@ -3,7 +3,7 @@ from __future__ import annotations
 
 DOMAIN = "batterijplan"
 NAME = "Batterijplan"
-VERSION = "2.0.0-dev1"
+VERSION = "2.0.0"
 
 # settings (config entry options) and their defaults
 CONF_CAPACITY = "capaciteit"
@@ -106,7 +106,7 @@ HBC_STRATEGY_CHARGE = "Charge"  # used for charging at night under a Day/night c
 HBC_SETTINGS = {
     "cheapest": (HBC_CHEAPEST_HRS, 1.0, "h"),
     "expensive": (HBC_EXPENSIVE_HRS, 1.0, "h"),
-    "solar": (HBC_RESERVED, 0.5, "kWh"),
+    "solar": (HBC_RESERVED, 1.0, "kWh"),
 }
 
 # keys of the switches (restored on start)
@@ -120,7 +120,14 @@ SWITCH_RULES = {
     "ontladen": "batterijplan_regel_ontladen",
     "vasthouden": "batterijplan_regel_vasthouden",
     "terugleveren": "batterijplan_regel_terugleveren",
+    "elk_kwartier": "batterijplan_regel_elk_kwartier",  # 2.0.0: charge from the grid in any cheap quarter, not only HBC's cheap hours
+    "verkoopreserve": "batterijplan_regel_verkoopreserve",  # 2.0.0 (issue #9): fill HBC's 'Keep energy in reserve' (verkoopreserve.py)
 }
+RULES_DEFAULT_OFF = ("elk_kwartier", "verkoopreserve")  # they write HBC settings, so you turn them on yourself
+# HBC Sell strategy (2.0.0, rule 'verkoopreserve'): Batterijplan only writes the reserve, it only reads 'Sell until' and 'Then use'
+HBC_SELL_RESERVE = "input_number.house_battery_strategy_sell_target_energy"
+HBC_SELL_GOAL = "input_select.house_battery_strategy_sell_goal"
+HBC_SELL_THEN = "input_select.house_battery_strategy_sell_goal_reached"
 
 OWN_SOLAR_SENSOR = "sensor.batterijplan_zon_voor_hbc"
 STORAGE_VERSION = 1

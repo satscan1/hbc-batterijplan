@@ -2,7 +2,7 @@
 // Config: entity (default sensor.batterijplan), weergave, titel (optional), taal: nl | en | de (default: user profile).
 // Areas (kWh / kW, right axis): solar forecast (purple), Batterijplan charge (teal), HBC charge (yellow dashed line).
 // Price (ct, left axis): thin grey step line. Bar: HBC row (muted), Plan row (only where it differs).
-// Rule switches: switch.batterijplan_regel_laden|ontladen|vasthouden|terugleveren.
+// Rule switches: switch.batterijplan_regel_laden|ontladen|vasthouden|terugleveren|elk_kwartier|verkoopreserve.
 const BP_PLAN_TX = {
   en: {
     'laden van het net': 'charge from the grid', 'ontladen': 'discharge', 'vasthouden': 'hold', 'terugleveren': 'feed in', 'niet laden / niet ontladen': 'no charge / no discharge', 'alleen zon / niets': 'solar only / nothing',
@@ -10,7 +10,7 @@ const BP_PLAN_TX = {
     'Briefing en plan': 'Briefing and plan', 'HBC origineel': 'HBC original', 'klik: alleen deze / beide': 'click: only this / both', 'klik: tonen / verbergen': 'click: show / hide',
     'Nog geen berekening.': 'No calculation yet.', 'in de batterij': 'in the battery', 'Kwartier': 'Quarter', 'hetzelfde als HBC': 'same as HBC', 'HBC zou': 'HBC would', 'Tot': 'Until', 'einde': 'end of', 'verwacht': 'expected', 'verschil': 'difference',
     'Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.': 'No steering needed: Batterijplan does the same as HBC.',
-    'Extra laden van het net': 'Extra charging from the grid', 'Ontladen buiten HBC-uren': 'Discharging outside HBC hours', 'Vasthouden voor later': 'Holding for later', 'Terugleveren': 'Feeding in', 'aan': 'on', 'uit': 'off',
+    'Extra laden van het net': 'Extra charging from the grid', 'Ontladen buiten HBC-uren': 'Discharging outside HBC hours', 'Vasthouden voor later': 'Holding for later', 'Terugleveren': 'Feeding in', 'Laden in elk goedkoop kwartier': 'Charging in any cheap quarter', 'Verkoopreserve automatisch': 'Sell reserve automatic', 'aan': 'on', 'uit': 'off',
     'Waar Batterijplan bijstuurt': 'Where Batterijplan steers', 'Regels': 'Rules',
     'zon verwachting (kW)': 'solar forecast (kW)', 'lading Batterijplan (kWh)': 'charge Batterijplan (kWh)', 'lading HBC (kWh)': 'charge HBC (kWh)', 'prijs (ct)': 'price (ct)',
     'bijgestuurd kwartier (kleur = actie)': 'steered quarter (colour = action)', 'balk HBC': 'HBC bar', 'balk Plan': 'Plan bar', 'Nu': 'Now', 'Plan': 'Plan',
@@ -23,7 +23,7 @@ const BP_PLAN_TX = {
     'Briefing en plan': 'Briefing und Plan', 'HBC origineel': 'HBC Original', 'klik: alleen deze / beide': 'Klick: nur diese / beide', 'klik: tonen / verbergen': 'Klick: anzeigen / ausblenden',
     'Nog geen berekening.': 'Noch keine Berechnung.', 'in de batterij': 'in der Batterie', 'Kwartier': 'Viertelstunde', 'hetzelfde als HBC': 'dasselbe wie HBC', 'HBC zou': 'HBC würde', 'Tot': 'Bis', 'einde': 'Ende', 'verwacht': 'erwartet', 'verschil': 'Differenz',
     'Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.': 'Kein Nachsteuern nötig: Batterijplan tut dasselbe wie HBC.',
-    'Extra laden van het net': 'Zusätzliches Laden aus dem Netz', 'Ontladen buiten HBC-uren': 'Entladen außerhalb der HBC-Zeiten', 'Vasthouden voor later': 'Halten für später', 'Terugleveren': 'Einspeisen', 'aan': 'an', 'uit': 'aus',
+    'Extra laden van het net': 'Zusätzliches Laden aus dem Netz', 'Ontladen buiten HBC-uren': 'Entladen außerhalb der HBC-Zeiten', 'Vasthouden voor later': 'Halten für später', 'Terugleveren': 'Einspeisen', 'Laden in elk goedkoop kwartier': 'In jeder günstigen Viertelstunde laden', 'Verkoopreserve automatisch': 'Verkaufsreserve automatisch', 'aan': 'an', 'uit': 'aus',
     'Waar Batterijplan bijstuurt': 'Wo Batterijplan nachsteuert', 'Regels': 'Regeln',
     'zon verwachting (kW)': 'Sonnenprognose (kW)', 'lading Batterijplan (kWh)': 'Ladung Batterijplan (kWh)', 'lading HBC (kWh)': 'Ladung HBC (kWh)', 'prijs (ct)': 'Preis (ct)',
     'bijgestuurd kwartier (kleur = actie)': 'nachgesteuerte Viertelstunde (Farbe = Aktion)', 'balk HBC': 'Balken HBC', 'balk Plan': 'Balken Plan', 'Nu': 'Jetzt', 'Plan': 'Plan',
@@ -146,7 +146,7 @@ class BatterijplanPlanCard extends HTMLElement {
     // like the status card: with a second Batterijplan (sensor.batterijplan_2) the _2 one is the live one
     const id = this._c.entity === 'sensor.batterijplan' && h.states['sensor.batterijplan_2'] ? 'sensor.batterijplan_2' : this._c.entity;
     const s = h.states[id];
-    const rg = ['laden', 'ontladen', 'vasthouden', 'terugleveren'].map(k => (h.states['switch.batterijplan_regel_' + k] || {}).state).join() + this._lng();
+    const rg = ['laden', 'ontladen', 'vasthouden', 'terugleveren', 'elk_kwartier', 'verkoopreserve'].map(k => (h.states['switch.batterijplan_regel_' + k] || {}).state).join() + this._lng();
     if (rg !== this._rg) { this._rg = rg; this._sig = null; }
     const sig = (s ? s.last_updated : '') + '|' + this._liveState().last_updated + '|' + (h.themes && h.themes.darkMode);
     this._s = s;
@@ -277,7 +277,7 @@ class BatterijplanPlanCard extends HTMLElement {
     let lijst = rij(BG, `<b>${lv != null ? dec(lv.toFixed(1)) : '–'} kWh</b> ${T('in de batterij')}`) + rij(ACT, `${T('HBC-strategie nu')}: <b>${bpEsc(strat)}</b>`);
     const tlTxt = this._tijdlijn(vd); if (tlTxt) lijst += rij('#8b5cf6', bpEsc(tlTxt));
     if (dual && vd.volgende_wissel) lijst += rij('#8b5cf6', `${T('Volgende wissel')}: <b>${this._F(vd.dal_nu ? '{n} vanaf {t}' : '{d} vanaf {t}', { n: w.n, d: w.d, t: this._wanneer(vd.volgende_wissel) })}</b>`);
-    const RG = [['laden', T('Extra laden van het net')], ['ontladen', T('Ontladen buiten HBC-uren')], ['vasthouden', T('Vasthouden voor later')], ['terugleveren', T('Terugleveren')]];
+    const RG = [['laden', T('Extra laden van het net')], ['ontladen', T('Ontladen buiten HBC-uren')], ['vasthouden', T('Vasthouden voor later')], ['terugleveren', T('Terugleveren')], ['elk_kwartier', T('Laden in elk goedkoop kwartier')], ['verkoopreserve', T('Verkoopreserve automatisch')]];
     const a = s ? s.attributes : {}, ACTC = { O: ACT, H: LICHT ? '#ca8208' : '#f59e0b' };
     const regels = RG.map(([k, n]) => { const on = ((this._h && this._h.states['switch.batterijplan_regel_' + k]) || {}).state !== 'off'; return `<div style="opacity:.45"><span style="color:var(--secondary-text-color)">${n}</span> <b style="color:${on ? ACTC.O : ACTC.H}">${on ? T('aan') : T('uit')}</b></div>`; }).join('')
       + `<div class="rn">${T('Alleen bij dynamisch contract')}</div>` + this._nieuweRegels(a, ACTC);
@@ -387,8 +387,10 @@ class BatterijplanPlanCard extends HTMLElement {
         return `<div class="r"><i style="background:${ACT[r.k]}"></i><b>${dag(r.b[0])} ${tijd(r.b[0])}–${tijd(r.e[0] + 900)}</b> <span>${NAAMB[r.k]} (${mn === mx ? dec(mn) : dec(mn) + '–' + dec(mx)} ct)</span></div>`; }).join('')
         : '<div class="r"><span>' + T('Geen bijsturing nodig: Batterijplan doet hetzelfde als HBC.') + '</span></div>';
     }
-    const RG = [['laden', T('Extra laden van het net')], ['ontladen', T('Ontladen buiten HBC-uren')], ['vasthouden', T('Vasthouden voor later')], ['terugleveren', T('Terugleveren')]];
-    const regels = RG.map(([k, n]) => { const on = ((this._h && this._h.states['switch.batterijplan_regel_' + k]) || {}).state !== 'off'; return `<div><span style="color:var(--secondary-text-color)">${n}</span> <b style="color:${on ? ACT.O : ACT.H}">${on ? T('aan') : T('uit')}</b></div>`; }).join('') + this._nieuweRegels(a, ACT);
+    const RG = [['laden', T('Extra laden van het net')], ['ontladen', T('Ontladen buiten HBC-uren')], ['vasthouden', T('Vasthouden voor later')], ['terugleveren', T('Terugleveren')], ['elk_kwartier', T('Laden in elk goedkoop kwartier')], ['verkoopreserve', T('Verkoopreserve automatisch')]];
+    const vrs = a && a.verkoopreserve && typeof a.verkoopreserve === 'object' ? a.verkoopreserve : null;  // 2.0.0: chosen sell reserve
+    const vrk = vrs && vrs.actief && vrs.kwh !== null && vrs.kwh !== undefined && Number.isFinite(Number(vrs.kwh)) ? ` · ${dec(Number(vrs.kwh).toFixed(1))} kWh` : '';
+    const regels = RG.map(([k, n]) => { const on = ((this._h && this._h.states['switch.batterijplan_regel_' + k]) || {}).state !== 'off'; return `<div><span style="color:var(--secondary-text-color)">${n}</span> <b style="color:${on ? ACT.O : ACT.H}">${on ? T('aan') : T('uit')}</b>${k === 'verkoopreserve' && on ? vrk : ''}</div>`; }).join('') + this._nieuweRegels(a, ACT);
     this.shadowRoot.innerHTML = `<style>
       ha-card{padding:12px 16px}
       .t{font-size:16px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px}

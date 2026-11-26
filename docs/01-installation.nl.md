@@ -28,8 +28,8 @@ Welke HBC-standen je nu hebt voor goedkoop, gewoon en duur maakt voor de install
 
 ## Stap 2 — Installeren met HACS
 
-1. Zoek in HACS naar **HBC Batterijplan** en kies **Downloaden**.
-2. Zie je hem nog niet? HACS ververst zijn lijst af en toe. Tot die tijd kun je hem toevoegen als aangepaste repository: open in HACS het menu (⋮) rechtsboven en kies **Aangepaste repositories**. Repository: `https://github.com/satscan1/hbc-batterijplan`, categorie **Integratie**. Voeg toe, zoek dan **HBC Batterijplan** en kies **Downloaden**.
+1. Zoek in HACS naar **HBC Batterijplan** en kies **Downloaden** (zodra de integratie in de standaardlijst van HACS staat).
+2. Staat hij er nog niet, of zie je hem niet? Voeg hem dan toe als aangepaste repository: open in HACS het menu (⋮) rechtsboven en kies **Aangepaste repositories**. Repository: `https://github.com/satscan1/hbc-batterijplan`, categorie **Integratie**. Voeg toe, zoek dan **HBC Batterijplan** en kies **Downloaden**.
 3. Herstart Home Assistant.
 
 ## Stap 3 — Integratie toevoegen
@@ -137,12 +137,11 @@ Goed om te weten:
 - Het totaal van de teller wordt overgenomen. De teller *meerwaarde dit contractjaar* begint opnieuw bij het overnemen.
 - *Live* wordt nooit overgenomen: hij staat na de installatie altijd **uit**, dus de integratie wijzigt niets in HBC. Zet Live van het pakket zelf uit en zet daarna *Live* van de integratie aan als je zover bent.
 
-## Een pre-release installeren (testers)
+## Bijwerken naar 2.0.0
 
-Pre-releases zoals **2.0.0-dev1** biedt HACS niet standaard aan.
+**2.0.0** is een volledige release. HACS biedt hem vanzelf aan.
 
-1. Open in HACS **HBC Batterijplan**, dan het menu (⋮) → **Opnieuw downloaden**.
-2. Kies de versie **2.0.0-dev1** (zet *Bètaversies tonen* aan als je hem niet ziet) en download hem.
-3. Herstart Home Assistant.
+1. Open in HACS **HBC Batterijplan** en kies **Bijwerken** (of het menu (⋮) → **Opnieuw downloaden** en dan versie **2.0.0**).
+2. Herstart Home Assistant.
 
-Op dezelfde manier ga je terug naar de laatste volledige release (1.1.0). Je instellingen en het geleerde verbruik blijven. Wat nieuw is staat in [07 · Contracten, daluren en Vlaanderen](07-contracts-and-flanders.nl.md). Meld wat je merkt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues), met je HBC-versie en je land.
+Je instellingen, het geleerde verbruik en de teller blijven. Een oudere versie kies je op dezelfde manier via **Opnieuw downloaden**. Wat nieuw is staat in [07 · Contracten, daluren en Vlaanderen](07-contracts-and-flanders.nl.md) en [08 · Slimmer rekenen](08-calculation.nl.md). Meld wat je merkt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues), met je HBC-versie en je land.

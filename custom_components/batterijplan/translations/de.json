@@ -171,6 +171,12 @@
       "batterijplan_regel_terugleveren": {
         "name": "Regel: einspeisen"
       },
+      "batterijplan_regel_elk_kwartier": {
+        "name": "Regel: in jeder günstigen Viertelstunde laden"
+      },
+      "batterijplan_regel_verkoopreserve": {
+        "name": "Regel: Verkaufsreserve automatisch"
+      },
       "batterijplan_dal_weekend": {
         "name": "Wochenende und Feiertage als Nebenzeit"
       },

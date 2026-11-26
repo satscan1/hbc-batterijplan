@@ -14,7 +14,7 @@
 Die Bilder auf dieser Seite sind mit Demodaten erstellt. Die Beträge sind Beispielzahlen.
 
 1. **Live**: an = Batterijplan steuert HBC. Aus = Schattenmodus: es rechnet mit, steuert aber nichts.
-2. **Knöpfe**: Ertrag, Heute, Bericht, Empfehlung HBC, Einstellungen und Sensoren. Jeder Knopf öffnet ein Fenster. Der orange Punkt auf **Empfehlung HBC** bedeutet, dass *cheapest hrs*, *expensive hrs* oder *Solar reserved for house* von der Empfehlung abweicht (um mindestens 1 Stunde oder 0,5 kWh); im Fenster steht auch der Schalter *HBC-Einstellungen automatisch anpassen*.
+2. **Knöpfe**: Ertrag, Heute, Bericht, Empfehlung HBC, Einstellungen und Sensoren. Jeder Knopf öffnet ein Fenster. Der orange Punkt auf **Empfehlung HBC** bedeutet, dass *cheapest hrs*, *expensive hrs* oder *Solar reserved for house* von der Empfehlung abweicht (um mindestens 1 Stunde oder 1 kWh); im Fenster steht auch der Schalter *HBC-Einstellungen automatisch anpassen*.
 3. **Statuskarte**: Modus, Verbrauch lernen, HBC-Strategie, nächste Viertelstunde und Empfehlung Hausverbrauch. Das (i) hinter jeder Zeile erklärt sie.
 4. **Briefing und Plan**: was jetzt in der Batterie ist, was der Plan in der nächsten Viertelstunde tut, und der Kostenunterschied zu HBC allein bis zum Ende des Plans.
 5. **Regeln**: die vier Regeln (*Zusätzliches Laden aus dem Netz*, *Entladen außerhalb der HBC-Zeiten*, *Halten für später*, *Einspeisen*), jede mit eigenem Ein/Aus-Schalter.
@@ -159,8 +159,9 @@ War deine Batterie groß genug für die teuren Viertelstunden, und was hätte ei
 
 Die Entitäten haben feste Namen (`sensor.batterijplan`, `switch.batterijplan_live` und so weiter) und die Karten werden überall in Home Assistant geladen. Du kannst die Karten also auch in deinen eigenen Dashboards nutzen. Die Karten kommen in vier Dateien: `batterijplan-cards.js`, `batterijplan-plan-card.js`, `batterijplan-vandaag-cards.js` und `batterijplan-capaciteit-card.js`. Die Karten haben eine optionale Einstellung `taal` (`nl`, `en` oder `de`), die die Sprache dieser Karte festlegt; ohne sie folgt die Karte der Sprache deines Home-Assistant-Profils.
 
-## Neu in der Pre-Release 2.0.0-dev1
+## Neu in 2.0.0
 
+- **Regeln**: neue Regeln **In jeder günstigen Viertelstunde laden** und **Verkaufsreserve automatisch** (beide standardmäßig aus, nur bei einem dynamischen Vertrag). Die Statuskarte hat dann eine Zeile *Verkaufsreserve*. Sonnenmarge, dunkle Tage, die lernende Reserve und der Verbrauch pro Wochentag arbeiten von selbst. Siehe [08 · Klüger rechnen](08-calculation.de.md).
 - **Einstellungen** hat zwei neue Reiter: **Vertrag** (Vertragsart, Tarif, Preise, Einspeisevergütung, Nachtstunden, Wochenende und Feiertage) und **Flandern** (der Schalter, der Kapazitätstarif und eine eigene Grenze in kW). Zeilen, die nicht gelten, sind grau mit einem Grund.
 - **Fenster Spitze** (nur sichtbar mit *Flandern* an): die Karten *Laufende Viertelstunde* und *Spitze diesen Monat*.
 - **Bei einem Festvertrag** zeigen der Hauptbildschirm, das Fenster *Heute* und der *Bericht* Tarife, die erwartete Batterieladung und was die Batterie tut, statt des Plans. Siehe [07 · Verträge, Nebenzeiten und Flandern](07-contracts-and-flanders.de.md).

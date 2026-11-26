@@ -76,7 +76,8 @@ class RuleSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
         super().__init__(coordinator, key)
         self._rule = rule
         self._attr_icon = {"laden": "mdi:transmission-tower-import", "ontladen": "mdi:battery-arrow-down",
-                           "vasthouden": "mdi:battery-lock", "terugleveren": "mdi:transmission-tower-export"}[rule]
+                           "vasthouden": "mdi:battery-lock", "terugleveren": "mdi:transmission-tower-export",
+                           "elk_kwartier": "mdi:clock-fast", "verkoopreserve": "mdi:battery-lock"}[rule]
 
     @property
     def is_on(self) -> bool:
@@ -87,6 +88,8 @@ class RuleSwitch(BatterijplanEntity, SwitchEntity, RestoreEntity):
         last = await self.async_get_last_state()
         if last is not None and last.state == STATE_OFF:
             self.coordinator.rules[self._rule] = False
+        elif last is not None and last.state == STATE_ON:  # a rule that starts off (RULES_DEFAULT_OFF) comes back on
+            self.coordinator.rules[self._rule] = True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self.coordinator.async_set_rule(self._rule, True)

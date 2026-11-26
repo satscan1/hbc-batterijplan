@@ -6,7 +6,7 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Versie 1.1.0 · Midnight Sunshine*
+*Versie 1.0.0*
 
 Batterijplan zorgt dat je thuisbatterij zijn lading bewaart voor de **duurste** momenten van de dag. Het werkt samen met [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) en neemt HBC niet over: HBC blijft de batterij aansturen, Batterijplan geeft alleen per kwartier een aanwijzing.
 
@@ -16,18 +16,17 @@ Het is bedoeld voor huishoudens in Nederland, Duitsland en België (Vlaanderen) 
 
 <p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/dashboard-overview-nl.png" width="95%" alt="Batterijplan dashboard"></p>
 
-De plaatjes op deze pagina zijn gemaakt met demogegevens. De bedragen zijn voorbeeldcijfers.
+De bedragen in het plaatje zijn voorbeeldcijfers.
 
 1. **Live**: aan = Batterijplan stuurt HBC. Uit = schaduwmodus: het rekent mee, maar stuurt niets.
-2. **Knoppen**: Opbrengst, Vandaag, Rapport, Advies HBC, Instellingen en Sensoren. Elke knop opent een venster. De oranje stip op **Advies HBC** betekent dat *cheapest hrs*, *expensive hrs* of *Solar reserved for house* afwijkt van het advies (minstens 1 uur of 0,5 kWh); in het venster staat ook de schakelaar *HBC-instellingen automatisch*.
+2. **Knoppen**: Opbrengst, Rapport, Advies HBC, Instellingen en Sensoren. Elke knop opent een venster. De oranje stip op **Advies HBC** betekent dat *cheapest hrs*, *expensive hrs* of *Solar reserved for house* afwijkt van het advies (minstens 1 uur of 1 kWh); in het venster staat ook de schakelaar *HBC-instellingen automatisch*.
 3. **Statuskaart**: Modus, Verbruik leren, HBC-strategie, komend kwartier en advies huisverbruik. De (i) achter elke regel legt hem uit.
-4. **Briefing en plan**: wat er nu in de batterij zit, wat het plan het komende kwartier doet en het kostenverschil met HBC alleen tot het einde van het plan.
+4. **Briefing en plan**: wat er nu in de batterij zit, wat het plan het komende kwartier doet en het kostenverschil met HBC alleen tot middernacht.
 5. **Regels**: de vier regels (*Extra laden van het net*, *Ontladen buiten HBC-uren*, *Vasthouden voor later*, *Terugleveren*), elk met een eigen aan/uit-schakelaar.
 6. **Waar Batterijplan bijstuurt**: de blokken waarin het plan iets anders doet dan HBC, met een kleur per actie en de prijs.
-7. **Kale prijs nu en de stroomkosten tot het einde van het plan**: HBC naast Batterijplan.
-8. **Nog te besparen tot einde &lt;dag&gt; (24:00)**: wat Batterijplan nog bespaart ten opzichte van HBC alleen, van nu tot het einde van het plan. Tik erop voor het venster *Vandaag*.
-9. **Batterij**: hoeveel kWh er nu in de batterij zit, met de verwachte lading eronder.
-10. **Capaciteit** (blauw randje = experiment): past je batterij bij je huis? Aan of uit in *Instellingen → Expert*.
+7. **Kale prijs nu en de stroomkosten tot middernacht**: HBC naast Batterijplan.
+8. **Verwachte besparing** ten opzichte van HBC alleen.
+9. **Batterij**: hoeveel kWh er nu in de batterij zit.
 
 ## Wat Batterijplan doet
 
@@ -35,21 +34,8 @@ De plaatjes op deze pagina zijn gemaakt met demogegevens. De bedragen zijn voorb
 - **Gebruikt overschot slim.** Zit er meer in de batterij dan nodig is tot het volgende goedkope moment? Dan levert Batterijplan dat overschot al aan het huis in de duurste gewone kwartieren, in plaats van met een volle batterij te gaan laden.
 - **Leert je verbruik.** Per uur van de dag, in 7 dagen, en daarna glijdend mee met de seizoenen. Met de zonverwachting van Solcast erbij.
 - **Geeft advies voor HBC.** Hoeveel zonne-energie je huis zelf gebruikt (de HBC-instelling *Solar reserved for house*), op basis van de laatste 7 dagen. Het adviseert ook over *cheapest hrs* en *expensive hrs*. Alleen als je de schakelaar *HBC-instellingen automatisch* aanzet (standaard uit) past het deze drie HBC-instellingen zelf aan; je eigen waarden komen terug als je hem uitzet. Aan de flows of code van HBC komt het nooit.
-- **Laat zien of je batterij past.** Het capaciteitsexperiment toont per jaar, kwartaal en maand wat je batterij opbracht en wat een andere capaciteit had kunnen opbrengen. Geen batterijprijs, geen oordeel: jij beslist.
 - **Laat zien wat het oplevert.** Een eerlijke schatting bovenop HBC alleen: bij overschot ontladen telt alleen wat er echt uit de batterij ging.
 - **Begint veilig.** Eerst in schaduwmodus (rekent mee, stuurt niets). Pas als jij *Live* aanzet, stuurt het HBC bij.
-
-## Nieuw in 1.1.0 · Midnight Sunshine
-
-<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/batterijplan-nl.gif" width="80%" alt="Batterijplan in beweging"></p>
-
-- **Vandaag:** al bespaard, nog te verwachten tot 24:00 en het dagtotaal, met een grafiek over de dag en de laatste 7 dagen. Tik op *Nog te besparen* in de kop van de grafiek of op de knop *Vandaag*.
-- **Nog te besparen tot einde &lt;dag&gt; (24:00):** de kop van de grafiek toont nu wat Batterijplan nog bespaart tot het einde van het plan, met de dag erbij.
-- **Opbrengst per dag, week, maand, kwartaal en jaar,** van nieuw naar oud met een trendpijl, plus een CSV-export met één regel per dag.
-- **Opbrengst telt alleen live:** het totaal is wat Batterijplan opleverde terwijl het echt stuurde.
-- **Capaciteitsadvies (experiment):** was je batterij groot genoeg voor de dure kwartieren, en wat had een andere capaciteit opgeleverd? Per jaar (tot 5), kwartaal en maand. Aan of uit in *Instellingen → Expert*; de gegevens blijven bewaard. Zie [06 · Capaciteitsadvies](docs/06-capacity.nl.md).
-- **Rapport** met de capaciteit per jaar, kwartaal en maand, de voorspelling in je eigen taal en getallen in je eigen notatie.
-- **In de batterij nu** met de verwachte lading eronder.
 
 ## Nieuw in 1.0.0
 
@@ -75,8 +61,8 @@ Alles op een rij: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installatie
 
-1. Open HACS, zoek **HBC Batterijplan** en kies **Downloaden**.
-2. Zie je hem nog niet? HACS ververst zijn lijst af en toe. Tot die tijd kun je hem toevoegen als aangepaste repository: HACS → menu (⋮) → **Aangepaste repositories** → `https://github.com/satscan1/hbc-batterijplan`, categorie **Integratie**. Zoek hem daarna op en download hem.
+1. Open HACS, zoek **HBC Batterijplan** en kies **Downloaden** (zodra de integratie in de standaardlijst van HACS staat).
+2. Staat hij er nog niet, of zie je hem niet? Voeg hem dan toe als aangepaste repository: HACS → menu (⋮) → **Aangepaste repositories** → `https://github.com/satscan1/hbc-batterijplan`, categorie **Integratie**. Zoek hem daarna op en download hem.
 3. Herstart Home Assistant, ga dan naar *Instellingen → Apparaten & diensten → Integratie toevoegen → Batterijplan*.
 
 Details: [01 · Installatie](docs/01-installation.nl.md).
@@ -90,11 +76,13 @@ Details: [01 · Installatie](docs/01-installation.nl.md).
 | [03 · Hoe het werkt](docs/03-how-it-works.nl.md) | Het plan, overschot, leren, het advies en de teller in gewone taal |
 | [04 · Onderhoud en bijwerken](docs/04-maintenance.nl.md) | Wat je af en toe doet, nieuwe versie, verwijderen |
 | [05 · Problemen oplossen](docs/05-troubleshooting.nl.md) | Bekende meldingen en wat je eraan doet |
-| [06 · Capaciteitsadvies](docs/06-capacity.nl.md) | Het capaciteitsexperiment: hoe het rekent en hoe je het leest |
+| [07 · Contracten, daluren en Vlaanderen](docs/07-contracts-and-flanders.nl.md) | Welk contract kies je, vast en dag/nacht, het Vlaamse capaciteitstarief |
+| [08 · Slimmer rekenen](docs/08-calculation.nl.md) | Zonmarge, donkere dagen, meelerende reserve, verbruik per weekdag, laden in elk goedkoop kwartier, verkoopreserve (2.0.0) |
+| [Alle wijzigingen in 2.0.0](docs/WIJZIGINGEN_v2.0.0.nl.md) | Alles wat nieuw, verbeterd, opgelost en verwijderd is sinds 1.1.0 |
 
 ## Status
 
-1.1.0 · Midnight Sunshine bouwt voort op 1.0.0, de eerste volledige release. Nieuw? Zet hem eerst in schaduwmodus, kijk een paar dagen mee en meld wat je opvalt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Vermeld je HBC-versie en, bij een foutmelding, een schermafdruk.
+1.0.0 is de eerste volledige release. Zet hem eerst in schaduwmodus, kijk een paar dagen mee en meld wat je opvalt via [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Vermeld je HBC-versie en, bij een foutmelding, een schermafdruk.
 
 ## Licentie
 

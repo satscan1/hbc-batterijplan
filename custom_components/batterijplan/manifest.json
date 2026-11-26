@@ -17,5 +17,5 @@
   "issue_tracker": "https://github.com/satscan1/hbc-batterijplan/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "2.0.0-dev1"
+  "version": "2.0.0"
 }

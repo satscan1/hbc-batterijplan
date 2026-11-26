@@ -2,7 +2,7 @@
 
 *English: [07-contracts-and-flanders.md](07-contracts-and-flanders.md) · Nederlands: [07-contracts-and-flanders.nl.md](07-contracts-and-flanders.nl.md)*
 
-> **Pre-Release 2.0.0-dev1.** Dieses Kapitel beschreibt, was in der Pre-Release für Tester neu ist. Die letzte vollständige Version bleibt 1.1.0.
+> **Neu in 2.0.0.** Dieses Kapitel beschreibt die Vertragsformen und den flämischen Kapazitätstarif. Die neuen Rechenteile stehen in [08 · Klüger rechnen](08-calculation.de.md).
 
 **Kurz gesagt**
 - Du wählst deine **Vertragsart**: *Fest* oder *Dynamisch*. Bei *Fest* wählst du außerdem einen **Tarif**: *Eintarif* oder *Zweitarif*.
@@ -44,6 +44,21 @@ Laden aus dem Netz in der Nebenzeit lohnt sich nur, wenn der Preisunterschied gr
 - **Unterschied (Normaltarif − Nebenzeittarif) mindestens die Schwelle:** HBC geht in der Nebenzeit auf Charge.
 - **Unterschied unter der Schwelle:** HBC bleibt auf Self-consumption. Der Bericht sagt: *Laden aus dem Netz lohnt sich nicht: Unterschied 2,7 ct, Schwelle 6,0 ct*, und die Regel *Nachtladen* zeigt *aus (lohnt nicht)*.
 - **Ausnahme, Flandern an:** Laden in der Nebenzeit darf dann die Reserve für Spitzen füllen, unabhängig vom Preisunterschied, aber nur solange unter der Zielgrenze Platz ist.
+
+## Welchen Vertrag wähle ich?
+
+- **Du hast einen dynamischen Vertrag** (Preis pro Stunde oder Viertelstunde): wähle *Dynamisch*. HBC steht auf Dynamic und Batterijplan macht den Plan. Willst du auch außerhalb der günstigen Stunden von HBC laden, schalte die Regel *In jeder günstigen Viertelstunde laden* ein (siehe [08 · Klüger rechnen](08-calculation.de.md)).
+- **Du hast einen Festvertrag mit einem Preis**: wähle *Fest* und *Eintarif*. HBC bleibt auf Self-consumption. Laden aus dem Netz bringt dann nichts, also passiert es nicht.
+- **Du hast einen Festvertrag mit Tag- und Nachtpreis** (HT/NT): wähle *Fest* und *Zweitarif* und trage beide Preise ein. In den Nebenzeiten lädt HBC nur, wenn der Unterschied mindestens die HBC-Schwelle ist.
+- **Du wohnst in Flandern**: wähle deinen Vertrag wie oben und schalte zusätzlich *Flandern* für den Kapazitätstarif ein. Das funktioniert mit jedem Vertrag.
+- **Unsicher?** Schau auf deine Energierechnung: steht dort ein Preis pro Stunde oder Viertelstunde, ist er dynamisch. Sonst ist er fest.
+
+### Was stellst du in HBC ein?
+
+Laut der HBC-Dokumentation (*docs/03-strategies.md*):
+- **Dynamisch**: stelle HBC auf die Strategie **Dynamic**. Dafür braucht HBC die Integration *Cheapest Energy Hours* und eine Preisquelle. Wähle in Batterijplan den Vertrag **Dynamisch**. Mit Live an setzt Batterijplan jede Viertelstunde die Dynamic-Modi von HBC.
+- **Fest, Eintarif**: stelle HBC auf **Self-consumption**. HBC hält den Netzzähler dann bei etwa 0 W: die Batterie lädt mit Solarüberschuss und versorgt das Haus. Wähle in Batterijplan den Vertrag **Fest** mit **Eintarif**.
+- **Fest, Zweitarif**: stelle HBC ebenfalls auf **Self-consumption**. Wähle in Batterijplan den Vertrag **Fest** mit **Zweitarif**. Mit Live an stellt Batterijplan HBC in der Nebenzeit selbst vorübergehend auf *Charge*, wenn sich das Nachtladen lohnt, und danach zurück. Dafür musst du in HBC kein *Timed* einstellen.
 
 ## Land aus Home Assistant
 

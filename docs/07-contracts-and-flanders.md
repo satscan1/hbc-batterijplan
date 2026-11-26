@@ -2,7 +2,7 @@
 
 *Nederlands: [07-contracts-and-flanders.nl.md](07-contracts-and-flanders.nl.md) · Deutsch: [07-contracts-and-flanders.de.md](07-contracts-and-flanders.de.md)*
 
-> **Pre-release 2.0.0-dev1.** This chapter describes what is new in the pre-release for testers. The latest full release stays 1.1.0.
+> **New in 2.0.0.** This chapter describes the contract forms and the Flemish capacity tariff. The new calculation parts are in [08 · Smarter calculation](08-calculation.md).
 
 **In short**
 - You choose your **kind of contract**: *Fixed* or *Dynamic*. With *Fixed* you also choose a **rate**: *single* or *dual*.
@@ -44,6 +44,21 @@ Charging from the grid in the off-peak hours only pays when the price difference
 - **Difference (normal rate − off-peak rate) at least the threshold:** HBC goes to Charge in the off-peak hours.
 - **Difference below the threshold:** HBC stays on Self-consumption. The briefing says: *Charging from the grid does not pay: difference 2.7 ct, threshold 6.0 ct*, and the rule *Night charging* shows *off (not worth it)*.
 - **Exception, Flanders on:** charging in the off-peak hours may fill the reserve for peaks, whatever the price difference, but only while there is room under the target limit.
+
+## Which contract do I choose?
+
+- **You have a dynamic contract** (price per hour or quarter): choose *Dynamic*. HBC is on Dynamic and Batterijplan makes the plan. To also charge outside HBC's cheap hours, turn on the rule *Charge in any cheap quarter* (see [08 · Smarter calculation](08-calculation.md)).
+- **You have a fixed contract with one price**: choose *Fixed* and *Single rate*. HBC stays on Self-consumption. Charging from the grid earns nothing then, so it does not happen.
+- **You have a fixed contract with a day and a night price** (Netherlands: normal and off-peak rate, Belgium: day and night price): choose *Fixed* and *Dual rate*, and fill in both prices. In the off-peak hours HBC only charges when the difference is at least HBC's threshold.
+- **You live in Flanders**: choose your contract as above, and also turn on the switch *Flanders* for the capacity tariff. It works with every contract.
+- **Not sure?** Look at your energy bill: a price per hour or quarter means dynamic. Otherwise it is fixed.
+
+### What do you set in HBC?
+
+According to the HBC documentation (*docs/03-strategies.md*):
+- **Dynamic**: set HBC to the strategy **Dynamic**. HBC then needs the integration *Cheapest Energy Hours* and a price source. In Batterijplan choose the contract **Dynamic**. With Live on, Batterijplan sets HBC's Dynamic modes every quarter.
+- **Fixed, single rate**: set HBC to **Self-consumption**. HBC then keeps the grid meter around 0 W: the battery charges with solar surplus and supplies the house. In Batterijplan choose the contract **Fixed** with **Single rate**.
+- **Fixed, dual rate**: set HBC to **Self-consumption** as well. In Batterijplan choose the contract **Fixed** with **Dual rate**. With Live on, Batterijplan itself puts HBC on *Charge* in the off-peak hours when night charging pays, and back afterwards. You do not need to set *Timed* in HBC for this.
 
 ## Country from Home Assistant
 

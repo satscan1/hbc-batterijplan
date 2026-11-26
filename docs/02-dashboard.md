@@ -14,7 +14,7 @@
 The pictures on this page are made with demo data. The amounts are example figures.
 
 1. **Live**: on = Batterijplan steers HBC. Off = shadow mode: it calculates along, but steers nothing.
-2. **Buttons**: Earnings, Today, Report, Advice HBC, Settings and Sensors. Each button opens a window. The orange dot on **Advice HBC** means that *cheapest hrs*, *expensive hrs* or *Solar reserved for house* differs from the advice (by at least 1 hour or 0.5 kWh); the window also has the switch *Auto-adjust HBC settings*.
+2. **Buttons**: Earnings, Today, Report, Advice HBC, Settings and Sensors. Each button opens a window. The orange dot on **Advice HBC** means that *cheapest hrs*, *expensive hrs* or *Solar reserved for house* differs from the advice (by at least 1 hour or 1 kWh); the window also has the switch *Auto-adjust HBC settings*.
 3. **Status card**: mode, learning usage, HBC strategy, next quarter and advice house use. The (i) behind each line explains it.
 4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference in cost with HBC alone until the end of the plan.
 5. **Rules**: the four rules (*Extra charging from the grid*, *Discharging outside HBC hours*, *Holding for later*, *Feeding in*), each with its own on/off switch.
@@ -159,8 +159,9 @@ Was your battery big enough for the expensive quarters, and what would another c
 
 The entities have fixed names (`sensor.batterijplan`, `switch.batterijplan_live`, and so on) and the cards are loaded everywhere in Home Assistant. You can therefore also use the cards in your own dashboards. The cards come in four files: `batterijplan-cards.js`, `batterijplan-plan-card.js`, `batterijplan-vandaag-cards.js` and `batterijplan-capaciteit-card.js`. The cards have an optional option `taal` (`nl`, `en` or `de`) that sets the language of that card; without it the card follows the language of your Home Assistant profile.
 
-## New in the pre-release 2.0.0-dev1
+## New in 2.0.0
 
+- **Rules**: new rules **Charge in any cheap quarter** and **Sell reserve automatic** (both off by default, only with a dynamic contract). The status card then has a row *Sell reserve*. The solar margin, dark days, the learning reserve and the use per weekday work by themselves. See [08 · Smarter calculation](08-calculation.md).
 - **Settings** has two new tabs: **Contract** (kind of contract, rate, prices, feed-in price, night hours, weekend and public holidays) and **Flanders** (the switch, the capacity tariff and an own limit in kW). Rows that do not apply are greyed out with a reason.
 - **Window Peak** (only visible with *Flanders* on): the cards *Running quarter* and *Peak this month*.
 - **Under a Fixed contract** the main screen, the window *Today* and the *Report* show tariffs, the expected battery charge and what the battery does instead of the plan. See [07 · Contracts, off-peak hours and Flanders](07-contracts-and-flanders.md).

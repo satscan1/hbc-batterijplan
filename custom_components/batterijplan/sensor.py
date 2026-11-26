@@ -23,7 +23,8 @@ class BpSensorDescription(SensorEntityDescription):
 def _profile_attrs(d: dict[str, Any]) -> dict[str, Any]:
     p = d["profile"]
     return {"dagen": p.dagen, "uur": p.uur, "n": p.n, "bt_n": p.bt_n, "bt_afw": p.bt_afw, "bt_gem": p.bt_gem,
-            "bt_bw": p.bt_bw, "bt_bp": p.bt_bp, "bt_bk": p.bt_bk, "bt_blok": p.bt_blok, "bt_maat": p.bt_maat}
+            "bt_bw": p.bt_bw, "bt_bp": p.bt_bp, "bt_bk": p.bt_bk, "bt_blok": p.bt_blok, "bt_maat": p.bt_maat,
+            "weekprofiel": d.get("weekprofiel")}  # 2.0.0: self-test of the profile per weekday (actief, fout_week, fout_7d, kwartieren, reden)
 
 
 def _counter_attrs(d: dict[str, Any]) -> dict[str, Any]:
@@ -103,6 +104,7 @@ UNRECORDED = frozenset({
     "lading_plan", "eur_live", "eur_schaduw", "eur_contract_live", "eur_contract_schaduw",
     "dag_datum", "dag_huis_kwh", "dag_zon_kwh", "dag_net_kwh", "dag_terug_kwh",
     "kwartieren_vastgehouden", "kwartieren_teruggeleverd", "kwartieren_ontladen",
+    "donker", "reserve_plan", "zon_betrouwbaar", "weekprofiel", "verkoopreserve",  # dark days, learned reserve, sell reserve, solar reliability (2.0.0): change with every plan run
     "vast", "dagen", "dagen_zonder", "maanden", "verstreken_s", "verbruikt_kwh", "toegestaan_w", "hbc_grens_w",  # capacity tariff cards (2.0.0-dev1)
 })
 

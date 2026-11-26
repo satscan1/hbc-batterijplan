@@ -14,7 +14,7 @@
 De plaatjes op deze pagina zijn gemaakt met demogegevens. De bedragen zijn voorbeeldcijfers.
 
 1. **Live**: aan = Batterijplan stuurt HBC. Uit = schaduwmodus: het rekent mee, maar stuurt niets.
-2. **Knoppen**: Opbrengst, Vandaag, Rapport, Advies HBC, Instellingen en Sensoren. Elke knop opent een venster. De oranje stip op **Advies HBC** betekent dat *cheapest hrs*, *expensive hrs* of *Solar reserved for house* afwijkt van het advies (minstens 1 uur of 0,5 kWh); in het venster staat ook de schakelaar *HBC-instellingen automatisch*.
+2. **Knoppen**: Opbrengst, Vandaag, Rapport, Advies HBC, Instellingen en Sensoren. Elke knop opent een venster. De oranje stip op **Advies HBC** betekent dat *cheapest hrs*, *expensive hrs* of *Solar reserved for house* afwijkt van het advies (minstens 1 uur of 1 kWh); in het venster staat ook de schakelaar *HBC-instellingen automatisch*.
 3. **Statuskaart**: Modus, Verbruik leren, HBC-strategie, komend kwartier en advies huisverbruik. De (i) achter elke regel legt hem uit.
 4. **Briefing en plan**: wat er nu in de batterij zit, wat het plan het komende kwartier doet en het kostenverschil met HBC alleen tot het einde van het plan.
 5. **Regels**: de vier regels (*Extra laden van het net*, *Ontladen buiten HBC-uren*, *Vasthouden voor later*, *Terugleveren*), elk met een eigen aan/uit-schakelaar.
@@ -159,8 +159,9 @@ Was je batterij groot genoeg voor de dure kwartieren, en wat had een andere capa
 
 De entiteiten hebben vaste namen (`sensor.batterijplan`, `switch.batterijplan_live`, enzovoort) en de kaarten worden overal in Home Assistant geladen. Je kunt de kaarten dus ook in je eigen dashboards gebruiken. De kaarten komen in vier bestanden: `batterijplan-cards.js`, `batterijplan-plan-card.js`, `batterijplan-vandaag-cards.js` en `batterijplan-capaciteit-card.js`. De kaarten hebben een optionele instelling `taal` (`nl`, `en` of `de`) die de taal van die kaart bepaalt; zonder die instelling volgt de kaart de taal van je Home Assistant-profiel.
 
-## Nieuw in de pre-release 2.0.0-dev1
+## Nieuw in 2.0.0
 
+- **Regels**: nieuwe regels **Laden in elk goedkoop kwartier** en **Verkoopreserve automatisch** (beide standaard uit, alleen bij een dynamisch contract). De statuskaart heeft dan een rij *Verkoopreserve*. Zonmarge, donkere dagen, de meelerende reserve en het verbruik per weekdag werken vanzelf. Zie [08 · Slimmer rekenen](08-calculation.nl.md).
 - **Instellingen** heeft twee nieuwe tabbladen: **Contract** (soort contract, tarief, prijzen, terugleververgoeding, nachturen, weekend en feestdagen) en **Vlaanderen** (de schakelaar, het capaciteitstarief en een eigen grens in kW). Rijen die niet gelden staan grijs met een reden.
 - **Venster Piek** (alleen zichtbaar met *Vlaanderen* aan): de kaarten *Lopend kwartier* en *Piek deze maand*.
 - **Bij een vast contract** tonen het hoofdscherm, het venster *Vandaag* en het *Rapport* tarieven, de verwachte batterijlading en wat de batterij doet in plaats van het plan. Zie [07 · Contracten, daluren en Vlaanderen](07-contracts-and-flanders.nl.md).

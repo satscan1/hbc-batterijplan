@@ -6,7 +6,7 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md)*
 
-*Version 1.1.0 · Midnight Sunshine*
+*Version 1.0.0*
 
 Batterijplan sorgt dafür, dass dein Hausspeicher seine Ladung für die **teuersten** Momente des Tages aufhebt. Es arbeitet mit [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) zusammen und übernimmt HBC nicht: HBC steuert weiter den Speicher, Batterijplan gibt nur pro Viertelstunde einen Hinweis.
 
@@ -16,18 +16,17 @@ Es ist für Haushalte in den Niederlanden, Deutschland und Belgien (Flandern) mi
 
 <p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/dashboard-overview-de.png" width="95%" alt="Batterijplan Dashboard"></p>
 
-Die Bilder auf dieser Seite sind mit Demodaten erstellt. Die Beträge sind Beispielzahlen.
+Die Beträge im Bild sind Beispielzahlen.
 
 1. **Live**: an = Batterijplan steuert HBC. Aus = Schattenmodus: es rechnet mit, steuert aber nichts.
-2. **Knöpfe**: Ertrag, Heute, Bericht, Empfehlung HBC, Einstellungen und Sensoren. Jeder Knopf öffnet ein Fenster. Der orange Punkt auf **Empfehlung HBC** bedeutet, dass *cheapest hrs*, *expensive hrs* oder *Solar reserved for house* von der Empfehlung abweicht (um mindestens 1 Stunde oder 0,5 kWh); im Fenster steht auch der Schalter *HBC-Einstellungen automatisch anpassen*.
+2. **Knöpfe**: Ertrag, Bericht, Empfehlung HBC, Einstellungen und Sensoren. Jeder Knopf öffnet ein Fenster. Der orange Punkt auf **Empfehlung HBC** bedeutet, dass *cheapest hrs*, *expensive hrs* oder *Solar reserved for house* von der Empfehlung abweicht (um mindestens 1 Stunde oder 1 kWh); im Fenster steht auch der Schalter *HBC-Einstellungen automatisch anpassen*.
 3. **Statuskarte**: Modus, Verbrauch lernen, HBC-Strategie, nächste Viertelstunde und Empfehlung Hausverbrauch. Das (i) hinter jeder Zeile erklärt sie.
-4. **Briefing und Plan**: was jetzt in der Batterie ist, was der Plan in der nächsten Viertelstunde tut, und der Kostenunterschied zu HBC allein bis zum Ende des Plans.
+4. **Briefing und Plan**: was jetzt in der Batterie ist, was der Plan in der nächsten Viertelstunde tut, und der Kostenunterschied zu HBC allein bis Mitternacht.
 5. **Regeln**: die vier Regeln (*Zusätzliches Laden aus dem Netz*, *Entladen außerhalb der HBC-Zeiten*, *Halten für später*, *Einspeisen*), jede mit eigenem Ein/Aus-Schalter.
 6. **Wo Batterijplan nachsteuert**: die Blöcke, in denen der Plan etwas anderes tut als HBC, mit einer Farbe pro Aktion und dem Preis.
-7. **Reiner Preis jetzt und die Stromkosten bis zum Ende des Plans**: HBC neben Batterijplan.
-8. **Noch zu sparen bis Ende &lt;Tag&gt; (24:00)**: was Batterijplan gegenüber HBC allein noch spart, von jetzt bis zum Ende des Plans. Tippe darauf für das Fenster *Heute*.
-9. **Batterie**: wie viele kWh jetzt in der Batterie sind, mit der erwarteten Ladung darunter.
-10. **Kapazität** (blauer Rand = Experiment): passt deine Batterie zu deinem Haus? Ein oder aus unter *Einstellungen → Experte*.
+7. **Reiner Preis jetzt und die Stromkosten bis Mitternacht**: HBC neben Batterijplan.
+8. **Erwartete Ersparnis** gegenüber HBC allein.
+9. **Batterie**: wie viele kWh jetzt in der Batterie sind.
 
 ## Was Batterijplan tut
 
@@ -37,18 +36,6 @@ Die Bilder auf dieser Seite sind mit Demodaten erstellt. Die Beträge sind Beisp
 - **Gibt eine Empfehlung für HBC.** Wie viel Solarstrom dein Haus selbst verbraucht (die HBC-Einstellung *Solar reserved for house*), auf Basis der letzten 7 Tage. Es gibt auch Empfehlungen für *cheapest hrs* und *expensive hrs*. Nur wenn du den Schalter *HBC-Einstellungen automatisch anpassen* einschaltest (standardmäßig aus), ändert es diese drei HBC-Einstellungen selbst; deine eigenen Werte kommen beim Ausschalten zurück. An den Flows oder am Code von HBC ändert es nie etwas.
 - **Zeigt, was es bringt.** Eine ehrliche Schätzung zusätzlich zu HBC allein: Beim Überschuss entladen zählt nur, was wirklich aus dem Speicher kam.
 - **Startet sicher.** Zuerst im Schattenmodus (rechnet mit, steuert nichts). Erst wenn du *Live* einschaltest, steuert es HBC nach.
-
-## Neu in 1.1.0 · Midnight Sunshine
-
-<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/batterijplan-de.gif" width="80%" alt="Batterijplan in Bewegung"></p>
-
-- **Heute:** bisher gespart, noch erwartet bis 24:00 und die Tagessumme, mit einer Grafik über den Tag und den letzten 7 Tagen. Tippe auf *Noch zu sparen* im Kopf der Grafik oder auf den Knopf *Heute*.
-- **Noch zu sparen bis Ende &lt;Tag&gt; (24:00):** der Kopf der Grafik zeigt jetzt, was Batterijplan bis zum Ende des Plans noch spart, mit dem Tag dazu.
-- **Ertrag pro Tag, Woche, Monat, Quartal und Jahr,** von neu nach alt mit Trendpfeil, dazu ein CSV-Export mit einer Zeile pro Tag.
-- **Ertrag zählt nur live:** die Summe ist, was Batterijplan einbrachte, während es wirklich steuerte.
-- **Kapazitätsempfehlung (Experiment):** war deine Batterie groß genug für die teuren Viertelstunden, und was hätte eine andere Kapazität gebracht? Pro Jahr (bis 5), Quartal und Monat. Ein oder aus unter *Einstellungen → Experte*; die Daten bleiben erhalten. Siehe [06 · Kapazitätsempfehlung](docs/06-capacity.de.md).
-- **Bericht** mit der Kapazität pro Jahr, Quartal und Monat, der Prognose in deiner Sprache und Zahlen in deinem Zahlenformat.
-- **Jetzt in der Batterie** mit der erwarteten Ladung darunter.
 
 ## Neu in 1.0.0
 
@@ -74,8 +61,8 @@ Alles auf einen Blick: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
-1. Öffne HACS, suche nach **HBC Batterijplan** und wähle **Herunterladen**.
-2. Noch nicht zu sehen? HACS aktualisiert seine Liste ab und zu. Bis dahin kannst du sie als benutzerdefiniertes Repository hinzufügen: HACS → Menü (⋮) → **Benutzerdefinierte Repositories** → `https://github.com/satscan1/hbc-batterijplan`, Kategorie **Integration**. Suche sie danach und lade sie herunter.
+1. Öffne HACS, suche nach **HBC Batterijplan** und wähle **Herunterladen** (sobald die Integration in der HACS-Standardliste steht).
+2. Noch nicht gelistet, oder du findest sie nicht? Füge sie als benutzerdefiniertes Repository hinzu: HACS → Menü (⋮) → **Benutzerdefinierte Repositories** → `https://github.com/satscan1/hbc-batterijplan`, Kategorie **Integration**. Suche sie danach und lade sie herunter.
 3. Starte Home Assistant neu, dann *Einstellungen → Geräte & Dienste → Integration hinzufügen → Batterijplan*.
 
 Details: [01 · Installation](docs/01-installation.de.md).
@@ -89,11 +76,13 @@ Details: [01 · Installation](docs/01-installation.de.md).
 | [03 · So funktioniert es](docs/03-how-it-works.de.md) | Der Plan, Überschuss, Lernen, die Empfehlung und der Zähler in einfacher Sprache |
 | [04 · Pflege und Aktualisieren](docs/04-maintenance.de.md) | Was du ab und zu tust, neue Version, Entfernen |
 | [05 · Probleme lösen](docs/05-troubleshooting.de.md) | Bekannte Meldungen und was du dagegen tust |
-| [06 · Kapazitätsempfehlung](docs/06-capacity.de.md) | Das Kapazitätsexperiment: wie es rechnet und wie man es liest |
+| [07 · Verträge, Nebenzeiten und Flandern](docs/07-contracts-and-flanders.de.md) | Welcher Vertrag, Fest- und Zweitarif, der flämische Kapazitätstarif |
+| [08 · Klüger rechnen](docs/08-calculation.de.md) | Sonnenmarge, dunkle Tage, lernende Reserve, Verbrauch pro Wochentag, Laden in jeder günstigen Viertelstunde, Verkaufsreserve (2.0.0) |
+| [Alle Änderungen in 2.0.0](docs/AENDERUNGEN_v2.0.0.de.md) | Alles, was seit 1.1.0 neu, verbessert, behoben und entfernt ist |
 
 ## Status
 
-1.1.0 · Midnight Sunshine baut auf 1.0.0 auf, der ersten vollständigen Version. Neu dabei? Starte sie zuerst im Schattenmodus, schau ein paar Tage zu und melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Nenne deine HBC-Version und, bei einer Fehlermeldung, einen Screenshot.
+1.0.0 ist die erste vollständige Version. Starte sie zuerst im Schattenmodus, schau ein paar Tage zu und melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Nenne deine HBC-Version und, bei einer Fehlermeldung, einen Screenshot.
 
 ## Lizenz
 

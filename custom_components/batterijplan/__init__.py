@@ -10,13 +10,15 @@ import logging
 from pathlib import Path
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, FRONTEND_URL, OBSOLETE_ENTITIES
+from homeassistant.helpers.storage import Store
+
+from .const import DOMAIN, FRONTEND_URL, HBC_SELL_RESERVE, OBSOLETE_ENTITIES, STORAGE_VERSION
 from .coordinator import BatterijplanConfigEntry, BatterijplanCoordinator
 from .panel import async_remove_dashboard, async_setup_dashboard
 
@@ -122,5 +124,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: BatterijplanConfigEntry) -> None:
-    """Integration removed: its dashboard goes too (a reload keeps it)."""
+    """Integration removed: its dashboard goes too (a reload keeps it), and HBC's 'Keep energy in reserve' gets your own value
+    back when Batterijplan still owned it (2.0.0, sell reserve). Never on unload: that also happens at every restart."""
     async_remove_dashboard(hass)
+    try:
+        data = await Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}").async_load() or {}
+        orig = data.get("sell_orig")
+        if isinstance(orig, (int, float)) and hass.states.get(HBC_SELL_RESERVE) is not None:
+            await hass.services.async_call("input_number", "set_value", {"entity_id": HBC_SELL_RESERVE, "value": orig},
+                                           blocking=True, context=Context())
+    except Exception:  # noqa: BLE001 - removing the integration must never fail on this
+        _LOGGER.warning("Batterijplan: could not give HBC 'Keep energy in reserve' back", exc_info=True)

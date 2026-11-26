@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import consumption as profile
-from . import advisor, counter, daluren, hbcmarks, peak, plan, solcast, steering, vastsim
+from . import advisor, counter, daluren, donker, hbcmarks, peak, plan, reserve, solcast, steering, vastsim, verkoopreserve, weekprofiel, zonleer, zonmarge
 from .const import (
     CONF_BONUS_FROM, CONF_BONUS_TO, CONF_CAPACITY, CONF_CONTRACT_START, CONF_FEED_IN_BONUS, CONF_FEED_IN_FEE, CONF_FEED_IN_FIXED,
     COUNTRY_BE, HBC_LIMIT_IMPORT_ON, HBC_LIMIT_IMPORT_W, CONF_FLANDERS, ha_country, migrate_options,
@@ -29,7 +29,7 @@ from .const import (
     CONF_MARGIN, CONF_PRICES, CONF_SENSOR_BATTERY, CONF_SENSOR_EV, CONF_SENSOR_NET, CONF_SENSOR_SOLAR,
     CONF_STORAGE_FEE, CONF_VAT, DEFAULTS, DOMAIN, HBC_COUNT, HBC_DELTA, HBC_FORECAST_POINTER, HBC_MAX_ENERGY, HBC_PRICES, HBC_RESERVED, HBC_SETTINGS, HBC_STRATEGY,
     CONF_SOLAR_TODAY, CONF_SOLAR_TOMORROW, OWN_SOLAR_SENSOR, PRICES_ALL_IN,
-    STORAGE_VERSION, SWITCH_RULES, VERSION,
+    RULES_DEFAULT_OFF, STORAGE_VERSION, SWITCH_RULES, VERSION, HBC_SELL_GOAL, HBC_SELL_RESERVE, HBC_SELL_THEN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
         self.settings: dict[str, Any] = {}
         self.live = False
-        self.rules = {k: True for k in SWITCH_RULES}
+        self.rules = {k: k not in RULES_DEFAULT_OFF for k in SWITCH_RULES}
         self.profile = profile.Profile()
         self.avg = profile.StepAverage(900)
         self.consumption_w: float | None = None
@@ -99,10 +99,19 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # channels: net = grid (+ import), nb = grid + battery (= grid without the battery), dis / chg = battery discharge / charge, imp = import only
         self._qs = peak.QuarterSet(("net", "nb", "dis", "chg", "imp", "exp"))
         self._night_on = False  # we put HBC on Charge for the night
+        self._strat_q: int | None = None  # plan quarter of the last Dynamic <-> Charge change (2.0.0)
+        self.donker: dict[str, Any] = {}  # dark days after the price horizon (2.0.0, donker.py)
+        self.zon_boek: dict[str, list] = {}  # 2.0.0: per day [solar forecast kWh (morning), measured kWh] (zonleer.py), own store
+        self.reserve: dict[str, Any] = {}  # 2.0.0: learned reserve (reserve.py)
+        self.week: dict[str, Any] = weekprofiel.empty()  # 2.0.0: consumption per weekday x hour + self-test, own store
         self.lading_hist: list[list[float]] = []  # [quarter ts, kWh in the battery], last 24 h: the chart under a Fixed contract
         self._vast_cache: tuple[Any, dict[str, Any]] | None = None
         self.limit_orig: dict[str, Any] | None = None  # HBC import limit as it was before we took it over (None = not ours)
         self.strat_orig: str | None = None  # HBC strategy as it was before Fixed / Day-night took it over
+        self.sell_orig: float | None = None  # 2.0.0: HBC 'Keep energy in reserve' as it was before we took it over (None = not ours)
+        self._sell_q: int | None = None  # plan quarter of the last sell-reserve write (at most one per quarter)
+        self._sell_written: float | None = None  # last value we wrote (HBC's own Min/max node may only lower it: not your edit)
+        self.sell_view: dict[str, Any] = {}  # 2.0.0: what the sell-reserve rule does now (attribute 'verkoopreserve')
         self._lim_last_write: float | None = None
         self._q_pushed = 0.0
         self.load_settings()
@@ -223,7 +232,11 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.limit_orig = dict(lo) if isinstance(lo, dict) else None
             so = data.get("strat_orig")
             self.strat_orig = str(so) if so else None
+            sr = data.get("sell_orig")  # additive key of 2.0.0: absent = not ours
+            self.sell_orig = float(sr) if isinstance(sr, (int, float)) else None
             self.lading_hist = [[float(a), float(b)] for a, b in (data.get("lading_hist") or []) if isinstance(a, (int, float)) and isinstance(b, (int, float))]
+            self.week = weekprofiel.load(data.get("weekprofiel"))
+            self.zon_boek = {str(k): list(v) for k, v in (data.get("zon_boek") or {}).items() if isinstance(v, list) and len(v) == 2}
         hdata = await self._hstore.async_load()
         if hdata:
             self.hist = {str(k): list(v) for k, v in (hdata.get("q") or {}).items()}
@@ -255,6 +268,8 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass, [HBC_STRATEGY, *steering.HBC_SELECTS.values()], self._hbc_changed))
         self._unsub.append(async_track_state_change_event(
             hass, [eid for eid, _t, _u in HBC_SETTINGS.values()], self._hbc_setting_changed))
+        self._unsub.append(async_track_state_change_event(hass, [HBC_SELL_RESERVE], self._sell_changed))
+        self._unsub.append(async_track_state_change_event(hass, [HBC_SELL_GOAL, HBC_SELL_THEN], self._sell_goal_changed))
         self._unsub.append(async_track_state_change_event(
             hass, [f"sensor.marstek_m{i}_battery_state_of_charge" for i in range(1, 5)]
             + [f"input_number.marstek_m{i}_discharging_cutoff_capacity" for i in range(1, 5)], self._soc_changed))
@@ -298,7 +313,8 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _data_to_save(self) -> dict[str, Any]:
         return {"profile": self.profile.to_dict(), "counter": self.cnt, "remembered": self.remembered, "hbc_source": self.hbc_source,
                 "hbc_auto": self.hbc_auto, "cap_on": self.cap_on, "hbc_user": self.hbc_user, "hbc_advice": self.hbc_advice, "adv_days": self.adv_days,
-                "limit_orig": self.limit_orig, "strat_orig": self.strat_orig, "lading_hist": self.lading_hist}
+                "limit_orig": self.limit_orig, "strat_orig": self.strat_orig, "sell_orig": self.sell_orig, "lading_hist": self.lading_hist,
+                "zon_boek": self.zon_boek, "weekprofiel": self.week}
 
     def _save_peaks(self) -> None:
         self._pstore.async_delay_save(self.peaks.to_dict, 30)
@@ -352,8 +368,11 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Learn the consumption of the quarter that just ended (time minus 2 minutes, as the package did)."""
         v = self.avg.average(time.time())
         when = dt_util.now() - timedelta(minutes=2)
+        normal = self.profile.uur[when.hour] if len(self.profile.uur) == 24 else None  # forecast BEFORE learning (self-test)
+        weekprofiel.learn(self.week, when.weekday(), when.hour, v, normal)
         self.profile = profile.update(self.profile, when, v if v is not None else -1)
         self._record_quarter(v)
+        self._learn_solar()
         lv = self._charge_live()
         if lv is not None:  # the battery level of this quarter: drawn in the chart under a Fixed contract
             self.lading_hist.append([float(int(time.time() // 900 * 900)), float(lv)])
@@ -409,9 +428,13 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Sensors with the detailed forecast: with a filled-in field only the chosen today/tomorrow sensors,
         otherwise every Solcast sensor of the platform (as before), else the known ids."""
         chosen = self.solar_ids()
-        if self.setting_text(CONF_SOLAR_TODAY) or self.setting_text(CONF_SOLAR_TOMORROW):
-            return [e for e in (chosen["vandaag"], chosen["morgen"]) if e]
         reg = er.async_get(self.hass)
+        if self.setting_text(CONF_SOLAR_TODAY) or self.setting_text(CONF_SOLAR_TOMORROW):
+            # 2.0.0: also Solcast day 3 .. 7, else the dark days (after the prices) never have a forecast
+            later = solcast.later_days((e.entity_id, e.translation_key, e.unique_id) for e in reg.entities.values()
+                                       if e.platform == "solcast_solar" and e.domain == "sensor")
+            mine = [e for e in (chosen["vandaag"], chosen["morgen"]) if e]
+            return mine + [e for e in later if e not in mine]
         ids = [e.entity_id for e in reg.entities.values() if e.platform == "solcast_solar" and e.domain == "sensor"]
         return ids or [e for e in (chosen["vandaag"], chosen["morgen"]) if e] or SOLCAST_FALLBACK
 
@@ -523,11 +546,13 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         out: dict[str, Any] = {"value": None if res["value"] is None else round(res["value"], 2),
                                "modus": res["modus"], "reden": res["reden"], "bron": src_id}
         tgt = res.get("tgt")
+        # 2.0.0: laaddoel_kwh / zon_voor_huis (and the old doel / reserve) in every mode, None when not steering or unknown (for HBC+)
+        out.update(steering.solar_names(tgt["doel"] if tgt else None, reserved))
         if tgt:
             def hm(v: float | None) -> str | None:
                 return dt_util.as_local(dt_util.utc_from_timestamp(v)).strftime("%H:%M") if v is not None else None
 
-            out.update({"doel": round(tgt["doel"], 2), "reserve": reserved, "hbc_max": round(hbc_max, 2), "bron_max": source,
+            out.update({"hbc_max": round(hbc_max, 2), "bron_max": source,
                         "blok_van": hm(tgt["start"]), "blok_tot": hm(tgt["einde"])})
         return out
 
@@ -551,10 +576,20 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         nbat = int(self._float(HBC_COUNT, 0))
         pv10, pv = self._solcast()
         fallback = self.avg.average(time.time())
+        marks = list(attrs.get("marks") or [])
+        dph = float(attrs.get("datapoints_per_hour") or 4)
+        cap = float(s[CONF_CAPACITY])
+        use_pct = profile.reliability(self.profile)
+        # without a solar power sensor the solar forecast can never be checked: then only the use forecast counts
+        sun_pct = zonleer.reliability(self.zon_boek)["pct"] if self.setting_text(CONF_SENSOR_SOLAR) else use_pct
+        self.reserve = reserve.learned(cap, float(s[CONF_MARGIN]), use_pct, sun_pct)
+        margin = float(self.reserve["kwh"])
+        self.donker = self._dark_days(marks, dph, pv, pv10, max(cap - margin, 0.0))
         return plan.PlanInput(
+            end_floor=float(self.donker.get("vloer") or 0.0),
             now_ts=time.time(),
             capacity=float(s[CONF_CAPACITY]),
-            margin=float(s[CONF_MARGIN]),
+            margin=margin,  # 2.0.0: learned reserve, your own margin is the minimum (reserve.py)
             storage_fee=float(s[CONF_STORAGE_FEE]),
             vat=float(s[CONF_VAT]) / 100,
             feed_in_fee=float(s[CONF_FEED_IN_FEE]),
@@ -583,12 +618,84 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             rule_discharge=self.rules["ontladen"],
             rule_hold=self.rules["vasthouden"],
             rule_feed_in=self.rules["terugleveren"],
+            charge_any=self.rules["elk_kwartier"],
+            sell_reserve=self._sell_rule_applies(),  # 2.0.0: the plan sells down to the sell reserve, as HBC will
+            sell_then=verkoopreserve.then_action(self._state(HBC_SELL_THEN)),
+            profile_week=self._week_table(),
+            solar_margin=True,
         )
+
+    def _learn_solar(self) -> None:
+        """Solar forecast reliability (zonleer.py): write today's P50 forecast once before 07:00, and the measured solar of
+        the complete past days from the quarter history (at least 90 % of the quarters measured)."""
+        if not self.setting_text(CONF_SENSOR_SOLAR):
+            return
+        tz = self._tz()
+        now = dt_util.now()
+        today = now.date()
+        changed = False
+        if now.hour < 7:
+            _pv10, pv = self._solcast()
+            start = int(datetime(today.year, today.month, today.day, tzinfo=tz).timestamp())
+            day = [v for ts, v in pv.items() if start <= ts < start + 86400 and datetime.fromtimestamp(ts, tz).date() == today]
+            if day:
+                changed |= zonleer.note_forecast(self.zon_boek, today.isoformat(), round(sum(day) * 0.5, 2))
+        for k in [k for k, r in self.zon_boek.items() if r[1] is None and k < today.isoformat()]:
+            qs = advisor.day_quarters(date.fromisoformat(k), tz)
+            vals = [self.hist[str(t)][2] for t in qs if str(t) in self.hist and self.hist[str(t)][2] is not None]
+            if qs and len(vals) >= advisor.COVER * len(qs):
+                changed |= zonleer.note_measured(self.zon_boek, k, sum(vals) / len(vals) * len(qs) * 0.25 / 1000)
+        n0 = len(self.zon_boek)
+        zonleer.prune(self.zon_boek, today.isoformat())
+        if changed or len(self.zon_boek) != n0:
+            self._save_now()
+
+    def _week_table(self) -> list[list[float | None]] | None:
+        """7 x 24 profile per weekday, only when its self-test shows it forecasts better than the normal profile."""
+        return weekprofiel.table(self.week, list(self.profile.uur)) if weekprofiel.verdict(self.week)["actief"] else None
+
+    def _day_use_kwh(self, day: date) -> float:
+        """Expected house use in kWh on ``day`` (learned profile per hour, per weekday when that one won its self-test;
+        fallback the 15-min average or 400 W)."""
+        wt = self._week_table()
+        prof = wt[day.weekday()] if wt is not None else self.profile.uur
+        fb = self.consumption_w if self.consumption_w is not None else 400.0
+        return sum(float(v) if isinstance(v, (int, float)) else float(fb) for v in (prof if len(prof) == 24 else [fb] * 24)) / 1000
+
+    def _dark_days(self, marks: list, dph: float, pv: dict[int, float], pv10: dict[int, float], usable: float) -> dict[str, Any]:
+        """Dark days right after the price horizon (donker.py): floor for the charge at the end of the plan."""
+        try:
+            starts = [plan._mark_start_ms(m["start"]) / 1000 for m in marks]
+        except (KeyError, TypeError, ValueError):
+            starts = []
+        if not starts:
+            return {"vloer": 0.0, "dagen": 0, "tekort": 0.0, "reden": "geen prijzen"}
+        tz = self._tz()
+        end = max(starts) + 3600 / max(dph, 0.01)
+        e = datetime.fromtimestamp(end, tz)
+        first = e.date() if (e.hour, e.minute) == (0, 0) else e.date() + timedelta(days=1)  # first whole day without prices
+        tot = zonmarge.day_totals(pv, pv10, time.time(), lambda ts: datetime.fromtimestamp(ts, tz).date())
+        days = []
+        for i in range(donker.MAX_DAYS):
+            d = first + timedelta(days=i)
+            days.append((d.isoformat(), tot.get(d), round(self._day_use_kwh(d), 2)))
+        out = donker.floor(days, usable)
+        out["vanaf"] = first.isoformat()
+        out["dagen_info"] = [[k, v, u] for k, v, u in days]
+        return out
 
     @property
     def hbc_dynamic(self) -> bool:
+        """HBC on Dynamic, or on the Charge Batterijplan itself set for a grid-charge block outside HBC's cheap hours (2.0.0):
+        HBC then still follows Batterijplan (steering, charge target, counter)."""
         st = self.hass.states.get(HBC_STRATEGY)
-        return st is not None and st.state == "Dynamic"
+        if st is None:
+            return False
+        return st.state == "Dynamic" or self._ours_charge(st.state)
+
+    def _ours_charge(self, state: str | None) -> bool:
+        return (self.contract == CONTRACT_DYNAMIC and state == HBC_STRATEGY_CHARGE
+                and self.strat_orig == steering.HBC_DYNAMIC)
 
     async def async_recalculate(self) -> None:
         """Run the rules, settle the counter, steer HBC for the coming quarter."""
@@ -692,7 +799,12 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return n
 
     async def async_steer(self) -> None:
-        """Set the HBC mode of the coming quarter's class to the plan's action (Live on, HBC on Dynamic)."""
+        """Set the HBC mode of the coming quarter's class to the plan's action (Live on, HBC on Dynamic).
+        2.0.0: first the main strategy: Charge for a grid-charge block outside HBC's cheap hours, else back to Dynamic;
+        then the sell reserve, so HBC has it before a Sell quarter starts."""
+        if self.live and self.contract == CONTRACT_DYNAMIC:
+            await self.async_apply_contract()
+        await self._sell_step()
         if not (self.live and self.hbc_dynamic):
             return
         first = (self.plan_result.get("punten") or [None])[0]
@@ -744,7 +856,9 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         old, new = event.data.get("old_state"), event.data.get("new_state")
         if eid == HBC_STRATEGY:
             self._sample()  # the HBC solar forecast switches between steering and pass-through with the strategy
-            if old is not None and old.state == "Dynamic" and (new is None or new.state != "Dynamic") and self.live:
+            self.hass.async_create_task(self._sell_step())  # 2.0.0: HBC leaves Dynamic: your own sell reserve back at once
+            if (old is not None and old.state == "Dynamic" and (new is None or new.state != "Dynamic") and self.live
+                    and not self._ours_charge(new.state if new else None)):  # our own Charge block: keep the modes
                 self.hass.async_create_task(self.async_restore_modes())
             elif new is not None and new.state == "Dynamic":
                 self.request_recalculate()
@@ -759,6 +873,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.async_restore_modes()
         await self.async_apply_contract()
         await self._limit_step(time.time())  # Live on: take over the HBC limit (BE); Live off: give it back
+        await self._sell_step()  # Live off: your own sell reserve back (also under a Fixed contract, where no plan runs)
         await self.async_recalculate()
 
     # ---- contract kind: Fixed / Day-night keep HBC on Self-consumption (2.0.0-dev1) ----------
@@ -784,8 +899,21 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _desired_strategy(self, now_ts: float) -> str | None:
         """HBC strategy we want: None = not ours (Live off or Dynamic); Charge in the night of a Day/night contract; else Self-consumption."""
-        if not self.live or self.contract == CONTRACT_DYNAMIC:
+        if not self.live:
             return None
+        if self.contract == CONTRACT_DYNAMIC:  # 2.0.0: Charge only for a grid-charge block outside HBC's cheap hours
+            st = self.hass.states.get(HBC_STRATEGY)
+            first = (self.plan_result.get("punten") or [None])[0]
+            want, _why = steering.any_quarter_charge(
+                live=self.live, contract_dynamic=True, rule_charge=self.rules["laden"], rule_any=self.rules["elk_kwartier"],
+                strategy=st.state if st else None, strat_orig=self.strat_orig, first_point=first)
+            q = int(first[0]) if first else None
+            ours = self._ours_charge(st.state if st else None)
+            want = steering.hold_switch(want=want, ours=ours, forced=not (self.rules["laden"] and self.rules["elk_kwartier"]),
+                                        quarter=q, last_switch_quarter=self._strat_q)
+            if want != ours:
+                self._strat_q = q  # one Dynamic <-> Charge change per plan quarter
+            return HBC_STRATEGY_CHARGE if want else None
         if self.contract == CONTRACT_DAYNIGHT and self._night_charge_ok(now_ts):
             return HBC_STRATEGY_CHARGE
         return HBC_STRATEGY_SELF
@@ -816,7 +944,9 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         elif self.strat_orig is not None:
             orig, self.strat_orig, self._night_on = self.strat_orig, None, False
             self._save_now()
-            if st.state in (HBC_STRATEGY_SELF, HBC_STRATEGY_CHARGE) and st.state != orig:
+            # Dynamic contract: only our own Charge goes back to Dynamic; a strategy you chose yourself in between stays
+            back = (HBC_STRATEGY_CHARGE,) if (self.contract == CONTRACT_DYNAMIC and self.live) else (HBC_STRATEGY_SELF, HBC_STRATEGY_CHARGE)
+            if st.state in back and st.state != orig:
                 await self._set_strategy(st.state, orig, "your own value back")
 
     async def _tick_night(self, _now: datetime) -> None:
@@ -837,6 +967,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Contract, Flanders switch or own limit changed: strategy and HBC limit follow."""
         await self.async_apply_contract()
         await self._limit_step(time.time())
+        await self._sell_step()  # e.g. Fixed contract: the sell reserve goes back to your own value
         self.async_set_updated_data(self._build_data())
 
     # ---- Flemish capacity tariff: quarter average, monthly peak, HBC import limit (BE only) -
@@ -1009,8 +1140,13 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         fallback = self.consumption_w if self.consumption_w is not None else 400.0
         tz = self._tz()
 
+        wt = self._week_table()
+
         def house(ts: int) -> float:
-            h = datetime.fromtimestamp(ts, tz).hour
+            lt = datetime.fromtimestamp(ts, tz)
+            h = lt.hour
+            if wt is not None and isinstance(wt[lt.weekday()][h], (int, float)):
+                return float(wt[lt.weekday()][h])
             return float(prof[h]) if (len(prof) == 24 and isinstance(prof[h], (int, float))) else float(fallback)
 
         target = self._float("input_number.house_battery_strategy_charge_target_energy", cap)
@@ -1156,6 +1292,119 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_set_rule(self, rule: str, on: bool) -> None:
         self.rules[rule] = on
         await self.async_recalculate()
+        if rule == "verkoopreserve":
+            await self._sell_step()  # also when no plan ran (Fixed contract): give the reserve back right away
+            self.async_set_updated_data(self._build_data())
+
+    # ---- sell reserve: HBC 'Keep energy in reserve' (2.0.0, GitHub issue #9) ----------------------------------------
+    def _state(self, eid: str) -> str | None:
+        st = self.hass.states.get(eid)
+        return st.state if st is not None and st.state not in BAD else None
+
+    def _sell_rule_applies(self) -> bool:
+        """Rule on, Dynamic contract and HBC's 'Sell until' on 'energy reserve' (else the helper does nothing in HBC)."""
+        return (bool(self.rules.get("verkoopreserve")) and self.contract == CONTRACT_DYNAMIC
+                and self._state(HBC_SELL_GOAL) == verkoopreserve.SELL_GOAL_RESERVE)
+
+    def _sell_reason(self) -> str:
+        strat = self._state(HBC_STRATEGY)
+        return verkoopreserve.inactive_reason(
+            rule_on=bool(self.rules.get("verkoopreserve")), contract_dynamic=self.contract == CONTRACT_DYNAMIC,
+            sell_goal=self._state(HBC_SELL_GOAL), live=self.live, strategy=strat, ours_charge=self._ours_charge(strat))
+
+    def _sell_wanted(self) -> float | None:
+        """Helper value from the plan: need until the next cheap quarter + the plan's reserve, on the helper's step and range."""
+        need = self.plan_result.get("verkoopreserve")
+        cur, (lo, hi, step) = self._helper(HBC_SELL_RESERVE)
+        if need is None or cur is None:
+            return None
+        usable = self._float(HBC_MAX_ENERGY, 0)
+        if usable <= 1:
+            usable = float(self.settings[CONF_CAPACITY])
+        return verkoopreserve.helper_value(float(need), float(self.plan_result.get("marge") or 0.0), step, lo, hi, usable)
+
+    async def _sell_step(self) -> None:
+        """Rule active (Live on, rule on, Dynamic, HBC on Dynamic, Sell until 'energy reserve'): write the sell reserve,
+        at most once per plan quarter and only on a real difference. Otherwise: give your own value back (when it was ours)."""
+        reason = self._sell_reason()
+        before = dict(self.sell_view)
+        try:
+            await self._sell_apply(reason)
+        finally:
+            if self.sell_view != before:
+                self.async_set_updated_data(self._build_data())
+
+    async def _sell_apply(self, reason: str) -> None:
+        cur, (_lo, _hi, step) = self._helper(HBC_SELL_RESERVE)
+        wanted = self._sell_wanted() if not reason or reason in ("live uit", "HBC niet op Dynamic") else None
+        self.sell_view = {"aan": bool(self.rules.get("verkoopreserve")), "actief": not reason, "reden": reason or None,
+                          "kwh": wanted, "in_hbc": cur, "eigen": self.sell_orig,
+                          "plan_kwh": self.plan_result.get("verkoopreserve")}
+        if reason:
+            await self._sell_restore()
+            return
+        if wanted is None or cur is None:
+            return  # no plan or no HBC helper (yet): nothing to steer
+        first = (self.plan_result.get("punten") or [None])[0]
+        q = int(first[0]) if first else None
+        if self.sell_orig is None:  # first time: remember your value; never again while we own it (also over a restart)
+            self.sell_orig = cur
+            self._save_now()
+            self.sell_view["eigen"] = cur
+            await self.hass.services.async_call("logbook", "log", {
+                "name": "Batterijplan", "message": f"HBC 'Keep energy in reserve' taken over (was {_fmt(cur)} kWh): "
+                                                   "Batterijplan sets it per quarter (sell reserve)", "entity_id": HBC_SELL_RESERVE})
+        if not verkoopreserve.should_write(cur, wanted, step, q, self._sell_q):
+            return
+        self._sell_q = q
+        ctx = Context()
+        self._own_ctx.append(ctx.id)
+        await self.hass.services.async_call("input_number", "set_value", {"entity_id": HBC_SELL_RESERVE, "value": wanted},
+                                            blocking=True, context=ctx)
+        self.sell_view["in_hbc"] = wanted
+        self._sell_written = wanted
+        await self.hass.services.async_call("logbook", "log", {
+            "name": "Batterijplan", "message": f"HBC 'Keep energy in reserve': {_fmt(cur)} -> {_fmt(wanted)} kWh "
+                                               "(house use until the next cheap quarter + reserve)", "entity_id": HBC_SELL_RESERVE})
+
+    async def _sell_restore(self) -> None:
+        if self.sell_orig is None:
+            return
+        orig, self.sell_orig = self.sell_orig, None
+        self._sell_q = None
+        self.sell_view["eigen"] = None
+        self._save_now()
+        if self.hass.states.get(HBC_SELL_RESERVE) is not None:
+            ctx = Context()
+            self._own_ctx.append(ctx.id)
+            await self.hass.services.async_call("input_number", "set_value", {"entity_id": HBC_SELL_RESERVE, "value": orig},
+                                                blocking=True, context=ctx)
+            self.sell_view["in_hbc"] = orig
+        await self.hass.services.async_call("logbook", "log", {
+            "name": "Batterijplan", "message": f"HBC 'Keep energy in reserve' back to your own value ({_fmt(orig)} kWh)",
+            "entity_id": HBC_SELL_RESERVE})
+
+    @callback
+    def _sell_goal_changed(self, _event: Event) -> None:
+        """HBC 'Sell until' / 'Then use' changed: the rule may stop or start at once, and the plan models the new behaviour."""
+        self.hass.async_create_task(self._sell_step())
+        self.request_recalculate()
+
+    @callback
+    def _sell_changed(self, event: Event) -> None:
+        """You change 'Keep energy in reserve' by hand while Batterijplan owns it: that is your new own value (restored later)."""
+        new = event.data.get("new_state")
+        if self.sell_orig is None or new is None or event.data.get("old_state") is None or event.context.id in self._own_ctx:
+            return
+        try:
+            val = float(new.state)
+            old = float(event.data["old_state"].state)
+        except ValueError:
+            return
+        if self._sell_written is not None and abs(old - self._sell_written) < 1e-6 and val < old:
+            return  # HBC's Sell flow clamps the helper to the usable energy: not your own value
+        self.sell_orig = val
+        self._save_now()
 
     # ---- history and advice for the HBC settings (rc6) --------------------------------------
     def _tz(self) -> tzinfo:
@@ -1327,7 +1576,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return cur, specs
 
     async def async_apply_hbc(self) -> None:
-        """Auto-adjust on: set a HBC setting to the advice when it differs enough (>= 1 h, >= 0.5 kWh)."""
+        """Auto-adjust on: set a HBC setting to the advice when it differs enough (>= 1 h, >= 1 kWh)."""
         if self.contract != CONTRACT_DYNAMIC or not self.hbc_auto or self.hbc_advice.get("status") != "berekend":
             return
         advice = {"cheapest": self.hbc_advice.get("cheapest"), "expensive": self.hbc_advice.get("expensive"),
@@ -1432,6 +1681,10 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "contract": self.contract, "vast": self._vast_view(),
                 "hbc_strategie": st.state if st else None, "versie": VERSION,
                 "zon_vandaag": sol["vandaag"], "zon_morgen": sol["morgen"], "zon_rest_vandaag": sol["rest"],
+                "donker": {k: v for k, v in self.donker.items() if k != "dagen_info"} or None,  # 2.0.0: dark days after the price horizon
+                "reserve_plan": self.reserve or None,  # 2.0.0: learned reserve (kwh, eigen, geleerd, betrouwbaar)
+                "verkoopreserve": self.sell_view or None,  # 2.0.0: HBC sell reserve (aan, actief, reden, kwh, in_hbc, eigen, plan_kwh)
+                "zon_betrouwbaar": zonleer.reliability(self.zon_boek),  # 2.0.0: solar forecast vs measured
                 "uitleg": "punten = [time, price ct, kind (1 HBC expensive, 2 extra expensive, -1 cheap, 0 normal), "
                           "action HBC, charge HBC, action plan, charge plan, solar kW, cautious solar kW]; "
                           "actions L charge from grid, O discharge, H hold, Z solar only, V feed in",
@@ -1442,6 +1695,7 @@ class BatterijplanCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "consumption": self.consumption_w,
             "consumption_15m": round(a, 1) if (a := self.avg.average(time.time())) is not None else None,
             "profile": p,
+            "weekprofiel": weekprofiel.verdict(self.week),
             "profile_state": p.state,
             "reliability": pct,
             "verdict": profile.verdict(pct),

@@ -171,6 +171,12 @@
       "batterijplan_regel_terugleveren": {
         "name": "Rule: feed in"
       },
+      "batterijplan_regel_elk_kwartier": {
+        "name": "Rule: charge in any cheap quarter"
+      },
+      "batterijplan_regel_verkoopreserve": {
+        "name": "Rule: sell reserve automatic"
+      },
       "batterijplan_dal_weekend": {
         "name": "Weekend and public holidays off-peak"
       },

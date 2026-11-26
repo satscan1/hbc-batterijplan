@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.0.0 — Smarter calculation
+
+Builds on 2.0.0-dev1 (Fixed contracts, off-peak hours, Flanders). This is meant to be the last large update of the 2.x line; after this only bug fixes.
+
+**New**
+- **Charge in any cheap quarter** (new rule `switch.batterijplan_regel_elk_kwartier`, off by default, Dynamic contract only). Batterijplan recognises cheap quarters itself with HBC's own marking rule, but without HBC's maximum number of cheap hours, and the plan may charge from the grid in them. For a charge block outside HBC's cheap hours, Batterijplan sets HBC's main strategy to *Charge* for that block (the same Charge flow and charge target HBC uses in a cheap quarter) and back to *Dynamic* afterwards. Only from *Dynamic*, never from a strategy you chose yourself; Live off restores Dynamic at once.
+- **Solar risk margin that grows with the lead time.** Now: halfway between Solcast's normal and cautious estimate; sliding to the cautious estimate at 24 hours; after that 10 % less per further day (never below 70 % of it). Before: the cautious estimate everywhere.
+- **Dark days.** When at least two days right after the last known price bring hardly any sun (Solcast day 3 to 7, below a quarter of the expected use), the plan keeps up to the shortfall of those days (at most three, at most the usable capacity). Below that floor a kWh counts at the average purchase price instead of the cheapest one, so the plan only tops up in quarters cheaper than that, and in Flanders stays under the peak limit. Attribute `donker` on `sensor.batterijplan`.
+- **Reserve that learns.** Starts at 20 % of the capacity and drops to at least 3 % as the forecasts of house use and solar prove reliable (the weaker of the two counts). Your own safety margin stays the minimum. The solar forecast is checked every day against the measured solar (last 14 days). Attributes `reserve_plan` and `zon_betrouwbaar` on `sensor.batterijplan`.
+- **Use per weekday as a self-test.** A second profile per weekday × hour (last 4 weeks). Both profiles forecast every quarter before it is learned; the weekday profile is only used when its error over the last 14 days is at least 10 % smaller. Stored in Batterijplan's own storage file, not in the recorder. Attribute `weekprofiel` on `sensor.batterijplan_verbruiksprofiel`.
+- **Sell reserve automatic** (new rule `switch.batterijplan_regel_verkoopreserve`, off by default, Dynamic contract only; wish from GitHub issue #9). With Live on and HBC's *Sell until* on *energy reserve*, Batterijplan sets HBC's *Keep energy in reserve* (`input_number.house_battery_strategy_sell_target_energy`) every quarter to the house use until the next cheap quarter (worst running deficit, solar surplus refills) plus the plan's reserve, rounded up to the helper step and within its min/max and the usable energy. Written only on a difference of at least 0.5 kWh (or one step) and at most once per quarter. Active only with Live on, HBC on *Dynamic* (a *Charge* Batterijplan set itself for a charge block counts as Dynamic, so no back and forth), *Sell until* on *energy reserve* and a Dynamic contract. Your own value is remembered and restored at once when any of these goes away (HBC strategy and *Sell until* are watched) and when the integration is removed; the status card row then shows *not active* with the reason. *Sell until* and *Then use* are only read, never written. With the rule on, the plan models a Sell quarter as stopping at that reserve and then doing HBC's *Then use*. Attribute `verkoopreserve` on `sensor.batterijplan`; row *Sell reserve* on the status card.
+- **Docs**: new chapter *08 · Smarter calculation* (EN/NL/DE); chapter 07 has a section *Which contract do I choose?*.
+
+**Changed**
+- **Clearer attribute names on `sensor.batterijplan_zon_voor_hbc`** (for HBC+ and own cards): new `laaddoel_kwh` (charge target) and `zon_voor_huis` (HBC's *solar reserved for house*). The old `doel` and `reserve` keep the same values for now; they are old and will be replaced by `laaddoel_kwh` and `zon_voor_huis`. All four are always present (also with Live off); `laaddoel_kwh` / `doel` are `null` while Batterijplan does not steer the charge target.
+- **2.0.0 is a full release** (no pre-release); the installation guide now describes a normal update.
+- The cautious solar line in the plan chart (*Solar cautious*) now shows the value with the growing margin.
+- The HBC settings replay ignores today's dark days (they say nothing about a replayed day).
+- Pop-ups (*How to read this?*) render *italic* text; no more literal asterisks.
+- Dark days also read Solcast day 3 to 7 when you filled in your own solar sensors for today and tomorrow (before, that part then stayed off).
+
+**Tests**: `tests/test_elk_kwartier.py`, `tests/test_zonmarge.py`, `tests/test_donker.py`, `tests/test_reserve.py`, `tests/test_weekprofiel.py`, `tests/test_verkoopreserve.py`, `tests/test_popup_markup.mjs`.
+
 ## 2.0.0-dev1 — pre-release for testers
 
 **Pre-release.** Meant for testers, especially in Flanders. The latest full release stays 1.1.0. Nothing is lost when you update; you can go back to 1.1.0 in HACS.
@@ -19,6 +42,7 @@
 **Changed**
 - **The country comes from Home Assistant** (NL, BE or DE; anything else counts as the Netherlands). It decides the off-peak hours, the public holidays and the words (normal / off-peak rate, day / night price, HT / NT). **Germany: the Home Assistant country must be DE.**
 - Amounts on the dashboard are shown with two decimals.
+- **Solar reserved for house: whole kWh.** The advice is now rounded to whole kWh (half up) instead of 0.5 kWh, because HBC's field only takes whole kWh. The orange dot, the status line and *Auto-adjust HBC settings* now count a difference of at least 1 kWh (was 0.5 kWh), so there is no more dot for a value you cannot set.
 
 **Removed**
 - The country setting (`select.batterijplan_land`) and the trial mode switch of the earlier test builds. *Flanders on* in any country does what the trial mode did.

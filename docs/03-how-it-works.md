@@ -2,7 +2,7 @@
 
 *Nederlands: [03-how-it-works.nl.md](03-how-it-works.nl.md) · Deutsch: [03-how-it-works.de.md](03-how-it-works.de.md)*
 
-> Pre-release 2.0.0-dev1: with a *Fixed* contract Batterijplan makes no plan; see [07 · Contracts, off-peak hours and Flanders](07-contracts-and-flanders.md). This chapter describes a *Dynamic* contract.
+> Since 2.0.0: with a *Fixed* contract Batterijplan makes no plan; see [07 · Contracts, off-peak hours and Flanders](07-contracts-and-flanders.md). This chapter describes a *Dynamic* contract.
 
 **In short**
 - For each quarter of an hour HBC says: cheap, expensive or regular. Batterijplan looks ahead (at most 36 hours) and works out where it can do better than HBC alone.
@@ -164,9 +164,9 @@ Batterijplan can advise on three HBC settings: *cheapest hrs*, *expensive hrs* a
 
 **What is kept.** Per quarter, for 7 days: the bare HBC price, your measured house use and your measured solar. It is stored compactly in its own file and survives restarts. Until 7 full days are there the card says *Still measuring: day x of 7* and nothing changes.
 
-**How the advice is made.** Once a night (about 03:10) Batterijplan plays the last 7 days again with its own planner (Live on, current rules). For every candidate pair of *cheapest hrs* and *expensive hrs* it marks the quarters exactly the way HBC does (per calendar day, cheapest against most expensive, as long as the spread is at least the threshold delta, capped by the number of hours) and adds up the grid cost. Every replayed day starts with an empty battery, and charge that is left at the end of the day is valued at that day's cheapest purchase price, so it does not count as a loss. The pair with the lowest cost wins. When two results are practically equal (less than 1 cent over the 7 days) the value closest to your current setting wins. The candidates are whole hours up to 12 (or the maximum of the helper), always inside the helper's limits. The calculation takes a few seconds of processor time, once a day. *Solar reserved for house* is the 7-day average of the existing advice, rounded to 0.5 kWh.
+**How the advice is made.** Once a night (about 03:10) Batterijplan plays the last 7 days again with its own planner (Live on, current rules). For every candidate pair of *cheapest hrs* and *expensive hrs* it marks the quarters exactly the way HBC does (per calendar day, cheapest against most expensive, as long as the spread is at least the threshold delta, capped by the number of hours) and adds up the grid cost. Every replayed day starts with an empty battery, and charge that is left at the end of the day is valued at that day's cheapest purchase price, so it does not count as a loss. The pair with the lowest cost wins. When two results are practically equal (less than 1 cent over the 7 days) the value closest to your current setting wins. The candidates are whole hours up to 12 (or the maximum of the helper), always inside the helper's limits. The calculation takes a few seconds of processor time, once a day. *Solar reserved for house* is the 7-day average of the existing advice, rounded to whole kWh.
 
-**Auto-adjust.** The switch *Auto-adjust HBC settings* is **off** by default. When you turn it on, Batterijplan first remembers your own three values and then sets a setting to the advice, only when the difference is at least 1 hour (cheapest, expensive) or 0.5 kWh (solar reserved). Turning it off puts your own values back exactly. Every change is written to the logbook. Batterijplan only changes these three settings; it never touches HBC's flows or code.
+**Auto-adjust.** The switch *Auto-adjust HBC settings* is **off** by default. When you turn it on, Batterijplan first remembers your own three values and then sets a setting to the advice, only when the difference is at least 1 hour (cheapest, expensive) or 1 kWh (solar reserved). Turning it off puts your own values back exactly. Every change is written to the logbook. Batterijplan only changes these three settings; it never touches HBC's flows or code.
 
 ### Live charge level and lighter recorder load (rc6)
 

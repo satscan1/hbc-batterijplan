@@ -2,7 +2,7 @@
 
 *English: [07-contracts-and-flanders.md](07-contracts-and-flanders.md) · Deutsch: [07-contracts-and-flanders.de.md](07-contracts-and-flanders.de.md)*
 
-> **Pre-release 2.0.0-dev1.** Dit hoofdstuk beschrijft wat nieuw is in de pre-release voor testers. De laatste volledige release blijft 1.1.0.
+> **Nieuw in 2.0.0.** Dit hoofdstuk beschrijft de contractvormen en het Vlaamse capaciteitstarief. De nieuwe rekenonderdelen staan in [08 · Slimmer rekenen](08-calculation.nl.md).
 
 **In het kort**
 - Je kiest je **soort contract**: *Vast* of *Dynamisch*. Bij *Vast* kies je ook een **tarief**: *enkel* of *dubbel*.
@@ -44,6 +44,21 @@ Laden van het net in de daluren loont alleen als het prijsverschil groot genoeg 
 - **Verschil (normaaltarief − daltarief) minstens de drempel:** HBC gaat in de daluren op Charge.
 - **Verschil onder de drempel:** HBC blijft op Self-consumption. De briefing zegt: *Laden van het net levert niets op: verschil 2,7 ct, drempel 6,0 ct*, en de regel *Nachtladen* toont *uit (loont niet)*.
 - **Uitzondering, Vlaanderen aan:** laden in de daluren mag dan om de reserve voor pieken te vullen, los van het prijsverschil, maar alleen zolang er ruimte is onder de doelgrens.
+
+## Welk contract kies ik?
+
+- **Je hebt een dynamisch contract** (prijs per uur of kwartier): kies *Dynamisch*. HBC staat op Dynamic en Batterijplan maakt het plan. Wil je ook laden buiten de goedkope uren van HBC, zet dan de regel *Laden in elk goedkoop kwartier* aan (zie [08 · Slimmer rekenen](08-calculation.nl.md)).
+- **Je hebt een vast contract met één prijs**: kies *Vast* en *Enkeltarief*. HBC blijft op Self-consumption. Laden van het net levert dan niets op, dus dat gebeurt niet.
+- **Je hebt een vast contract met een dag- en nachtprijs** (Nederland: normaal- en daltarief, België: dag- en nachtprijs): kies *Vast* en *Dubbeltarief*, en vul beide prijzen in. In de daluren laadt HBC alleen als het verschil minstens de drempel van HBC is.
+- **Je woont in Vlaanderen**: kies je contract zoals hierboven, en zet daarnaast de schakelaar *Vlaanderen* aan voor het capaciteitstarief. Dat werkt bij elk contract.
+- **Twijfel je?** Kijk op je energierekening: staat er een prijs per uur of kwartier, dan is het dynamisch. Anders is het vast.
+
+### Wat stel je in HBC in?
+
+Volgens de HBC-documentatie (*docs/03-strategies.md*):
+- **Dynamisch**: zet HBC op de strategie **Dynamic**. Daarvoor heeft HBC de integratie *Cheapest Energy Hours* en een prijsbron nodig. Kies in Batterijplan het contract **Dynamisch**. Met Live aan zet Batterijplan elk kwartier de Dynamic-standen van HBC.
+- **Vast, enkeltarief**: zet HBC op **Self-consumption**. HBC houdt de netmeter dan rond 0 W: de batterij laadt met zonoverschot en levert aan het huis. Kies in Batterijplan het contract **Vast** met **Enkeltarief**.
+- **Vast, dubbeltarief**: zet HBC ook op **Self-consumption**. Kies in Batterijplan het contract **Vast** met **Dubbeltarief**. Met Live aan zet Batterijplan HBC in de daluren zelf tijdelijk op *Charge* als nachtladen loont, en daarna weer terug. Je hoeft daarvoor in HBC geen *Timed* in te stellen.
 
 ## Land uit Home Assistant
 

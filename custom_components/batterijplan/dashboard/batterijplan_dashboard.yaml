@@ -270,6 +270,28 @@ views:
                 **On:** feed in what is certainly left over, only when the feed-in payment is at least the HBC threshold higher than the cheapest purchase later on.
 
                 **Off:** never feed in.
+            - entity: switch.batterijplan_regel_elk_kwartier
+              name: Charge in any cheap quarter
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
+              info: |-
+                **On:** Batterijplan recognises cheap quarters itself (the same rule as HBC, without the maximum number of cheap hours) and may charge from the grid in them. When such a charge block falls outside HBC's cheap hours, Batterijplan sets HBC's strategy to Charge for that block and back to Dynamic afterwards. Only from Dynamic, never from a strategy you chose yourself.
+
+                **Off:** only charge in HBC's cheap hours (default).
+            - entity: switch.batterijplan_regel_verkoopreserve
+              name: Sell reserve automatic
+              beschikbaar:
+              - - entity: select.batterijplan_contract_soort
+                  state:
+                  - dynamisch
+              reden: Only with a dynamic contract
+              info: |-
+                **On:** with Live on, Batterijplan fills HBC's *Keep energy in reserve* (Sell strategy) every quarter with what your house still needs until the next cheap quarter, plus the plan's reserve. So HBC sells no more in a Sell quarter than the plan means. Only works when HBC's *Sell until* is set to *energy reserve*. Batterijplan only writes on a difference of at least 0.5 kWh and at most once per quarter. When you turn Live or this rule off, HBC gets your own value back.
+
+                **Off:** HBC keeps your own value (default).
           - naam: Expert
             sub: Only change if you know why
             rows:
@@ -337,7 +359,7 @@ views:
               info: |-
                 **Off (default):** Batterijplan changes nothing in HBC. Under HBC advice you only see the advice.
 
-                **On:** Batterijplan sets *cheapest hrs*, *expensive hrs* and *Solar reserved for house* in HBC to the advice itself, only when the difference is at least 1 hour or 0.5 kWh. Your own values are remembered first and come back exactly when you switch this off again. Every change is in the logbook.
+                **On:** Batterijplan sets *cheapest hrs*, *expensive hrs* and *Solar reserved for house* in HBC to the advice itself, only when the difference is at least 1 hour or 1 kWh. Your own values are remembered first and come back exactly when you switch this off again. Every change is in the logbook.
 
                 The first advice comes after 7 full days of measuring.
             - entity: switch.batterijplan_experiment_capaciteit

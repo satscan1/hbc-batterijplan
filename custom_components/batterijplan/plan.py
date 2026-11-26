@@ -24,6 +24,14 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
 
+try:
+    from . import donker, hbcmarks, verkoopreserve, zonmarge
+except ImportError:  # plain import in the offline tests
+    import donker
+    import verkoopreserve
+    import hbcmarks
+    import zonmarge
+
 QUARTER = 900
 MIN_CHARGE_QUARTERS = 2  # grid charging in blocks of at least 30 minutes (one quarter was too short for HBC)
 MAX_HORIZON = 129600  # 36 hours
@@ -72,6 +80,21 @@ class PlanInput:
     country: str = "nl"  # "nl" (default), "de" (fixed feed-in tariff, no selling from the battery) or "be" (Flanders); compared case-insensitively
     feed_in_fixed: float = 0.077  # EUR/kWh fixed feed-in tariff, only used for "de"
     limit_w: float | None = None  # W grid import limit (HBC peak shaving), only used for "be"; None = off
+    # 2.0.0: charge from the grid in any quarter Batterijplan itself recognises as cheap (HBC's own marking rule without HBC's
+    # cap on the number of cheap hours); steering then puts HBC's main strategy on Charge for that block (steering.any_quarter_charge)
+    charge_any: bool = False
+    # 2.0.0: solar risk margin that grows with the lead time (zonmarge.py) instead of the cautious estimate everywhere
+    solar_margin: bool = False
+    # 2.0.0: dark days after the price horizon (donker.py): kWh above the reserve the plan should keep at the end of the horizon;
+    # each kWh below it is worth the average purchase price of the horizon instead of the cheapest one (0 = earlier behaviour)
+    end_floor: float = 0.0
+    # 2.0.0: consumption per weekday x hour (7 x 24 W, Monday = 0), only when the self-test shows it forecasts better (weekprofiel.py)
+    profile_week: list[list[float | None]] | None = None
+    # 2.0.0 (issue #9): rule 'Sell reserve automatic' with HBC 'Sell until: energy reserve'. A sell quarter (V) then stops at the
+    # energy the house needs until the next cheap quarter (verkoopreserve.py); after that HBC runs its 'Then use' (``sell_then``:
+    # "O" discharges to the house, "H" keeps the charge). False = earlier behaviour (sell down to the reserve of the plan)
+    sell_reserve: bool = False
+    sell_then: str = "O"
 
 
 def stored_energy(soc: list[float], cutoff: list[float], nbat: int, cap: float) -> float:
@@ -97,6 +120,18 @@ def _mark_start_ms(start: Any) -> float:
         except ValueError:
             return datetime.fromisoformat(start).timestamp() * 1000
     return start.timestamp() * 1000  # datetime
+
+
+def own_low_marks(marks: list[dict[str, Any]], delta: float, per_hour: float, tz: ZoneInfo) -> list[bool]:
+    """Cheap quarters as Batterijplan recognises them itself (2.0.0): HBC's own marking rule (pair the cheapest with the most
+    expensive per local day while the spread is at least the threshold delta), but WITHOUT HBC's cap on the number of cheap
+    hours per day. A quarter HBC marks cheap is always one of these. Same order as ``marks``."""
+    if not marks:
+        return []
+    prices = [float(m.get("price") or 0) for m in marks]
+    days = [datetime.fromtimestamp(_mark_start_ms(m["start"]) / 1000, tz).date() for m in marks]
+    out = hbcmarks.mark_quarters(prices, days, delta, 0, 0, per_hour)
+    return [o == "low" or m.get("mark") == "low" for o, m in zip(out, marks)]
 
 
 def _prepare(inp: PlanInput) -> dict[str, Any]:
@@ -131,17 +166,23 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
     tz = ZoneInfo(inp.time_zone)
     Qraw: list[dict[str, Any]] = []
     mn = 999.0
-    for m in inp.marks:
+    own = own_low_marks(inp.marks, inp.delta, dph, tz) if inp.charge_any else [False] * len(inp.marks)
+    zs = zonmarge.series(inp.pv, inp.pv10, inp.now_ts) if inp.solar_margin else None
+    for mi, m in enumerate(inp.marks):
         st = _mark_start_ms(m["start"])
         mark = m.get("mark")
         p = float(m.get("price") or 0)
         for j in range(nsub):
             t = int(st / 1000) + j * QUARTER
             if T <= t < T + (inp.horizon or MAX_HORIZON):
-                h = datetime.fromtimestamp(t, tz).hour  # local hour of day
+                lt = datetime.fromtimestamp(t, tz)
+                h = lt.hour  # local hour of day
                 w = prof[h] if (have_prof and isinstance(prof[h], (int, float))) else fallback
+                if inp.profile_week is not None:
+                    wv = inp.profile_week[lt.weekday()][h]
+                    w = wv if isinstance(wv, (int, float)) else w
                 half = (t // 1800) * 1800
-                pv = inp.pv10.get(half, 0)
+                pv = inp.pv10.get(half, 0) if zs is None else zs.get(half, 0.0)
                 if inp.use_q is not None and t in inp.use_q:
                     w = inp.use_q[t]
                 if inp.solar_q is not None:
@@ -155,7 +196,7 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
                 lq = max(0.0, min(laadq, (inp.limit_w - w) / 1000 * 0.25)) if be_limit else laadq  # BE: charge power left under the limit
                 Qraw.append(
                     dict(
-                        t=t, p=p, m=mark, d=d, b=(p * fa + fb), e=ex,
+                        t=t, p=p, m=mark, d=d, b=(p * fa + fb), e=ex, own=own[mi],
                         z=inp.pv.get(half, 0) if inp.solar_q is None else pv,
                         z10=pv,  # cautious estimate (the one the plan uses)
                         need=round((w / 1000 - pv) * 0.25, 3),
@@ -167,11 +208,21 @@ def _prepare(inp: PlanInput) -> dict[str, Any]:
                     mn = p
     Q = sorted(Qraw, key=lambda x: x["t"])
     n = len(Q)
+    if inp.sell_reserve and n:
+        cheap = [x["m"] == "low" or (x["own"] and inp.charge_any and inp.rule_charge) for x in Q]
+        rv = verkoopreserve.per_quarter([x["need"] for x in Q], cheap, top)
+    else:
+        rv = [0.0] * n
+    for x, r in zip(Q, rv):
+        x["rv"] = r
     return {
         "T": T, "top": top, "marge": marge, "delta": delta, "fa": fa, "E": E, "Eruw": Eruw,
         "laadq": laadq, "ontlq": ontlq, "Q": Q, "n": n,
         "pmin_b": min(x["b"] for x in Q) if n else 0,
+        "plater": (sum(x["b"] for x in Q) / n) if n else 0,  # average purchase price: what a kWh bought after the horizon costs
+        "vloer": min(max(inp.end_floor, 0.0), top),
         "wear": delta * fa,  # EUR per discharged kWh
+        "vthen": "H" if inp.sell_then == "H" else "O",
     }
 
 
@@ -219,7 +270,7 @@ def hbc_alone_step(x: dict[str, Any], s: float, top: float, laadq: float) -> tup
 
 def _assemble(inp: PlanInput, P: dict[str, Any], engine: str, hl, hk, hk0, hs, bl, bk, bk0, bs, wear: float) -> dict[str, Any]:
     Q, n, pmin_b = P["Q"], P["n"], P["pmin_b"]
-    rest = (bs - hs) * pmin_b
+    rest = _end_val(P, hs) - _end_val(P, bs)  # = (bs - hs) x pmin_b without a dark-days floor
     opbrengst = hk - bk + rest
     punten = []
     for i in range(n):
@@ -251,6 +302,8 @@ def _assemble(inp: PlanInput, P: dict[str, Any], engine: str, hl, hk, hk0, hs, b
         "marge": round(P["marge"], 4),
         "engine": engine,
         "slijtage_plan": round(wear, 2),  # wear cost the plan accepted (not in kosten_plan)
+        # 2.0.0: sell reserve of the first quarter (kWh above the plan's reserve; None = rule off), see verkoopreserve.py
+        "verkoopreserve": Q[0].get("rv") if (n and inp.sell_reserve) else None,
     }
 
 
@@ -367,13 +420,24 @@ def _heuristic(P: dict[str, Any], inp: PlanInput, hbc_only: bool = False):
 # ---------------------------------------------------------------------------------------------
 # Dynamic programming
 # ---------------------------------------------------------------------------------------------
-def allowed_actions(mark: Any, inp: PlanInput) -> list[str]:
+def allowed_actions(mark: Any, inp: PlanInput, own_low: bool = False) -> list[str]:
     """Actions HBC can really execute in a quarter of this class, in order of preference (ties).
 
     cheap (low)    : L charge from the grid (up to charge power + solar), Z charge PV, H standby
     normal         : Z charge PV, O self-consumption (discharge up to consumption), H standby
     expensive      : O self-consumption, V sell (discharge up to discharge power), H standby
-    Rule switches off limit this to what HBC does by itself."""
+    Rule switches off limit this to what HBC does by itself.
+    2.0.0: with ``charge_any`` (and the rule 'charge' on) a normal quarter Batterijplan itself recognises as cheap
+    (``own_low``) also allows L: HBC's main strategy Charge executes it."""
+    if mark != "low" and own_low and inp.charge_any and inp.rule_charge:
+        acts = ["Z", "O", "H", "L"] if mark != "high" else ["O", "V", "H", "L"]
+        if not inp.rule_discharge and mark != "high":
+            acts.remove("O")
+        if not inp.rule_hold:
+            acts.remove("H")
+        if (not inp.rule_feed_in or inp.country.lower() == "de") and "V" in acts:
+            acts.remove("V")
+        return acts
     if mark == "low":
         acts = ["L"] if not inp.rule_charge else ["L", "Z", "H"]
     elif mark == "high":
@@ -389,8 +453,9 @@ def allowed_actions(mark: Any, inp: PlanInput) -> list[str]:
     return acts
 
 
-def _move(a: str, s: float, need: float, top: float, laadq: float, ontlq: float) -> float:
-    """Level after one quarter for HBC action ``a`` from level ``s`` (kWh above the reserve)."""
+def _move(a: str, s: float, need: float, top: float, laadq: float, ontlq: float, vfloor: float = 0.0, vthen: str = "O") -> float:
+    """Level after one quarter for HBC action ``a`` from level ``s`` (kWh above the reserve).
+    ``vfloor`` (2.0.0): HBC's sell reserve for V; at or below it HBC does its 'Then use' (``vthen``) instead."""
     if a == "Z":
         return min(top, s - need) if need < 0 else s
     if a == "O":
@@ -402,6 +467,10 @@ def _move(a: str, s: float, need: float, top: float, laadq: float, ontlq: float)
     if a == "L":
         return min(top, s + laadq + (-need if need < 0 else 0.0))
     # V: discharge up to the discharge power, the rest goes back to the grid
+    if vfloor > 0:
+        if s <= vfloor + 1e-9:
+            return _move(vthen, s, need, top, laadq, ontlq)
+        return max(s - ontlq, vfloor)
     return max(s - ontlq, 0.0)
 
 
@@ -427,13 +496,18 @@ def evaluate_actions(inp: PlanInput, actions: list[str], P: dict[str, Any] | Non
     s = P["E"]
     cost = wear = pen = 0.0
     for x, a in zip(P["Q"], actions):
-        s2 = _move(a, s, x["need"], P["top"], x["lq"], P["ontlq"])
+        s2 = _move(a, s, x["need"], P["top"], x["lq"], P["ontlq"], x.get("rv", 0.0), P.get("vthen", "O"))
         c, w = _cost(x, s, s2, P["wear"])
         cost += c
         wear += w
         pen += _cap_pen(x, x["need"] + s2 - s)
         s = s2
-    return {"cost": cost, "wear": wear, "end": s, "cap": pen, "objective": cost + wear + pen - s * P["pmin_b"]}
+    return {"cost": cost, "wear": wear, "end": s, "cap": pen, "objective": cost + wear + pen + _end_val(P, s)}
+
+
+def _end_val(P: dict[str, Any], s: float) -> float:
+    """End value of level ``s`` (negative cost): the cheapest purchase price per kWh, below a dark-days floor the average one."""
+    return donker.end_value(s, P["pmin_b"], P.get("plater", P["pmin_b"]), P.get("vloer", 0.0))
 
 
 def _dp(P: dict[str, Any], inp: PlanInput):
@@ -454,7 +528,7 @@ def _dp(P: dict[str, Any], inp: PlanInput):
             return v[ns]
         return v[i] + (v[i + 1] - v[i]) * (pos - i)
 
-    acts_q = [allowed_actions(x["m"], inp) for x in Q]
+    acts_q = [allowed_actions(x["m"], inp, x.get("own", False)) for x in Q]
     assert all(acts_q), "a quarter without an allowed action"
     M = max(int(MIN_CHARGE_QUARTERS), 1)
 
@@ -481,10 +555,11 @@ def _dp(P: dict[str, Any], inp: PlanInput):
     V = [[[[0.0] * (ns + 1) for _ in range(3)] for _ in range(M + 1)] for _ in range(n + 1)]
     for k in range(M + 1):
         for p in range(3):
-            V[n][k][p] = [-pmin_b * s for s in grid]
+            V[n][k][p] = [_end_val(P, s) for s in grid]
     for t in range(n - 1, -1, -1):
         x = Q[t]
-        need, b, e, lq, lim = x["need"], x["b"], x["e"], x["lq"], x["lim"]
+        need, b, e, lq, lim, rv = x["need"], x["b"], x["e"], x["lq"], x["lim"], x.get("rv", 0.0)
+        vthen = P.get("vthen", "O")
         for k in range(M + 1):
             acts = acts_for(t, k)
             for p in range(3):
@@ -493,7 +568,7 @@ def _dp(P: dict[str, Any], inp: PlanInput):
                     s = grid[i]
                     best = 1e18
                     for a in acts:
-                        s2 = _move(a, s, need, top, lq, ontlq)
+                        s2 = _move(a, s, need, top, lq, ontlq, rv, vthen)
                         net = need + s2 - s
                         pn = p_state(a, s, s2)
                         v = (net * b if net > 0 else net * e) + ((s - s2) * wear if s2 < s else 0.0) + pen(p, pn) + interp(V[t + 1][k_next(a, k)][pn], s2)
@@ -512,7 +587,7 @@ def _dp(P: dict[str, Any], inp: PlanInput):
         x = Q[t]
         best, ba, bs2, bc, bwr, bp = 1e18, "", s, 0.0, 0.0, 0
         for a in acts_for(t, k):
-            s2 = _move(a, s, x["need"], top, x["lq"], ontlq)
+            s2 = _move(a, s, x["need"], top, x["lq"], ontlq, x.get("rv", 0.0), P.get("vthen", "O"))
             c, w = _cost(x, s, s2, wear)
             pn = p_state(a, s, s2)
             v = c + w + _cap_pen(x, x["need"] + s2 - s) + pen(p, pn) + interp(V[t + 1][k_next(a, k)][pn], s2)

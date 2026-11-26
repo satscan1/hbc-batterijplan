@@ -28,8 +28,8 @@ Welche HBC-Modi du für günstig, normal und teuer eingestellt hast, spielt für
 
 ## Schritt 2 — Mit HACS installieren
 
-1. Suche in HACS nach **HBC Batterijplan** und wähle **Herunterladen**.
-2. Noch nicht zu sehen? HACS aktualisiert seine Liste ab und zu. Bis dahin kannst du sie als benutzerdefiniertes Repository hinzufügen: öffne in HACS das Menü (⋮) oben rechts und wähle **Benutzerdefinierte Repositories**. Repository: `https://github.com/satscan1/hbc-batterijplan`, Kategorie **Integration**. Hinzufügen, dann **HBC Batterijplan** suchen und **Herunterladen** wählen.
+1. Suche in HACS nach **HBC Batterijplan** und wähle **Herunterladen** (sobald die Integration in der HACS-Standardliste steht).
+2. Noch nicht gelistet, oder du findest sie nicht? Füge sie als benutzerdefiniertes Repository hinzu: öffne in HACS das Menü (⋮) oben rechts und wähle **Benutzerdefinierte Repositories**. Repository: `https://github.com/satscan1/hbc-batterijplan`, Kategorie **Integration**. Hinzufügen, dann **HBC Batterijplan** suchen und **Herunterladen** wählen.
 3. Starte Home Assistant neu.
 
 ## Schritt 3 — Integration hinzufügen
@@ -137,12 +137,11 @@ Gut zu wissen:
 - Die Summe des Zählers wird übernommen. Der Zähler *Mehrwert dieses Vertragsjahr* beginnt bei der Übernahme neu.
 - *Live* wird nie übernommen: Es steht nach der Installation immer auf **aus**, die Integration ändert also nichts in HBC. Schalte *Live* des Pakets selbst aus und danach *Live* der Integration ein, wenn du bereit bist.
 
-## Eine Pre-Release installieren (Tester)
+## Auf 2.0.0 aktualisieren
 
-Pre-Releases wie **2.0.0-dev1** bietet HACS nicht standardmäßig an.
+**2.0.0** ist eine vollständige Version. HACS bietet sie von selbst an.
 
-1. Öffne in HACS **HBC Batterijplan**, dann das Menü (⋮) → **Erneut herunterladen**.
-2. Wähle die Version **2.0.0-dev1** (aktiviere *Beta-Versionen anzeigen*, falls du sie nicht siehst) und lade sie herunter.
-3. Starte Home Assistant neu.
+1. Öffne **HBC Batterijplan** in HACS und wähle **Aktualisieren** (oder das Menü (⋮) → **Erneut herunterladen** und dann Version **2.0.0**).
+2. Starte Home Assistant neu.
 
-Auf demselben Weg gehst du zurück zur letzten vollständigen Version (1.1.0). Deine Einstellungen und der gelernte Verbrauch bleiben. Was neu ist, steht in [07 · Verträge, Nebenzeiten und Flandern](07-contracts-and-flanders.de.md). Melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues), mit deiner HBC-Version und deinem Land.
+Deine Einstellungen, der gelernte Verbrauch und der Zähler bleiben. Eine ältere Version wählst du auf demselben Weg über **Erneut herunterladen**. Was neu ist, steht in [07 · Verträge, Nebenzeiten und Flandern](07-contracts-and-flanders.de.md) und [08 · Klüger rechnen](08-calculation.de.md). Melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues), mit deiner HBC-Version und deinem Land.

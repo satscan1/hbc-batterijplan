@@ -49,6 +49,48 @@ def steer(first_point: list | None) -> tuple[str, str, str] | None:
 
 QUARTER = 900
 
+HBC_DYNAMIC = "Dynamic"
+HBC_CHARGE = "Charge"
+
+
+def any_quarter_charge(*, live: bool, contract_dynamic: bool, rule_charge: bool, rule_any: bool, strategy: str | None,
+                       strat_orig: str | None, first_point: list | None) -> tuple[bool, str]:
+    """Charge from the grid in a quarter HBC does not call cheap (2.0.0): should HBC's main strategy be 'Charge' now?
+
+    HBC's Dynamic strategy only offers 'Charge' in the quarters HBC marks cheap (at most its 'cheapest hours' per day). HBC's
+    main strategy 'Charge' runs the same Charge flow with the same charge goal, in any quarter. So for a grid-charge block of the
+    plan in a quarter HBC does not mark cheap, Batterijplan switches the main strategy from Dynamic to Charge, and back to Dynamic
+    when the block ends. Returns (want Charge, reason).
+
+    Batterijplan only takes over from Dynamic, or keeps its own Charge (``strat_orig`` = Dynamic); never from Timed, Full stop,
+    Self-consumption or anything else you chose. Once ours, the Charge stays for the whole block (also over HBC-cheap quarters),
+    so HBC does not switch back and forth inside one block."""
+    ours = strategy == HBC_CHARGE and strat_orig == HBC_DYNAMIC
+    if not live:
+        return False, "live uit"
+    if not contract_dynamic:
+        return False, "geen dynamisch contract"
+    if not (rule_charge and rule_any):
+        return False, "regel uit"
+    if not (strategy == HBC_DYNAMIC or ours):
+        return False, "HBC niet op Dynamic"
+    if not first_point or first_point[5] != "L":
+        return False, "geen laden van het net"
+    if first_point[2] == -1 and not ours:
+        return False, "HBC laadt zelf (goedkoop kwartier)"
+    return True, "laden buiten de goedkope uren van HBC"
+
+
+def hold_switch(*, want: bool, ours: bool, forced: bool, quarter: int | None, last_switch_quarter: int | None) -> bool:
+    """At most one change of HBC's main strategy (Dynamic <-> Charge) per plan quarter (2.0.0).
+
+    A plan run in the middle of a quarter (new prices, a source change) may flip the first point between L and not-L; HBC
+    should not follow that back and forth. Returns the decision to use: the new wish, or the current state (``ours``) when a
+    change already happened in this quarter. ``forced`` (Live off, rule off, no Dynamic contract) always wins: back at once."""
+    if forced or want == ours or quarter is None or last_switch_quarter != quarter:
+        return want
+    return ours
+
 
 def charge_target(points: list | None, stored_now: float | None) -> dict | None:
     """Grid-charge target for HBC: kWh above the discharge cut-off planned at the end of the coming
@@ -72,6 +114,15 @@ def hbc_forecast_value(target: float, reserved: float, hbc_max: float) -> float:
     available >= wanted. With forecast = reserved + max_energy - target: wanted = target (a target at or
     above max_energy gives surplus 0, so a full charge)."""
     return round(max(reserved + hbc_max - max(target, 0.0), 0.0), 2)
+
+
+def solar_names(target: float | None, reserved: float | None) -> dict:
+    """Charge target and HBC's 'solar reserved for house' on the sensor 'solar forecast for HBC', in every mode (2.0.0),
+    so HBC+ and own cards always find them: ``laaddoel_kwh`` is None while Batterijplan does not steer the charge target
+    (Live off, pass-through), ``zon_voor_huis`` None when HBC's value is unknown. ``doel`` / ``reserve``: old names, same values."""
+    t = None if target is None else round(max(float(target), 0.0), 2)
+    r = None if reserved is None or reserved < 0 else reserved
+    return {"laaddoel_kwh": t, "zon_voor_huis": r, "doel": t, "reserve": r}
 
 
 def solar_for_hbc(*, live: bool, dynamic: bool, rule_charge: bool, points: list | None, stored_now: float | None,

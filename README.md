@@ -6,7 +6,7 @@
 
 *Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Version 1.1.0 · Midnight Sunshine*
+*Version 1.0.0*
 
 Batterijplan makes your home battery save its charge for the **most expensive** moments of the day. It works together with [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) and does not take HBC over: HBC keeps controlling the battery, Batterijplan only gives it a hint for each quarter of an hour.
 
@@ -16,18 +16,17 @@ It is made for households in the Netherlands, Germany and Belgium (Flanders) wit
 
 <p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/dashboard-overview-en.png" width="95%" alt="Batterijplan dashboard"></p>
 
-The pictures on this page are made with demo data. The amounts are example figures.
+The amounts in the picture are example figures.
 
 1. **Live**: on = Batterijplan steers HBC. Off = shadow mode: it calculates along, but steers nothing.
-2. **Buttons**: Earnings, Today, Report, Advice HBC, Settings and Sensors. Each button opens a window. The orange dot on **Advice HBC** means that *cheapest hrs*, *expensive hrs* or *Solar reserved for house* differs from the advice (by at least 1 hour or 0.5 kWh); the window also has the switch *Auto-adjust HBC settings*.
+2. **Buttons**: Earnings, Report, Advice HBC, Settings and Sensors. Each button opens a window. The orange dot on **Advice HBC** means that *cheapest hrs*, *expensive hrs* or *Solar reserved for house* differs from the advice (by at least 1 hour or 1 kWh); the window also has the switch *Auto-adjust HBC settings*.
 3. **Status card**: mode, learning usage, HBC strategy, next quarter and advice house use. The (i) behind each line explains it.
-4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference in cost with HBC alone until the end of the plan.
+4. **Briefing and plan**: what is in the battery now, what the plan does in the next quarter, and the difference in cost with HBC alone until midnight.
 5. **Rules**: the four rules (*Extra charging from the grid*, *Discharging outside HBC hours*, *Holding for later*, *Feeding in*), each with its own on/off switch.
 6. **Where Batterijplan steers**: the blocks in which the plan does something different from HBC, with a colour for each action and the price.
-7. **Bare price now and the electricity cost until the end of the plan**: HBC next to Batterijplan.
-8. **Still to save until end of &lt;day&gt; (24:00)**: what Batterijplan still saves compared with HBC alone, from now until the end of the plan. Tap it for the *Today* window.
-9. **Battery**: how many kWh are in the battery now, with the expected charge below it.
-10. **Capacity** (blue border = experiment): does your battery fit your house? Switch it on or off in *Settings → Expert*.
+7. **Bare price now and the electricity cost until midnight**: HBC next to Batterijplan.
+8. **Expected saving** compared with HBC alone.
+9. **Battery**: how many kWh are in the battery now.
 
 ## What Batterijplan does
 
@@ -35,21 +34,8 @@ The pictures on this page are made with demo data. The amounts are example figur
 - **Uses surplus wisely.** Is there more in the battery than you need until the next cheap moment? Then Batterijplan already delivers that surplus to the house in the most expensive regular quarters, instead of starting to charge with a full battery.
 - **Learns your usage.** Per hour of the day, in 7 days, and after that it keeps moving along with the seasons. With the solar forecast from Solcast added in.
 - **Gives advice for HBC.** How much solar energy your house uses itself (the HBC setting *Solar reserved for house*), based on the last 7 days. It also advises on *cheapest hrs* and *expensive hrs*. Only when you turn on the switch *Auto-adjust HBC settings* (off by default) does it set these three HBC settings itself; your own values come back when you switch it off. It never touches HBC's flows or code.
-- **Shows whether your battery fits.** The capacity experiment shows per year, quarter and month what your battery earned and what another capacity could have earned. No battery price, no verdict: you decide.
 - **Shows what it earns.** An honest estimate on top of HBC alone: for surplus discharging, only what really came out of the battery counts.
 - **Starts safely.** First in shadow mode (it calculates along, but steers nothing). Only when you turn on *Live* does it steer HBC.
-
-## New in 1.1.0 · Midnight Sunshine
-
-<p align="center"><img src="https://raw.githubusercontent.com/satscan1/hbc-batterijplan/main/docs/images/batterijplan-en.gif" width="80%" alt="Batterijplan in motion"></p>
-
-- **Today:** saved so far, still expected until 24:00 and the day total, with a chart over the day and the last 7 days. Tap *Still to save* in the chart header or the *Today* button.
-- **Still to save until end of &lt;day&gt; (24:00):** the chart header now shows what Batterijplan still saves until the end of the plan, with the day named.
-- **Earnings per day, week, month, quarter and year,** from new to old with a trend arrow, plus a CSV export with one line per day.
-- **Earnings count only live:** the total is what Batterijplan earned while it really steered.
-- **Capacity advice (experiment):** was your battery big enough for the expensive quarters, and what would another capacity have earned? Per year (up to 5), quarter and month. Switch it on or off in *Settings → Expert*; the data is kept. See [06 · Capacity advice](docs/06-capacity.md).
-- **Report** with the capacity per year, quarter and month, the forecast in your language and numbers in your number format.
-- **In the battery now** with the expected charge below it.
 
 ## New in 1.0.0
 
@@ -75,8 +61,8 @@ Everything at a glance: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
-1. Open HACS, search for **HBC Batterijplan** and choose **Download**.
-2. Not showing up yet? HACS refreshes its list now and then. Until it does, you can add it as a custom repository: HACS → menu (⋮) → **Custom repositories** → `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Then search for it and download it.
+1. Open HACS, search for **HBC Batterijplan** and choose **Download** (once the integration is in the HACS default list).
+2. Not listed yet, or you do not see it? Add it as a custom repository: HACS → menu (⋮) → **Custom repositories** → `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Then search for it and download it.
 3. Restart Home Assistant, then *Settings → Devices & services → Add integration → Batterijplan*.
 
 Details: [01 · Installation](docs/01-installation.md).
@@ -90,11 +76,13 @@ Details: [01 · Installation](docs/01-installation.md).
 | [03 · How it works](docs/03-how-it-works.md) | The plan, surplus, learning, the advice and the counter in plain language |
 | [04 · Maintenance and updating](docs/04-maintenance.md) | What you do now and then, a new version, removing it |
 | [05 · Troubleshooting](docs/05-troubleshooting.md) | Known messages and what to do about them |
-| [06 · Capacity advice](docs/06-capacity.md) | The capacity experiment: how it is calculated and how to read it |
+| [07 · Contracts, off-peak hours and Flanders](docs/07-contracts-and-flanders.md) | Which contract to choose, Fixed and day/night rates, the Flemish capacity tariff |
+| [08 · Smarter calculation](docs/08-calculation.md) | Solar margin, dark days, the learning reserve, use per weekday, charging in any cheap quarter, sell reserve (2.0.0) |
+| [All changes in 2.0.0](docs/CHANGES_v2.0.0.md) | Everything new, improved, fixed and removed since 1.1.0 |
 
 ## Status
 
-1.1.0 · Midnight Sunshine builds on 1.0.0, the first full release. New? Start in shadow mode first, watch it for a few days and report what you notice via [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Mention your HBC version and, for an error message, add a screenshot.
+1.0.0 is the first full release. Start in shadow mode first, watch it for a few days and report what you notice via [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Mention your HBC version and, for an error message, add a screenshot.
 
 ## License
 

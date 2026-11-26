@@ -28,8 +28,8 @@ Which HBC modes you have set for cheap, regular and expensive does not matter fo
 
 ## Step 2 — Install with HACS
 
-1. In HACS, search for **HBC Batterijplan** and choose **Download** (once the integration is in the HACS default list).
-2. Not listed yet, or you do not see it? Add it as a custom repository: in HACS, open the menu (⋮) at the top right and choose **Custom repositories**. Repository: `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Add it, then search for **HBC Batterijplan** and choose **Download**.
+1. In HACS, search for **HBC Batterijplan** and choose **Download**.
+2. Can't find it? Add it as a custom repository: in HACS, open the menu (⋮) at the top right and choose **Custom repositories**. Repository: `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Add it, then search for **HBC Batterijplan** and choose **Download**.
 3. Restart Home Assistant.
 
 ## Step 3 — Add the integration

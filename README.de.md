@@ -6,11 +6,11 @@
 
 *English: [README.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.md) · Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md)*
 
-*Version 1.0.0*
+*Version 2.0.0*
 
 Batterijplan sorgt dafür, dass dein Hausspeicher seine Ladung für die **teuersten** Momente des Tages aufhebt. Es arbeitet mit [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) zusammen und übernimmt HBC nicht: HBC steuert weiter den Speicher, Batterijplan gibt nur pro Viertelstunde einen Hinweis.
 
-Es ist für Haushalte in den Niederlanden, Deutschland und Belgien (Flandern) mit einem dynamischen Stromvertrag gedacht.
+Es ist für Haushalte in den Niederlanden, Deutschland und Belgien (Flandern) mit einem dynamischen oder festen Stromvertrag gedacht.
 
 > Batterijplan ist eine eigenständige, inoffizielle Ergänzung zu HBC. Es wird nicht von den Machern von HBC entwickelt oder gepflegt. Fragen zu Batterijplan stellst du hier, nicht bei HBC.
 
@@ -37,32 +37,28 @@ Die Beträge im Bild sind Beispielzahlen.
 - **Zeigt, was es bringt.** Eine ehrliche Schätzung zusätzlich zu HBC allein: Beim Überschuss entladen zählt nur, was wirklich aus dem Speicher kam.
 - **Startet sicher.** Zuerst im Schattenmodus (rechnet mit, steuert nichts). Erst wenn du *Live* einschaltest, steuert es HBC nach.
 
-## Neu in 1.0.0
+## Neu in 2.0.0
 
-- **Ländereinstellung:** Deutschland (feste Einspeisevergütung) und Belgien/Flandern (Kapazitätstarif, nutzt die Importgrenze von HBC), neben den Niederlanden.
-- **Ruhigerer Plan bei fast gleichen Preisen:** Umschaltkosten von 2 ct zwischen Halten und Einspeisen, damit der Plan nicht mehr wegen eines Bruchteils eines Cents umschlägt.
-- **Lesbar im hellen Modus:** dunklere Farben für die Plankarte und die Legende im hellen Home-Assistant-Design; das dunkle Design bleibt unverändert.
-- **Zeitzone aus Home Assistant:** ohne blockierenden Aufruf gelesen (Review-Feedback).
-- **Solarprognose für HBC:** Der neue Sensor `sensor.batterijplan_zon_voor_hbc` lässt HBC das Laden aus dem Netz auf dem Niveau beenden, das der Plan will. Ohne Plan oder bei ausgeschaltetem Live gibt er die echte Prognose 1:1 weiter.
-- **Solcast-Namen:** werden automatisch auf Englisch, Niederländisch und Deutsch gefunden, oder du trägst deine eigenen Sensoren im Fenster *Sensoren* ein.
-- **HBC-Einstellungen automatisch:** ein Schalter (standardmäßig aus), der *cheapest hrs*, *expensive hrs* und *Solar reserved for house* auf die Empfehlung setzt. Deine eigenen Werte kommen zurück, wenn du ihn ausschaltest. Die Karte *Empfehlung HBC* zeigt alle drei Einstellungen.
-- **Live-Ladestand:** *Jetzt in der Batterie* folgt der Batterie, sobald sie sich ändert, in Schritten von 0,1 kWh.
-- **Schonender für die Datenbank:** Die großen Plandetails werden nicht mehr in den Recorder geschrieben.
-- **Tooltip im Diagramm:** Hover oder Tippen zeigt Zeit, Preis, Solar, Ladung und Aktionen pro Viertelstunde.
-- **Eine echte Home-Assistant-Integration:** mit HACS installieren und in einem Formular unter *Geräte & Dienste* einrichten. Kein YAML-Paket, keine Dateien kopieren, keine Dashboard-Ressource.
-- **Eingebautes Dashboard** in der Seitenleiste (`/batterijplan`), auf Niederländisch, Englisch und Deutsch.
-- **Vier Regeln mit eigenem Schalter:** aus dem Netz laden, außerhalb der HBC-Zeiten entladen, halten, einspeisen. Die Schwelle ist die von HBC selbst.
-- **Laden aus dem Netz in Blöcken von mindestens 30 Minuten**, damit HBC auch wirklich lädt.
-- **Empfehlung für HBC eingebaut**, mit eigener Karte; der Status zeigt die Empfehlung nach 7 Tagen Messen.
-- **Schattenwert nur bei ausgeschaltetem Live**, höchstens 30 Tage aufbewahrt.
-- **Zahlen folgen deinem Home-Assistant-Zahlenformat** (Komma oder Punkt). Tippe auf das Logo für das Jahreszeitenbild.
+Alle Änderungen seit 1.1.0:
 
-Alles auf einen Blick: [CHANGELOG.md](CHANGELOG.md).
+- **Vertrag wählen:** Festpreis mit Einheitstarif, Festpreis mit Tag/Nacht-Tarif oder dynamisch. Bei einem festen Vertrag bleibt HBC auf *Self-consumption*; beim Tag/Nacht-Tarif lädt der Speicher nachts nur aus dem Netz, wenn es sich lohnt.
+- **Flandern (Kapazitätstarif):** ein eigener Schalter, mit jedem Vertrag. Spitze pro Viertelstunde, eine Zielgrenze, die der Monatsspitze folgt, und die Monatsspitze mit und ohne Speicher mit der Ersparnis.
+- **Laden in jeder günstigen Viertelstunde:** Batterijplan erkennt günstige Viertelstunden selbst, auch außerhalb der maximalen Zahl günstiger Stunden von HBC *(neuer Schalter, standardmäßig aus, dynamischer Vertrag)*.
+- **Sonnenmarge:** je weiter voraus, desto vorsichtiger geht Batterijplan mit der Solarprognose um.
+- **Dunkle Tage:** kommen Tage mit kaum Sonne, hält der Plan Ladung und lädt nur in günstigen Viertelstunden nach.
+- **Lernende Reserve:** beginnt bei 20 % und sinkt auf 3 %, je besser Verbrauch und Sonne vorhergesagt werden. Deine eigene Marge bleibt die Untergrenze.
+- **Verbrauch pro Wochentag** als Selbsttest: nur genutzt, wenn er wirklich besser vorhersagt.
+- **Verkaufsreserve automatisch:** Batterijplan setzt jede Viertelstunde das *Keep energy in reserve* von HBC auf das, was dein Haus bis zum nächsten günstigen Moment braucht, damit HBC nie verkauft, was du später selbst brauchst *(neuer Schalter, standardmäßig aus)*.
+- **Bildschirme:** Bericht und Heute funktionieren mit jedem Vertrag; die Einstellungen haben neue Reiter *Vertrag* und *Flandern*; klarere Erklärungen.
+- **Land aus Home Assistant**; Solarempfehlung in ganzen kWh; klarere Namen `laaddoel_kwh` und `zon_voor_huis` für eigene Karten und HBC+.
+- **Behoben:** kein Hin-und-her-Wechseln mehr zwischen Charge und Dynamic, kein „+610 %", keine Importgrenze von 25 kW nach einem Neustart, kein leeres Ladediagramm nach einem Neustart.
+
+Alles auf einen Blick: [Alle Änderungen in 2.0.0](docs/AENDERUNGEN_v2.0.0.de.md) · [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
-1. Öffne HACS, suche nach **HBC Batterijplan** und wähle **Herunterladen** (sobald die Integration in der HACS-Standardliste steht).
-2. Noch nicht gelistet, oder du findest sie nicht? Füge sie als benutzerdefiniertes Repository hinzu: HACS → Menü (⋮) → **Benutzerdefinierte Repositories** → `https://github.com/satscan1/hbc-batterijplan`, Kategorie **Integration**. Suche sie danach und lade sie herunter.
+1. Öffne HACS, suche nach **HBC Batterijplan** und wähle **Herunterladen**.
+2. Du findest sie nicht? Füge sie als benutzerdefiniertes Repository hinzu: HACS → Menü (⋮) → **Benutzerdefinierte Repositories** → `https://github.com/satscan1/hbc-batterijplan`, Kategorie **Integration**. Suche sie danach und lade sie herunter.
 3. Starte Home Assistant neu, dann *Einstellungen → Geräte & Dienste → Integration hinzufügen → Batterijplan*.
 
 Details: [01 · Installation](docs/01-installation.de.md).
@@ -82,7 +78,7 @@ Details: [01 · Installation](docs/01-installation.de.md).
 
 ## Status
 
-1.0.0 ist die erste vollständige Version. Starte sie zuerst im Schattenmodus, schau ein paar Tage zu und melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Nenne deine HBC-Version und, bei einer Fehlermeldung, einen Screenshot.
+2.0.0 ist die neueste vollständige Version. Starte sie zuerst im Schattenmodus, schau ein paar Tage zu und melde, was dir auffällt, über [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Nenne deine HBC-Version und, bei einer Fehlermeldung, einen Screenshot.
 
 ## Lizenz
 

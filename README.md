@@ -6,11 +6,11 @@
 
 *Nederlands: [README.nl.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.nl.md) · Deutsch: [README.de.md](https://github.com/satscan1/hbc-batterijplan/blob/main/README.de.md)*
 
-*Version 1.0.0*
+*Version 2.0.0*
 
 Batterijplan makes your home battery save its charge for the **most expensive** moments of the day. It works together with [Home Battery Control (HBC)](https://github.com/gitcodebob/marstek-venus-rs485-node-red) and does not take HBC over: HBC keeps controlling the battery, Batterijplan only gives it a hint for each quarter of an hour.
 
-It is made for households in the Netherlands, Germany and Belgium (Flanders) with a dynamic energy contract.
+It is made for households in the Netherlands, Germany and Belgium (Flanders) with a dynamic or a fixed energy contract.
 
 > Batterijplan is a separate, unofficial add-on to HBC. It is not made or maintained by the makers of HBC. Ask your questions about Batterijplan here, not at HBC.
 
@@ -37,32 +37,28 @@ The amounts in the picture are example figures.
 - **Shows what it earns.** An honest estimate on top of HBC alone: for surplus discharging, only what really came out of the battery counts.
 - **Starts safely.** First in shadow mode (it calculates along, but steers nothing). Only when you turn on *Live* does it steer HBC.
 
-## New in 1.0.0
+## New in 2.0.0
 
-- **Country setting:** Germany (fixed feed-in tariff) and Belgium/Flanders (capacity tariff, uses the HBC import limit), next to the Netherlands.
-- **Calmer plan at nearly equal prices:** a switching cost of 2 ct between holding and selling back, so the plan no longer flips for a fraction of a cent.
-- **Readable in light mode:** darker colours for the plan card and legend in Home Assistant's light theme; the dark theme is unchanged.
-- **Time zone from Home Assistant:** read without a blocking call (review feedback).
-- **Solar forecast for HBC:** the new sensor `sensor.batterijplan_zon_voor_hbc` lets HBC stop grid charging at the level the plan wants. Without a plan, or with Live off, it passes the real forecast on 1:1.
-- **Solcast names:** found automatically in English, Dutch and German, or fill in your own sensors in the *Sensors* window.
-- **Auto-adjust HBC settings:** a switch (off by default) that sets *cheapest hrs*, *expensive hrs* and *Solar reserved for house* to the advice. Your own values come back when you turn it off. The card *Advice for HBC* shows all three settings.
-- **Live charge level:** *In the battery now* follows the battery as it changes, in steps of 0.1 kWh.
-- **Lighter on the database:** the large plan details are no longer written to the recorder.
-- **Chart tooltip:** hover or tap to see time, price, solar, charge and actions per quarter.
-- **A real Home Assistant integration:** install it with HACS and set it up in a form under *Devices & services*. No YAML package, no files to copy, no dashboard resource.
-- **Built-in dashboard** in the sidebar (`/batterijplan`), in Dutch, English and German.
-- **Four rules, each with its own switch:** charge from the grid, discharge outside HBC hours, hold, feed in. The threshold is HBC's own.
-- **Grid charging in blocks of at least 30 minutes**, so HBC really starts charging.
-- **Advice for HBC built in**, with its own card; the status shows the advice after 7 days of measuring.
-- **Shadow value only while Live is off**, kept for at most 30 days.
-- **Numbers follow your Home Assistant number format** (comma or point). Tap the logo for the season picture.
+All changes since 1.1.0:
 
-Everything at a glance: [CHANGELOG.md](CHANGELOG.md).
+- **Choose your contract:** fixed single rate, fixed day/night rate or dynamic. With a fixed contract HBC stays on *Self-consumption*; on a day/night rate the battery only charges from the grid at night when that pays.
+- **Flanders (capacity tariff):** its own switch, with every contract. Peak per quarter, a target limit that follows the monthly peak, and the monthly peak with and without battery with what it saves.
+- **Charge in any cheap quarter:** Batterijplan recognises cheap quarters itself, also outside HBC's maximum number of cheap hours *(new switch, off by default, dynamic contract)*.
+- **Solar margin:** the further ahead, the more careful Batterijplan is with the solar forecast.
+- **Dark days:** when days with hardly any sun are coming, the plan keeps charge and only tops up in cheap quarters.
+- **Reserve that learns:** starts at 20 % and drops to 3 % as consumption and sun are predicted better. Your own margin stays the floor.
+- **Use per weekday** as a self-test: only used when it really predicts better.
+- **Sell reserve automatic:** Batterijplan sets HBC's *Keep energy in reserve* every quarter to what your house needs until the next cheap moment, so HBC never sells what you need later *(new switch, off by default)*.
+- **Screens:** Report and Today work with every contract; Settings has new tabs *Contract* and *Flanders*; clearer help texts.
+- **Country from Home Assistant**; solar advice in whole kWh; clearer names `laaddoel_kwh` and `zon_voor_huis` for your own cards and HBC+.
+- **Fixed:** no more switching back and forth between Charge and Dynamic, no "+610 %", no 25 kW import limit after a restart, no empty charge chart after a restart.
+
+Everything at a glance: [All changes in 2.0.0](docs/CHANGES_v2.0.0.md) · [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
-1. Open HACS, search for **HBC Batterijplan** and choose **Download** (once the integration is in the HACS default list).
-2. Not listed yet, or you do not see it? Add it as a custom repository: HACS → menu (⋮) → **Custom repositories** → `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Then search for it and download it.
+1. Open HACS, search for **HBC Batterijplan** and choose **Download**.
+2. Can't find it? Add it as a custom repository: HACS → menu (⋮) → **Custom repositories** → `https://github.com/satscan1/hbc-batterijplan`, category **Integration**. Then search for it and download it.
 3. Restart Home Assistant, then *Settings → Devices & services → Add integration → Batterijplan*.
 
 Details: [01 · Installation](docs/01-installation.md).
@@ -82,7 +78,7 @@ Details: [01 · Installation](docs/01-installation.md).
 
 ## Status
 
-1.0.0 is the first full release. Start in shadow mode first, watch it for a few days and report what you notice via [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Mention your HBC version and, for an error message, add a screenshot.
+2.0.0 is the latest full release. Start in shadow mode first, watch it for a few days and report what you notice via [Issues](https://github.com/satscan1/hbc-batterijplan/issues). Mention your HBC version and, for an error message, add a screenshot.
 
 ## License
 
